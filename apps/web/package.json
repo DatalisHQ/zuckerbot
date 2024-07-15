@@ -48,7 +48,7 @@
     "tailwind-merge": "^2.3.0",
     "trpc-nuxt": "^0.10.22",
     "ufo": "^1.5.3",
-    "vee-validate": "^4.13.1",
+    "vee-validate": "^4.13.2",
     "zod": "^3.23.8"
   }
 }
