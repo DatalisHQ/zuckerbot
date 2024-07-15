@@ -21,6 +21,11 @@ const getS3Client = () => {
     console.error("Missing env variable S3_ENDPOINT");
   }
 
+  const s3Region = process.env.S3_REGION as string;
+  if (!s3Region) {
+    console.error("Missing env variable S3_REGION");
+  }
+
   const s3AccessKeyId = process.env.S3_ACCESS_KEY_ID as string;
   if (!s3AccessKeyId) {
     console.error("Missing env variable S3_ACCESS_KEY_ID");
@@ -32,7 +37,7 @@ const getS3Client = () => {
   }
 
   s3Client = new S3Client({
-    region: "auto",
+    region: s3Region,
     endpoint: s3Endpoint,
     forcePathStyle: true,
     credentials: {
