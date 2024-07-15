@@ -41,7 +41,7 @@
     "class-variance-authority": "^0.7.0",
     "eslint": "8.57.0",
     "eslint-config-custom": "*",
-    "lucide-vue-next": "^0.399.0",
+    "lucide-vue-next": "^0.408.0",
     "nuxt": "3.12.2",
     "nuxt-simple-robots": "^3.1.9",
     "radix-vue": "^1.8.5",

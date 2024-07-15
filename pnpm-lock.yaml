@@ -103,8 +103,8 @@ importers:
         specifier: '*'
         version: 0.0.0(eslint@8.57.0)(typescript@5.5.2)
       lucide-vue-next:
-        specifier: ^0.399.0
-        version: 0.399.0(vue@3.4.29(typescript@5.5.2))
+        specifier: ^0.408.0
+        version: 0.408.0(vue@3.4.29(typescript@5.5.2))
       nuxt:
         specifier: 3.12.2
         version: 3.12.2(@opentelemetry/api@1.8.0)(@parcel/watcher@2.4.1)(@types/node@20.14.9)(encoding@0.1.13)(eslint@8.57.0)(ioredis@5.4.1)(magicast@0.3.4)(optionator@0.9.4)(rollup@4.17.2)(terser@5.31.1)(typescript@5.5.2)(vite@5.3.1(@types/node@20.14.9)(terser@5.31.1))
@@ -5139,8 +5139,8 @@ packages:
   lucia@3.2.0:
     resolution: {integrity: sha512-eXMxXwk6hqtjRTj4W/x3EnTUtAztLPm0p2N2TEBMDEbakDLXiYnDQ9z/qahjPdPdhPguQc+vwO0/88zIWxlpuw==}
 
-  lucide-vue-next@0.399.0:
-    resolution: {integrity: sha512-qdeU6HxMdgT9nC+WyANrkIsuKp+FUI+2XYoE9znESQwpHJf+tYe2H4ICKIS0hGRDNDt/U1kNZhEczP/pyvJE9w==}
+  lucide-vue-next@0.408.0:
+    resolution: {integrity: sha512-X2w4IDKs6O/R+vPdyMl5VvXS0mhuTqXtw6/NQOOIfCHvMz6vWa1Q2XvYT3oQGzyU94uVZw16jcdC1LwI5XbOdg==}
     peerDependencies:
       vue: '>=3.0.1'
 
@@ -13888,7 +13888,7 @@ snapshots:
     dependencies:
       oslo: 1.2.0
 
-  lucide-vue-next@0.399.0(vue@3.4.29(typescript@5.5.2)):
+  lucide-vue-next@0.408.0(vue@3.4.29(typescript@5.5.2)):
     dependencies:
       vue: 3.4.29(typescript@5.5.2)
 
