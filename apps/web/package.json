@@ -39,7 +39,7 @@
     "@vee-validate/zod": "^4.13.1",
     "@vueuse/core": "^10.11.0",
     "class-variance-authority": "^0.7.0",
-    "eslint": "8.57.0",
+    "eslint": "9.7.0",
     "eslint-config-custom": "*",
     "lucide-vue-next": "^0.399.0",
     "nuxt": "3.12.2",
