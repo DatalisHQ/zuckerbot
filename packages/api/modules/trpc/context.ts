@@ -32,7 +32,7 @@ export async function createContext(event?: H3Event | { isAdmin?: boolean }) {
             ...membership.team,
             avatarUrl: membership.team.avatarUrl
               ? await getSignedUrl(membership.team.avatarUrl, {
-                  bucket: "avatars",
+                  bucket: "datalis-avatars",
                   expiresIn: 360,
                 })
               : null,

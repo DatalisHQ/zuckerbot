@@ -39,7 +39,7 @@
       const path = `/${currentTeam.value?.id}-${uuid()}.png`;
       const uploadUrl = await getSignedUploadUrlMutation.mutate({
         path,
-        bucket: "avatars",
+        bucket: "datalis-avatars",
       });
 
       if (!uploadUrl) {

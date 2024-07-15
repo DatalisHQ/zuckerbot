@@ -41,7 +41,7 @@
       const path = `/${user.value.id}-${uuid()}.png`;
       const uploadUrl = await getSignedUploadUrlMutation.mutate({
         path,
-        bucket: "avatars",
+        bucket: "datalis-avatars",
       });
 
       if (!uploadUrl) {

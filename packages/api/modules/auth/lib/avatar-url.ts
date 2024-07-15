@@ -6,7 +6,7 @@ export async function getUserAvatarUrl(pathOrUrl: string | undefined | null) {
   let avatarUrl = pathOrUrl ?? null;
   if (avatarUrl && !avatarUrl.startsWith("http")) {
     avatarUrl = await getSignedUrl(avatarUrl, {
-      bucket: "avatars",
+      bucket: "datalis-avatars",
       expiresIn: 360,
     });
   }
