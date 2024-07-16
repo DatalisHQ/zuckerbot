@@ -6,6 +6,7 @@ import * as billingProcedures from "../billing/procedures";
 import * as newsletterProcedures from "../newsletter/procedures";
 import * as teamProcedures from "../team/procedures";
 import * as uploadsProcedures from "../uploads/procedures";
+import * as chatProcedures from "../chat/procedures";
 import { router } from "./trpc";
 
 export const apiRouter = router({
@@ -16,6 +17,7 @@ export const apiRouter = router({
   ai: router(aiProcedures),
   uploads: router(uploadsProcedures),
   admin: router(adminProcedures),
+  chat: router(chatProcedures),
 });
 
 export type ApiRouter = typeof apiRouter;
