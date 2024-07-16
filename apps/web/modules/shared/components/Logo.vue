@@ -10,7 +10,7 @@
 </script>
 
 <template>
-  <span class="flex items-center font-semibold leading-none text-primary">
+  <span class="text-primary flex items-center font-semibold leading-none">
     <svg class="size-10" viewBox="0 0 734 635">
       <path
         opacity="0.2"
@@ -31,8 +31,8 @@
     </svg>
     <span
       v-if="props.withLabel"
-      class="ml-3 hidden text-lg text-foreground md:block"
-      >acme</span
+      class="text-foreground ml-3 hidden text-lg md:block"
+      >ZuckerBot</span
     >
   </span>
 </template>
