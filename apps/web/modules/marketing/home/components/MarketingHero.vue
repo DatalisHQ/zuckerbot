@@ -4,32 +4,35 @@
 
 <template>
   <div class="container pb-20 pt-44 text-center">
-    <div class="mb-4 flex justify-center">
+    <!-- <div class="mb-4 flex justify-center">
       <div
         data-test="banner"
         class="mx-auto flex flex-wrap items-center justify-center rounded-full border border-highlight p-px px-4 py-1 text-sm font-normal text-highlight"
       >
         <span
-          class="flex items-center gap-2 rounded-full font-black text-highlight"
+          class="text-highlight flex items-center gap-2 rounded-full font-black"
         >
-          <span class="size-2 rounded-full bg-highlight"></span>
+          <span class="bg-highlight size-2 rounded-full"></span>
           New:
         </span>
         <span class="ml-1 block font-medium">
-          Amazing feature of your SaaS
+          Just launched!
         </span>
       </div>
-    </div>
+    </div> -->
 
     <h1
-      class="mx-auto max-w-3xl text-balance text-5xl font-bold text-foreground lg:text-7xl"
+      class="text-foreground mx-auto max-w-3xl text-balance text-5xl font-bold lg:text-7xl"
     >
-      Your revolutionary Nuxt 3 SaaS
+      Powering Smarter Ads With AI
     </h1>
 
-    <p class="mx-auto mt-4 max-w-xl text-balance text-lg text-foreground/60">
-      This is a demo application built with supastarter. It will save you a lot
-      of time and effort building your next SaaS.
+    <p class="text-foreground/60 mx-auto mt-4 max-w-xl text-balance text-lg">
+      Revolutionize your e-commerce and marketing campaigns with zuckerbot.ai
+    </p>
+    <p class="text-foreground/60 mx-auto mt-4 max-w-xl text-balance text-lg">
+      Join our community of brands and agencies leveraging AI for smarter,
+      faster, and more effective ads
     </p>
 
     <div
@@ -46,15 +49,15 @@
       </Button>
     </div>
 
-    <div class="mt-16 px-8 text-center">
+    <!-- <div class="mt-16 px-8 text-center">
       <h5
-        class="text-xs font-semibold uppercase tracking-wider text-foreground/50"
+        class="text-foreground/50 text-xs font-semibold uppercase tracking-wider"
       >
         Built & shipped with these awesome tools
       </h5>
 
       <div
-        class="mt-4 flex flex-col-reverse items-center justify-center gap-4 text-foreground/50 md:flex-row md:gap-8"
+        class="text-foreground/50 mt-4 flex flex-col-reverse items-center justify-center gap-4 md:flex-row md:gap-8"
       >
         <svg viewBox="0 0 631 236" class="h-8" fill="none">
           <path
@@ -151,10 +154,10 @@
           </g>
         </svg>
       </div>
-    </div>
+    </div> -->
 
     <div
-      class="mt-16 rounded-2xl border bg-card/50 p-2 shadow-lg dark:shadow-foreground/10"
+      class="bg-card/50 dark:shadow-foreground/10 mt-16 rounded-2xl border p-2 shadow-lg"
     >
       <NuxtImg
         src="/images/hero-image.png"
