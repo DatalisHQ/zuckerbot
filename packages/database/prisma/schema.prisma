@@ -36,6 +36,7 @@ model User {
   memberships        TeamMembership[]
   verificationtokens UserVerificationToken[]
   oneTimePasswords   UserOneTimePassword[]
+  chatSessions       ChatSession[]
 }
 
 model UserSession {
@@ -141,4 +142,22 @@ model Subscription {
   planId          String
   variantId       String
   nextPaymentDate DateTime?
+}
+
+model ChatSession {
+  id         String      @id @default(cuid())
+  name       String
+  user       User        @relation(fields: [userId], references: [id])
+  userId     String
+  createdAt  DateTime    @default(now())
+  messages   Message[]
+}
+
+model Message {
+  id         String      @id @default(cuid())
+  session    ChatSession @relation(fields: [sessionId], references: [id])
+  sessionId  String
+  sender     String      // 'user' or 'bot'
+  text       String
+  createdAt  DateTime    @default(now())
 }
