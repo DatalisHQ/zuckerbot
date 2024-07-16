@@ -11,7 +11,7 @@
 
   const useIdFunction = () => useId();
 
-  const titleTemplateDefault = "supastarter.nuxt - Application";
+  const titleTemplateDefault = "ZuckerBot - Application";
   const titleDivider = "|";
 
   const i18nHead = useLocaleHead({

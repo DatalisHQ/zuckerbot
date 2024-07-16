@@ -51,7 +51,7 @@
         marginLeft: '12px',
         fontSize: '18px',
       }"
-      >acme</span
+      >ZuckerBot</span
     >
   </span>
 </template>
