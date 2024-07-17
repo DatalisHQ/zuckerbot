@@ -31,9 +31,7 @@ const fetchSessions = async () => {
 
 <template>
   <div class="container max-w-6xl py-8">
-    <SessionsSidebar :sessions="sessions" @session-selected="handleSessionSelected" />
-    <div>
-      Selected Session ID: {{ selectedSessionId }}
-    </div>
+    <SaasSessionsSidebar :sessions="sessions" @session-selected="handleSessionSelected" />
+    <SaasSession :selectedSessionId="selectedSessionId" />
   </div>
 </template>
