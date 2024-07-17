@@ -4,7 +4,7 @@
     "@aws-sdk/s3-request-presigner": "3.437.0"
   },
   "devDependencies": {
-    "@types/node": "^20.14.9",
+    "@types/node": "^20.14.11",
     "eslint": "8.57.0",
     "eslint-config-custom": "workspace:*",
     "tsconfig": "workspace:*"
