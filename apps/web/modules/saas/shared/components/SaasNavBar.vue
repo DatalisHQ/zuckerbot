@@ -4,7 +4,6 @@
     GridIcon,
     SettingsIcon,
     UserCogIcon,
-    Wand2Icon,
   } from "lucide-vue-next";
 
   const route = useRoute();
@@ -25,11 +24,6 @@
         label: t("dashboard.menu.dashboard"),
         icon: GridIcon,
         to: "/app/dashboard",
-      },
-      {
-        label: t("dashboard.menu.aiDemo"),
-        icon: Wand2Icon,
-        to: "/app/ai-demo",
       },
       {
         label: t("dashboard.menu.settings"),
@@ -55,7 +49,7 @@
 
 <template>
   <nav class="w-full border-b">
-    <div class="container max-w-6xl py-4">
+    <div class="px-8 py-4">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div class="flex items-center gap-3">
           <NuxtLinkLocale to="/" class="block">
