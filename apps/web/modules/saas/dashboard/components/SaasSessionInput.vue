@@ -1,12 +1,12 @@
 <script setup lang="ts">
   import { toTypedSchema } from "@vee-validate/zod";
-  import { SendHorizonalIcon } from "lucide-vue-next";
+import { SendHorizonalIcon } from "lucide-vue-next";
   import { useForm } from "vee-validate";
   import { z } from "zod";
 
   const props = defineProps({
-    selectedSessionId: {
-      type: String,
+    selectedSession: {
+      type: Object,
       default: null,
     },
   });
@@ -35,14 +35,29 @@
   });
 
   const onSubmit = handleSubmit(async () => {
+    const { text } = values;
+
+    if(!text || text === '') {
+      return;
+    }
+
+    emit('messageCreated', {
+      id: Math.random().toString(36).substring(7),
+      sender: 'user',
+      text,
+    });
+
+    resetForm();
+
     pending.value = true;
     const response = await apiCaller.chat.createMessage.query({
-      sessionId: props.selectedSessionId,
-      text: text.value,
+      sessionId: props.selectedSession.id,
+      threadId: props.selectedSession.threadId,
+      assistantId: props.selectedSession.assistantId,
+      text,
     });
 
     pending.value = false;
-    resetForm();
     emit('messageCreated', response);
   });
 </script>
@@ -54,7 +69,7 @@
         <FormField v-slot="{ componentField }" name="text">
           <FormItem>
             <FormControl>
-              <Input v-bind="componentField" />
+              <Input v-bind="componentField" class="bg-white" />
             </FormControl>
             <FormMessage />
           </FormItem>
