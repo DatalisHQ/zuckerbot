@@ -7,7 +7,7 @@
   });
 
   const { apiCaller } = useApiCaller();
-  const messages = ref([]);
+  const messages = ref<any[]>([]); // Update the type of messages to an array of strings
 
   const fetchMessages = async (sessionId: string | null) => {
     if (!sessionId) {
@@ -22,6 +22,10 @@
     }
   };
 
+  const onMessageCreated = (message: string) => {
+    messages.value.push(message);
+  };
+
   onMounted(() => {
     fetchMessages(props.selectedSessionId);
   });
@@ -29,6 +33,7 @@
   watch(
     () => props.selectedSessionId,
     (newSessionId) => {
+      messages.value = [];
       fetchMessages(newSessionId);
     }
   );
@@ -36,15 +41,17 @@
 
 
 <template>
-  <div v-if="selectedSessionId">
-    <h2>Messages for Session {{ selectedSessionId }}</h2>
-    <ul>
-    <li v-for="message in messages" :key="message.id">
-      {{ message.text }}
-    </li>
-    </ul>
-  </div>
-  <div v-else>
-    <p>Select a session to view messages</p>
+  <div class="bg-card text-foreground mx-auto max-w-3xl rounded-lg border p-8">
+    <div>
+      <div v-if="selectedSessionId">
+        <h2>Messages for Session {{ selectedSessionId }}</h2>
+        <ul>
+        <li v-for="message in messages" :key="message.id">
+          {{ message.text }}
+        </li>
+        </ul>
+      </div>
+      <SaasSessionInput :selectedSessionId="selectedSessionId" @messageCreated="onMessageCreated" />
+    </div>
   </div>
 </template>
