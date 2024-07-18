@@ -48,19 +48,21 @@
 </script>
 
 <template>
-  <div>
-    <form @submit="onSubmit">
-      <FormField v-slot="{ componentField }" name="text">
-        <FormItem>
-          <FormControl>
-            <Input v-bind="componentField" />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      </FormField>
+  <div class="absolute bottom-0 left-0 w-full">
+    <form @submit="onSubmit" class="flex w-full items-center space-x-2">
+      <div class="grow">
+        <FormField v-slot="{ componentField }" name="text">
+          <FormItem>
+            <FormControl>
+              <Input v-bind="componentField" />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        </FormField>
+      </div>
 
-      <Button class="mt-4 w-full" :loading="pending">
-        <SendHorizonalIcon class="mr-2 size-4" />
+      <Button class="shrink-0" :loading="pending">
+        <SendHorizonalIcon class="size-4" />
       </Button>
     </form>
   </div>
