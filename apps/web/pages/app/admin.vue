@@ -18,13 +18,13 @@
 </script>
 
 <template>
-  <div class="container max-w-6xl py-8">
+  <div class="p-8">
     <div class="flex flex-col items-start gap-8 md:flex-row">
       <div class="w-full md:max-w-[200px]">
         <SaasAdminMenu :items="menuItems" />
       </div>
 
-      <div class="flex-1">
+      <div class="container max-w-6xl flex-1 ">
         <NuxtPage />
       </div>
     </div>
