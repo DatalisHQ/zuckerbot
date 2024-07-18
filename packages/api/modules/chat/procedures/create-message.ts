@@ -1,5 +1,5 @@
-// import OpenAI from "openai";
-import { db, MessageSchema } from "database";
+import OpenAI from "openai";
+import { db } from "database";
 import { z } from "zod";
 import { protectedProcedure } from "../../trpc";
 
@@ -7,16 +7,23 @@ export const createMessage = protectedProcedure
   .input(
     z.object({
       sessionId: z.string(),
+      threadId: z.string(),
+      assistantId: z.string(),
       text: z.string(),
     }),
   )
-  .output(MessageSchema)
-  .query(async ({ input: { sessionId, text } }) => {
-    // const openai = new OpenAI({
-    //   apiKey: process.env.OPENAI_API_KEY as string,
-    // });
+  .output(
+    z.object({
+      sender: z.string(),
+      text: z.string(),
+    }),
+  )
+  .query(async ({ input: { sessionId, threadId, assistantId, text } }) => {
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY as string,
+    });
 
-    const response = await db.message.create({
+    await db.message.create({
       data: {
         sessionId,
         text,
@@ -24,27 +31,40 @@ export const createMessage = protectedProcedure
       },
     });
 
-    return {
-      id: response.id,
-      sessionId: response.sessionId,
-      sender: response.sender,
-      text: response.text,
-      createdAt: response.createdAt,
-    };
+    try {
+      await openai.beta.threads.messages.create(
+        threadId,
+        {
+          role: "user",
+          content: text
+        }
+      );
 
+      const run = await openai.beta.threads.runs.createAndPoll(
+        threadId,
+        { 
+          assistant_id: assistantId,
+        }
+      );
 
+      const messages = await openai.beta.threads.messages.list(run.thread_id);
 
-    // const response = await openai.chat.completions.create({
-    //   model: "gpt-3.5-turbo",
-    //   messages: [
-    //     {
-    //       role: "user",
-    //       content: `List me five funny product names that could be used for ${topic}`,
-    //     },
-    //   ],
-    // });
+      const response = await db.message.create({
+        data: {
+          sessionId,
+          sender: messages.data[0].role,
+          text: messages.data[0].content[0].text.value,
+        },
+      });
 
-    // const ideas = (response.choices[0].message.content ?? "")
-    //   .split("\n")
-    //   .filter((name) => name.length > 0);
+      return {
+        id: response.id,
+        sessionId: response.sessionId,
+        sender: response.sender,
+        text: response.text,
+        createdAt: response.createdAt,
+      };
+    } catch (error) {
+      console.error("Error processing chat message:", error);
+    }
   });
