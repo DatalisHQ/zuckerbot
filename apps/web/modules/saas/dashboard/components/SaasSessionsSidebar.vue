@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import type { ChatSession } from "database";
   import { Wand2Icon, MessageSquareMoreIcon } from "lucide-vue-next";
 
   const props = defineProps({
@@ -9,11 +10,11 @@
   });
 
   const { apiCaller } = useApiCaller();
-  const emit = defineEmits(['session-selected']);
+  const emit = defineEmits(['sessionSelected']);
   const pending = ref(false);
 
-  const selectSession = (sessionId: string) => {
-    emit('sessionSelected', sessionId);
+  const selectSession = (session: ChatSession) => {
+    emit('sessionSelected', session);
   };
 
   const createSession = async () => {
@@ -22,7 +23,7 @@
       const response = await apiCaller.chat.create.mutate({
           name: 'New session',
         });
-      emit('sessionSelected', response.id); 
+      emit('sessionSelected', response); 
     } catch (error) {
       console.error('Error creating session:', error);
     } finally {
@@ -39,7 +40,7 @@
     </Button>
     <div class="flex items-center justify-between border-gray-200 py-4">
       <ul class="w-full">
-        <li class="mt-2 w-full" v-for="session in sessions" :key="session.id" @click="selectSession(session.id)">
+        <li class="mt-2 w-full" v-for="session in sessions" :key="session.id" @click="selectSession(session)">
           <Button class="w-full justify-start bg-slate-300"><MessageSquareMoreIcon class="mr-2 size-4"/>{{ session.name }}</Button>
         </li>
       </ul>
