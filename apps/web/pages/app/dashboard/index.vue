@@ -1,4 +1,6 @@
 <script setup lang="ts">
+  import type { ChatSession } from 'database';
+
   const { t } = useTranslations();
   const { user } = useUser();
 
@@ -8,11 +10,11 @@
 
   const { apiCaller } = useApiCaller();
 
-  const selectedSessionId = ref<string | null>(null);
+  const selectedSession = ref<ChatSession | null>(null);
   const sessions = ref([]);
 
-  const handleSessionSelected = (sessionId: string) => {
-    selectedSessionId.value = sessionId;
+  const handleSessionSelected = (session: ChatSession) => {
+    selectedSession.value = session;
     fetchSessions();
   };
 
@@ -36,7 +38,7 @@ const fetchSessions = async () => {
         <SaasSessionsSidebar :sessions="sessions" @session-selected="handleSessionSelected" />
       </div>
 
-      <SaasSession :selectedSessionId="selectedSessionId" />
+      <SaasSession  v-if="selectedSession" :selectedSession="selectedSession" />
     </div>
   </div>
 </template>
