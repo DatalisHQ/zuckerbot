@@ -24,6 +24,9 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+  .h-chat {
+    @apply h-[calc(100vh-10.5rem)];
+  }
 }
 
 @tailwind base;

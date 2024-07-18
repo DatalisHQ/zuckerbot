@@ -3,7 +3,7 @@
   const { user } = useUser();
 
   definePageMeta({
-    layout: "saas-app",
+    layout: "saas-chat",
   });
 
   const { apiCaller } = useApiCaller();
@@ -30,8 +30,13 @@ const fetchSessions = async () => {
 </script>
 
 <template>
-  <div class="container max-w-6xl py-8">
-    <SaasSessionsSidebar :sessions="sessions" @session-selected="handleSessionSelected" />
-    <SaasSession :selectedSessionId="selectedSessionId" />
+  <div class="h-full p-8">
+    <div class="flex h-full flex-col items-start gap-8 md:flex-row">
+      <div class="size-full md:max-w-[200px]">
+        <SaasSessionsSidebar :sessions="sessions" @session-selected="handleSessionSelected" />
+      </div>
+
+      <SaasSession :selectedSessionId="selectedSessionId" />
+    </div>
   </div>
 </template>
