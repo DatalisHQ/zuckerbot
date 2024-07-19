@@ -1,6 +1,6 @@
 <script setup lang="ts">
   import { toTypedSchema } from "@vee-validate/zod";
-import { SendHorizonalIcon } from "lucide-vue-next";
+  import { SendHorizonalIcon } from "lucide-vue-next";
   import { useForm } from "vee-validate";
   import { z } from "zod";
 
@@ -11,7 +11,7 @@ import { SendHorizonalIcon } from "lucide-vue-next";
     },
   });
 
-  const emit = defineEmits(['messageCreated']);
+  const emit = defineEmits(["messageCreated"]);
 
   const { apiCaller } = useApiCaller();
 
@@ -37,13 +37,13 @@ import { SendHorizonalIcon } from "lucide-vue-next";
   const onSubmit = handleSubmit(async () => {
     const { text } = values;
 
-    if(!text || text === '') {
+    if (!text || text === "") {
       return;
     }
 
-    emit('messageCreated', {
+    emit("messageCreated", {
       id: Math.random().toString(36).substring(7),
-      sender: 'user',
+      sender: "user",
       text,
     });
 
@@ -54,11 +54,12 @@ import { SendHorizonalIcon } from "lucide-vue-next";
       sessionId: props.selectedSession.id,
       threadId: props.selectedSession.threadId,
       assistantId: props.selectedSession.assistantId,
+      sender: "user",
       text,
     });
 
     pending.value = false;
-    emit('messageCreated', response);
+    emit("messageCreated", response);
   });
 </script>
 

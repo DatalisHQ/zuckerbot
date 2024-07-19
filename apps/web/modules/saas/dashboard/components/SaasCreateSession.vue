@@ -5,10 +5,6 @@
   const emit = defineEmits(["sessionSelected"]);
   const pending = ref(false);
 
-  const selectSession = (session: ChatSession) => {
-    emit("sessionSelected", session);
-  };
-
   const createSession = async () => {
     pending.value = true;
     try {
