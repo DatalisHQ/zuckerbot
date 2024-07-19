@@ -52,7 +52,10 @@
         >
           <Button
             class="w-full justify-start bg-slate-300"
-            :class="{ 'bg-primary/50': session.id === selectedSession.id }"
+            :class="{
+              'bg-primary/50':
+                selectedSession && session.id === selectedSession.id,
+            }"
             ><MessageSquareMoreIcon class="mr-2 size-4" />{{
               session.name
             }}</Button
