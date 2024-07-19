@@ -15,7 +15,12 @@
       "mode": "auto"
     }
   ],
+  "eslint.validate": ["html", "vue", "javascript"],
+  "[javascript]": {
+    "editor.formatOnSave": false
+  },
   "i18n-ally.localesPaths": ["apps/web/locales"],
   "i18n-ally.keystyle": "nested",
-  "i18n-ally.enabledFrameworks": ["vue"]
+  "i18n-ally.enabledFrameworks": ["vue"],
+  "editor.defaultFormatter": "esbenp.prettier-vscode"
 }

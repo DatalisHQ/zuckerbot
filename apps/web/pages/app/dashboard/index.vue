@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import type { ChatSession } from 'database';
+  import type { ChatSession } from "database";
 
   const { t } = useTranslations();
   const { user } = useUser();
@@ -18,15 +18,14 @@
     fetchSessions();
   };
 
-
-const fetchSessions = async () => {
-  try {
-    const response = await apiCaller.chat.sessions.query();
-    sessions.value = response;
-  } catch (error) {
-    console.error('Error fetching sessions:', error);
-  }
-};
+  const fetchSessions = async () => {
+    try {
+      const response = await apiCaller.chat.sessions.query();
+      sessions.value = response;
+    } catch (error) {
+      console.error("Error fetching sessions:", error);
+    }
+  };
 
   onMounted(fetchSessions);
 </script>
@@ -35,10 +34,15 @@ const fetchSessions = async () => {
   <div class="h-full p-8">
     <div class="flex h-full flex-col items-start gap-8 md:flex-row">
       <div class="size-full md:max-w-[200px]">
-        <SaasSessionsSidebar :sessions="sessions" @session-selected="handleSessionSelected" />
+        <SaasSessionsSidebar
+          :sessions="sessions"
+          :selectedSession="selectedSession"
+          @session-selected="handleSessionSelected"
+        />
       </div>
 
-      <SaasSession  v-if="selectedSession" :selectedSession="selectedSession" />
+      <SaasSession v-if="selectedSession" :selectedSession="selectedSession" />
+      <SaasCreateSession v-else />
     </div>
   </div>
 </template>
