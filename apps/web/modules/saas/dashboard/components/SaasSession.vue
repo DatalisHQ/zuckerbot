@@ -11,6 +11,30 @@
   const { apiCaller } = useApiCaller();
   const messages = ref<any[]>([]);
 
+  const initChat = async () => {
+    try {
+      messages.value.push({
+        id: Math.random().toString(36).substring(7),
+        sender: "assistant",
+        text: "Writing a message...",
+      });
+
+      const response = await apiCaller.chat.createMessage.query({
+        sessionId: props.selectedSession.id,
+        threadId: props.selectedSession.threadId,
+        assistantId: props.selectedSession.assistantId,
+        sender: "assistant",
+        text: "Hi! I'm ZuckerBot; I'm here to help you with your business on Facebook and Instagram. What do you need help with today?",
+      });
+
+      messages.value.splice(messages.value.length - 1, 1);
+      messages.value.push(response);
+    } catch (error) {
+      console.error("Error sending message:", error);
+      messages.value.splice(messages.value.length - 1, 1);
+    }
+  };
+
   const fetchMessages = async (sessionId: string | null) => {
     if (!sessionId) {
       return;
@@ -19,6 +43,10 @@
     try {
       const response = await apiCaller.chat.messages.query({ sessionId });
       messages.value = response;
+
+      if (messages.value.length === 0) {
+        initChat();
+      }
     } catch (error) {
       console.error("Error fetching messages:", error);
     }
