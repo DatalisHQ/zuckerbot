@@ -20,5 +20,5 @@ export const messages = protectedProcedure
       },
     });
 
-    return messages ?? []
+    return messages ?? [];
   });

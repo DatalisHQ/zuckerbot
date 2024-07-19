@@ -16,6 +16,11 @@
     }
   ],
   "i18n-ally.localesPaths": ["packages/i18n/translations"],
+  "eslint.validate": ["html", "vue", "javascript"],
+  "[javascript]": {
+    "editor.formatOnSave": false
+  },
   "i18n-ally.keystyle": "nested",
-  "i18n-ally.enabledFrameworks": ["vue"]
+  "i18n-ally.enabledFrameworks": ["vue"],
+  "editor.defaultFormatter": "esbenp.prettier-vscode"
 }
