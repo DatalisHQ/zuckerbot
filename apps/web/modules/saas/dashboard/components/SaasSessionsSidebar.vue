@@ -7,25 +7,29 @@
       type: Array,
       required: true,
     },
+    selectedSession: {
+      type: Object,
+      default: null,
+    },
   });
 
   const { apiCaller } = useApiCaller();
-  const emit = defineEmits(['sessionSelected']);
+  const emit = defineEmits(["sessionSelected"]);
   const pending = ref(false);
 
   const selectSession = (session: ChatSession) => {
-    emit('sessionSelected', session);
+    emit("sessionSelected", session);
   };
 
   const createSession = async () => {
     pending.value = true;
     try {
       const response = await apiCaller.chat.create.mutate({
-          name: 'New session',
-        });
-      emit('sessionSelected', response); 
+        name: "New session",
+      });
+      emit("sessionSelected", response);
     } catch (error) {
-      console.error('Error creating session:', error);
+      console.error("Error creating session:", error);
     } finally {
       pending.value = false;
     }
@@ -40,8 +44,19 @@
     </Button>
     <div class="flex items-center justify-between border-gray-200 py-4">
       <ul class="w-full">
-        <li class="mt-2 w-full" v-for="session in sessions" :key="session.id" @click="selectSession(session)">
-          <Button class="w-full justify-start bg-slate-300"><MessageSquareMoreIcon class="mr-2 size-4"/>{{ session.name }}</Button>
+        <li
+          class="mt-2 w-full"
+          v-for="session in sessions"
+          :key="session.id"
+          @click="selectSession(session)"
+        >
+          <Button
+            class="w-full justify-start bg-slate-300"
+            :class="{ 'bg-primary/50': session.id === selectedSession.id }"
+            ><MessageSquareMoreIcon class="mr-2 size-4" />{{
+              session.name
+            }}</Button
+          >
         </li>
       </ul>
     </div>
