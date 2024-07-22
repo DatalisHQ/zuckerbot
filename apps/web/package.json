@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@internationalized/date": "^3.5.4",
-    "@tanstack/vue-table": "^8.19.2",
+    "@tanstack/vue-table": "^8.19.3",
     "api": "workspace:*",
     "auth": "workspace:*",
     "cropperjs": "^1.6.2",
