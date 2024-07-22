@@ -26,7 +26,7 @@
   >
     <Button class="mt-4" :loading="pending" @click="createSession">
       <Wand2Icon class="mr-2 size-4" />
-      New session
+      New session placeholder
     </Button>
   </div>
 </template>

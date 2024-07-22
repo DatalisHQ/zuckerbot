@@ -2,10 +2,7 @@ import OpenAI from "openai";
 import { db } from "database";
 import { z } from "zod";
 import { protectedProcedure } from "../../trpc";
-import fs from "node:fs";
-import path from "node:path";
-
-const knowledgeFilePath = path.resolve("assets/knowledge.pdf");
+import { getSignedUrl } from "storage";
 
 export const create = protectedProcedure
   .input(
@@ -18,8 +15,15 @@ export const create = protectedProcedure
       apiKey: process.env.OPENAI_API_KEY as string,
     });
 
+    const knowledgeSignedUrl = await getSignedUrl("/knowledge.pdf", {
+      bucket: "datalis-avatars",
+      expiresIn: 360,
+    });
+
+    const response = await fetch(knowledgeSignedUrl);
+
     const knowledgeFile = await openai.files.create({
-      file: fs.createReadStream(knowledgeFilePath),
+      file: response,
       purpose: "assistants",
     });
 
