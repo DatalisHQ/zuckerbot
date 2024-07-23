@@ -64,15 +64,14 @@
 </script>
 
 <template>
-  <div class="absolute bottom-0 left-0 w-full">
+  <div class="bg-card absolute bottom-0 left-0 w-full">
     <form @submit="onSubmit" class="flex w-full items-center space-x-2">
       <div class="grow">
         <FormField v-slot="{ componentField }" name="text">
           <FormItem>
             <FormControl>
-              <Input v-bind="componentField" class="bg-white" />
+              <Input v-bind="componentField" class="bg-card text-foreground" />
             </FormControl>
-            <FormMessage />
           </FormItem>
         </FormField>
       </div>
