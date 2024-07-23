@@ -60,18 +60,18 @@
 </script>
 
 <template>
-  <div v-if="variant" class="rounded-xl bg-card/50 p-6 shadow">
+  <div v-if="variant" class="bg-card/50 rounded-xl p-6 shadow">
     <div class="flex h-full flex-col justify-between gap-4">
       <div>
         <h3 class="mb-4 text-2xl font-bold">{{ props.plan.name }}</h3>
         <div
           v-if="props.plan.description"
-          class="prose mb-2 text-muted-foreground"
+          class="prose text-muted-foreground mb-2"
           v-html="props.plan.description"
         />
         <ul
           v-if="props.plan.features?.length"
-          class="grid list-disc gap-2 pl-4 text-muted-foreground"
+          class="text-muted-foreground grid list-disc gap-2 pl-4"
         >
           <li v-for="(feature, key) of plan.features" :key="key">
             {{ feature }}
@@ -80,7 +80,7 @@
       </div>
 
       <div>
-        <strong class="text-2xl font-bold text-highlight">
+        <strong class="text-2xl font-bold">
           {{ n(variant.price / 100, "currency") }}
           <span class="text-sm font-normal opacity-70">
             / {{ props.labels[interval] }}
