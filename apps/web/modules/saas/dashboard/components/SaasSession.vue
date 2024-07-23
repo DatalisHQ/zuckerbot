@@ -74,7 +74,7 @@
     class="bg-card text-foreground container mt-4 h-full max-w-6xl rounded-lg border p-8"
   >
     <div class="relative flex h-full flex-col">
-      <div class="h-full overflow-y-scroll pb-24">
+      <div class="scroll-hidden h-full overflow-y-scroll pb-24">
         <div v-if="selectedSession">
           <ul>
             <li
