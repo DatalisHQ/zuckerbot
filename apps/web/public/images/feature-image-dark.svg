@@ -7,10 +7,10 @@
 <path fill-rule="evenodd" clip-rule="evenodd" d="M6 1043H1868L1858.87 1046.92C1846.42 1052.25 1833.02 1055 1819.47 1055H54.5257C40.983 1055 27.5815 1052.25 15.1338 1046.92L6 1043Z" fill="#141414"/>
 <path d="M803 1013H1072V1014C1072 1025.05 1063.05 1034 1052 1034H823C811.954 1034 803 1025.05 803 1014V1013Z" fill="#444444"/>
 <rect x="216" y="59" width="1440" height="900" fill="#212121"/>
-<rect x="362.996" y="120.998" width="168" height="33" rx="16.5" fill="#34d399"/>
+<rect x="362.996" y="120.998" width="168" height="33" rx="16.5" fill="#2EA7EB"/>
 <rect x="712.996" y="404.998" width="446" height="33" rx="16.5" fill="#9F9F9F"/>
 <rect x="735.996" y="453.998" width="399" height="33" rx="16.5" fill="#9F9F9F"/>
-<rect x="780.996" y="540.998" width="310" height="72" rx="30" fill="#34d399"/>
+<rect x="780.996" y="540.998" width="310" height="72" rx="30" fill="#2EA7EB"/>
 <rect x="1207" y="129.998" width="81" height="16" rx="8" fill="#545454"/>
 <rect x="1303" y="129.998" width="82" height="16" rx="8" fill="#545454"/>
 <rect x="1400" y="129.998" width="81" height="16" rx="8" fill="#545454"/>
