@@ -37,7 +37,7 @@
 </script>
 
 <template>
-  <div class="h-chat flex flex-col overflow-hidden">
+  <div class="h-chat scroll-hidden flex flex-col overflow-y-auto">
     <Button
       class="mt-4 w-full shrink-0"
       :loading="pending"
