@@ -88,7 +88,7 @@ export default {
         sm: "calc(0.75rem - 4px)",
       },
       fontFamily: {
-        sans: ["Poppins", "sans-serif"],
+        sans: ["Gotham", "sans-serif"],
       },
       keyframes: {
         "accordion-down": {
