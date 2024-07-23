@@ -1,10 +1,10 @@
 <template>
-  <footer class="bg-muted py-12 text-muted-foreground">
+  <footer class="bg-muted text-muted-foreground py-12">
     <div class="container grid grid-cols-1 gap-6 lg:grid-cols-3">
       <div>
         <Logo class="opacity-50 grayscale" />
         <p class="mt-3 text-sm opacity-70">
-          © {{ new Date().getFullYear() }} supastarter. All rights reserved.
+          © {{ new Date().getFullYear() }} ZuckerBot. All rights reserved.
         </p>
       </div>
 
