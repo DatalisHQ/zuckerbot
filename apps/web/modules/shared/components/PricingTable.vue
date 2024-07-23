@@ -58,7 +58,7 @@
 
 <template>
   <div :class="cn(props.class, '@container')">
-    <div class="flex justify-center">
+    <div class="mb-6 flex justify-center">
       <Tabs v-model="interval" class="mb-4">
         <TabsList>
           <TabsTrigger value="month">{{ labels.monthly }}</TabsTrigger>
@@ -67,8 +67,9 @@
       </Tabs>
     </div>
 
-    <div class="grid gap-4 @md:grid-cols-3">
+    <div class="flex items-center justify-center">
       <PricingTableItem
+        class="md:w-72"
         v-for="plan of sortedAndFilteredPlans"
         :onSelectPlan="props.onSelectPlan"
         :key="plan.id"
