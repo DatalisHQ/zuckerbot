@@ -12,7 +12,7 @@
   "scripts": {
     "build": "dotenv -c -- turbo build",
     "dev": "dotenv -c -- turbo dev --concurrency 15",
-    "start": "pnpm run dev",
+    "start": "node apps/web/.output/server/index.mjs",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
     "clean": "turbo clean",
