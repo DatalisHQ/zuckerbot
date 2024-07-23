@@ -37,8 +37,12 @@
 </script>
 
 <template>
-  <div class="flex h-full flex-col">
-    <Button class="mt-4 w-full" :loading="pending" @click="createSession">
+  <div class="h-chat flex flex-col overflow-hidden">
+    <Button
+      class="mt-4 w-full shrink-0"
+      :loading="pending"
+      @click="createSession"
+    >
       <Wand2Icon class="mr-2 size-4" />
       New session
     </Button>
