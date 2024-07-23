@@ -8,7 +8,7 @@
   });
 
   const colors = {
-    primary: "#10b981",
+    primary: "#044F98",
     primaryForeground: "#ffffff",
   };
 </script>

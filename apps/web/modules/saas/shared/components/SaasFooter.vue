@@ -1,7 +1,7 @@
 <template>
-  <footer class="container py-4 text-center text-sm text-muted-foreground">
+  <footer class="text-muted-foreground container py-4 text-center text-sm">
     <span>
-      © {{ new Date().getFullYear() }} supastarter. All rights reserved.
+      © {{ new Date().getFullYear() }} ZuckerBot. All rights reserved.
     </span>
     <span class="opacity-50"> | </span>
     <NuxtLink to="/legal/privacy-policy">Privacy policy</NuxtLink>
