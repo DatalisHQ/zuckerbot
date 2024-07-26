@@ -62,13 +62,24 @@ export const createMessage = protectedProcedure
           messagePayload.attachments.push(...fileAttachments);
         }
 
-        const run = await openai.beta.threads.runs.createAndPoll(threadId, {
-          assistant_id: assistantId,
-        });
+        const initialMessage =
+          "Welcome to ZuckerBot, your AI-powered assistant designed to revolutionize your advertising efforts. Whether you're a small business owner or an entrepreneur without a dedicated marketing team, ZuckerBot is here to simplify the complexities of online advertising. With ZuckerBot, you can create, manage, and optimize your ad campaigns across multiple platforms through a simple text chat interface. Please note that ZuckerBot currently does not support uploading files with .xlsx or .csv extensions. For best results, convert these files to PDF or TXT format before uploading.";
+
+        if (text === initialMessage) {
+          await openai.beta.threads.runs.createAndPoll(threadId, {
+            assistant_id: assistantId,
+          });
+        }
 
         await openai.beta.threads.messages.create(threadId, messagePayload);
 
-        const messages = await openai.beta.threads.messages.list(run.thread_id);
+        if (text !== initialMessage) {
+          await openai.beta.threads.runs.createAndPoll(threadId, {
+            assistant_id: assistantId,
+          });
+        }
+
+        const messages = await openai.beta.threads.messages.list(threadId);
 
         const response = await db.message.create({
           data: {
