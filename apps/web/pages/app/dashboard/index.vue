@@ -55,7 +55,7 @@
           v-if="selectedSession"
           :selectedSession="selectedSession"
         />
-        <SaasCreateSession v-else />
+        <SaasCreateSession @session-selected="handleSessionSelected" v-else />
       </template>
       <div
         v-else
