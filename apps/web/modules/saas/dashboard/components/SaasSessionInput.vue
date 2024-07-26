@@ -1,8 +1,14 @@
 <script setup lang="ts">
   import { toTypedSchema } from "@vee-validate/zod";
-  import { SendHorizonalIcon } from "lucide-vue-next";
   import { useForm } from "vee-validate";
   import { z } from "zod";
+  import {
+    LoaderIcon,
+    Trash2Icon,
+    PaperclipIcon,
+    SendHorizonalIcon,
+  } from "lucide-vue-next";
+  import { v4 as uuid } from "uuid";
 
   const props = defineProps({
     selectedSession: {
@@ -11,17 +17,67 @@
     },
   });
 
-  const emit = defineEmits(["messageCreated"]);
-
-  const { apiCaller } = useApiCaller();
-
-  const pending = ref(false);
-
   const formSchema = toTypedSchema(
     z.object({
       text: z.string().min(1),
     }),
   );
+
+  const emit = defineEmits(["messageCreated"]);
+
+  const pending = ref(false);
+  const uploading = ref(false);
+  const files = ref<File[]>([]);
+  const uploadedFiles = ref<{ name: string; url: string }[]>([]);
+  const { apiCaller } = useApiCaller();
+
+  const getSignedUploadUrlMutation =
+    apiCaller.uploads.signedUploadUrl.useMutation();
+
+  const uploadFileToS3 = async (file: File) => {
+    const path = `uploads/${uuid()}-${file.name}`;
+    const uploadUrl = await getSignedUploadUrlMutation.mutate({
+      path,
+      bucket: "datalis-avatars", // Replace with your bucket name
+    });
+
+    if (!uploadUrl) {
+      throw new Error("Failed to get upload url");
+    }
+
+    await fetch(uploadUrl, {
+      method: "PUT",
+      body: file,
+      headers: {
+        "Content-Type": file.type,
+      },
+    });
+
+    return { name: file.name, url: uploadUrl.split("?")[0] }; // Return the URL without query parameters
+  };
+
+  const onFilesSelected = async (event: Event) => {
+    const input = event.target as HTMLInputElement;
+    const selectedFiles = input.files;
+
+    if (selectedFiles?.length) {
+      files.value = Array.from(selectedFiles);
+      uploading.value = true;
+
+      try {
+        const uploaded = await Promise.all(files.value.map(uploadFileToS3));
+        uploadedFiles.value.push(...uploaded);
+        uploading.value = false;
+      } catch (e) {
+        console.error("Error uploading files:", e);
+        uploading.value = false;
+      }
+    }
+  };
+
+  const removeFile = (fileIndex: number) => {
+    uploadedFiles.value.splice(fileIndex, 1);
+  };
 
   const { handleSubmit, values, resetForm } = useForm({
     validationSchema: formSchema,
@@ -30,55 +86,95 @@
     },
   });
 
-  const text = computed(() => {
-    return values.text || "";
-  });
-
-  const onSubmit = handleSubmit(async () => {
+  const sendMessage = handleSubmit(async () => {
     const { text } = values;
 
     if (!text || text === "") {
       return;
     }
 
-    emit("messageCreated", {
-      id: Math.random().toString(36).substring(7),
-      sender: "user",
-      text,
-    });
-
-    resetForm();
-
     pending.value = true;
-    const response = await apiCaller.chat.createMessage.query({
+
+    const response = await apiCaller.chat.createMessage.mutate({
       sessionId: props.selectedSession.id,
       threadId: props.selectedSession.threadId,
       assistantId: props.selectedSession.assistantId,
       sender: "user",
       text,
+      files: uploadedFiles.value.map((file) => file.url),
     });
 
-    pending.value = false;
+    // Handle response if needed
     emit("messageCreated", response);
+
+    resetForm();
+    uploadedFiles.value = [];
+    pending.value = false;
   });
+
+  // Define the type for the file input reference
+  const fileInputRef = ref<HTMLInputElement | null>(null);
 </script>
 
 <template>
-  <div class="bg-card absolute bottom-0 left-0 w-full">
-    <form @submit="onSubmit" class="flex w-full items-center space-x-2">
-      <div class="grow">
-        <FormField v-slot="{ componentField }" name="text">
-          <FormItem>
-            <FormControl>
-              <Input v-bind="componentField" class="bg-card text-foreground" />
-            </FormControl>
-          </FormItem>
-        </FormField>
-      </div>
+  <div>
+    <div class="bg-card absolute bottom-0 left-0 w-full">
+      <form
+        @submit.prevent="sendMessage"
+        class="flex w-full items-center space-x-2"
+      >
+        <div class="relative grow">
+          <FormField v-slot="{ componentField }" name="text">
+            <FormItem>
+              <FormControl>
+                <Input
+                  v-bind="componentField"
+                  class="bg-card text-foreground pl-12"
+                />
+              </FormControl>
+            </FormItem>
+          </FormField>
+        </div>
 
-      <Button class="shrink-0" :loading="pending">
-        <SendHorizonalIcon class="size-4" />
-      </Button>
-    </form>
+        <Button class="shrink-0" :loading="pending">
+          <SendHorizonalIcon class="size-4" />
+        </Button>
+      </form>
+      <input
+        type="file"
+        multiple
+        @change="onFilesSelected"
+        class="hidden"
+        ref="fileInputRef"
+      />
+      <div
+        class="absolute left-4 top-1/2 -translate-y-1/2 cursor-pointer"
+        @click="fileInputRef?.click()"
+      >
+        <PaperclipIcon class="size-5 cursor-pointer" />
+      </div>
+      <div
+        v-if="uploading"
+        class="absolute inset-0 flex items-center justify-center"
+      >
+        <LoaderIcon class="text-primary size-6 animate-spin" />
+      </div>
+      <div
+        v-if="uploadedFiles.length > 0"
+        class="absolute bottom-full mb-2 flex flex-col items-start gap-2"
+      >
+        <div
+          v-for="(file, index) in uploadedFiles"
+          :key="file.url"
+          class="relative flex items-center space-x-2 rounded bg-white p-2 shadow"
+        >
+          <span>{{ file.name }}</span>
+          <Trash2Icon
+            class="size-4 cursor-pointer text-red-500"
+            @click="removeFile(index)"
+          />
+        </div>
+      </div>
+    </div>
   </div>
 </template>
