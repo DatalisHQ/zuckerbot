@@ -148,7 +148,7 @@
       <input
         type="file"
         multiple
-        accept=".pdf,.txt,.md,.html,.xml,.csv,.tsv,.json,.yaml,.yml,.tex,.latex,.rtf,.epub,.odt,.ott,.sxw,.stw,.fodt,.uot,.doc,.docx,.dot,.dotx,.ppt,.pptx,.pps,.ppsx,.odp,.otp,.fodp,.uop"
+        accept=".pdf,.txt,.md,.html,.xml,.tsv,.json,.yaml,.yml,.tex,.latex,.rtf,.epub,.odt,.ott,.sxw,.stw,.fodt,.uot,.doc,.docx,.dot,.dotx,.ppt,.pptx,.pps,.ppsx,.odp,.otp,.fodp,.uop"
         @change="onFilesSelected"
         class="hidden"
         ref="fileInputRef"
