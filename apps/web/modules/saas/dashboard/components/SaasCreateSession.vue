@@ -2,11 +2,21 @@
   import { Wand2Icon } from "lucide-vue-next";
 
   const { apiCaller } = useApiCaller();
-  const emit = defineEmits(["sessionSelected"]);
-  const pending = ref(false);
+  const emit = defineEmits(["sessionSelected", "sessionCreating"]);
+
+  const props = defineProps({
+    creatingSession: {
+      type: Boolean,
+      default: false,
+    },
+  });
 
   const createSession = async () => {
-    pending.value = true;
+    if (props.creatingSession) {
+      return;
+    }
+
+    emit("sessionCreating");
     try {
       const response = await apiCaller.chat.create.mutate({
         name: "New session",
@@ -14,8 +24,6 @@
       emit("sessionSelected", response);
     } catch (error) {
       console.error("Error creating session:", error);
-    } finally {
-      pending.value = false;
     }
   };
 </script>
@@ -30,7 +38,7 @@
       expert recommendations, and manage your ads across multiple platforms
       seamlessly.
     </div>
-    <Button :loading="pending" @click="createSession">
+    <Button :loading="creatingSession" @click="createSession">
       <Wand2Icon class="mr-2 size-4" />
       New session
     </Button>

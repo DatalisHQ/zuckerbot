@@ -11,18 +11,25 @@
       type: Object,
       default: null,
     },
+    creatingSession: {
+      type: Boolean,
+      default: false,
+    },
   });
 
   const { apiCaller } = useApiCaller();
-  const emit = defineEmits(["sessionSelected"]);
-  const pending = ref(false);
+  const emit = defineEmits(["sessionSelected", "sessionCreating"]);
 
   const selectSession = (session: ChatSession) => {
     emit("sessionSelected", session);
   };
 
   const createSession = async () => {
-    pending.value = true;
+    if (props.creatingSession) {
+      return;
+    }
+
+    emit("sessionCreating");
     try {
       const response = await apiCaller.chat.create.mutate({
         name: "New session",
@@ -30,8 +37,6 @@
       emit("sessionSelected", response);
     } catch (error) {
       console.error("Error creating session:", error);
-    } finally {
-      pending.value = false;
     }
   };
 </script>
@@ -40,7 +45,7 @@
   <div class="h-chat scroll-hidden flex flex-col overflow-y-auto">
     <Button
       class="mt-4 w-full shrink-0"
-      :loading="pending"
+      :loading="creatingSession"
       @click="createSession"
     >
       <Wand2Icon class="mr-2 size-4" />
