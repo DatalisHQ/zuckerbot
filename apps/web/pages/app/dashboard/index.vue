@@ -12,10 +12,16 @@
 
   const selectedSession = ref<ChatSession | null>(null);
   const sessions = ref([]);
+  const creatingSession = ref(false);
 
   const handleSessionSelected = (session: ChatSession) => {
     selectedSession.value = session;
+    creatingSession.value = false;
     fetchSessions();
+  };
+
+  const handleSessionCreating = () => {
+    creatingSession.value = true;
   };
 
   const fetchSessions = async () => {
@@ -47,6 +53,8 @@
           <SaasSessionsSidebar
             :sessions="sessions"
             :selectedSession="selectedSession"
+            :creatingSession="creatingSession"
+            @session-creating="handleSessionCreating"
             @session-selected="handleSessionSelected"
           />
         </div>
@@ -55,7 +63,12 @@
           v-if="selectedSession"
           :selectedSession="selectedSession"
         />
-        <SaasCreateSession @session-selected="handleSessionSelected" v-else />
+        <SaasCreateSession
+          :creatingSession="creatingSession"
+          @session-creating="handleSessionCreating"
+          @session-selected="handleSessionSelected"
+          v-else
+        />
       </template>
       <div
         v-else
