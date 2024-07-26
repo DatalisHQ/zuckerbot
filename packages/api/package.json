@@ -19,7 +19,7 @@
   "devDependencies": {
     "eslint": "8.57.0",
     "openai": "^4.52.2",
-    "prisma": "^5.15.1",
+    "prisma": "^5.17.0",
     "superjson": "^2.0.0",
     "trpc-nuxt": "^0.10.22",
     "zod": "^3.23.8"
