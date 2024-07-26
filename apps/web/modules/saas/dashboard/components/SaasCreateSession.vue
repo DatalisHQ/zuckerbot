@@ -22,11 +22,17 @@
 
 <template>
   <div
-    class="container mt-4 flex h-full max-w-6xl items-center justify-center p-8"
+    class="flex size-full flex-col content-center items-center justify-center"
   >
-    <Button class="mt-4" :loading="pending" @click="createSession">
+    <Logo size="size-32" :with-label="false" />
+    <div class="mb-4 max-w-96 text-center">
+      Start chatting with ZuckerBot to optimize your ad campaigns, receive
+      expert recommendations, and manage your ads across multiple platforms
+      seamlessly.
+    </div>
+    <Button :loading="pending" @click="createSession">
       <Wand2Icon class="mr-2 size-4" />
-      New session placeholder
+      New session
     </Button>
   </div>
 </template>
