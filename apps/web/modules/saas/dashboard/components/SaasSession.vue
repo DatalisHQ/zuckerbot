@@ -24,7 +24,7 @@
         threadId: props.selectedSession.threadId,
         assistantId: props.selectedSession.assistantId,
         sender: "assistant",
-        text: "Hi! I'm ZuckerBot; I'm here to help you with your business on Facebook and Instagram. What do you need help with today?",
+        text: "Welcome to ZuckerBot, your AI-powered assistant designed to revolutionize your advertising efforts. Whether you're a small business owner or an entrepreneur without a dedicated marketing team, ZuckerBot is here to simplify the complexities of online advertising. With ZuckerBot, you can create, manage, and optimize your ad campaigns across multiple platforms through a simple text chat interface. Please note that ZuckerBot currently does not support uploading files with .xlsx or .csv extensions. For best results, convert these files to PDF or TXT format before uploading.",
       });
 
       messages.value.splice(messages.value.length - 1, 1);
