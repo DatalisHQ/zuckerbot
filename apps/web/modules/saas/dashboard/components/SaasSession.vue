@@ -19,7 +19,7 @@
         text: "Writing a message...",
       });
 
-      const response = await apiCaller.chat.createMessage.query({
+      const response = await apiCaller.chat.createMessage.mutate({
         sessionId: props.selectedSession.id,
         threadId: props.selectedSession.threadId,
         assistantId: props.selectedSession.assistantId,
@@ -56,6 +56,10 @@
     messages.value.push(message);
   };
 
+  const onMessageReceived = async () => {
+    messages.value.splice(messages.value.length - 1, 1);
+  };
+
   onMounted(() => {
     fetchMessages(props.selectedSession.id);
   });
@@ -71,7 +75,7 @@
 
 <template>
   <div
-    class="container mt-4 h-full max-w-6xl rounded-lg border bg-card p-8 text-foreground"
+    class="bg-card text-foreground container mt-4 h-full max-w-6xl rounded-lg border p-8"
   >
     <div class="relative flex h-full flex-col">
       <div class="scroll-hidden h-full overflow-y-scroll pb-24">
@@ -85,9 +89,9 @@
               <div class="rounded-full bg-slate-300 p-2">
                 <UserIcon
                   v-if="message.sender === 'user'"
-                  class="size-4 text-primary-foreground"
+                  class="text-primary-foreground size-4"
                 />
-                <BotIcon v-else class="size-4 text-primary-foreground" />
+                <BotIcon v-else class="text-primary-foreground size-4" />
               </div>
               <div class="flex">
                 <div
@@ -113,6 +117,7 @@
       </div>
       <SaasSessionInput
         :selectedSession="selectedSession"
+        @messageReceived="onMessageReceived"
         @messageCreated="onMessageCreated"
       />
     </div>
