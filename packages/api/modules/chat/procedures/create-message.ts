@@ -62,11 +62,11 @@ export const createMessage = protectedProcedure
           messagePayload.attachments.push(...fileAttachments);
         }
 
-        await openai.beta.threads.messages.create(threadId, messagePayload);
-
         const run = await openai.beta.threads.runs.createAndPoll(threadId, {
           assistant_id: assistantId,
         });
+
+        await openai.beta.threads.messages.create(threadId, messagePayload);
 
         const messages = await openai.beta.threads.messages.list(run.thread_id);
 
