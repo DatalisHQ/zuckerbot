@@ -11,6 +11,7 @@ export const createMessage = protectedProcedure
       assistantId: z.string(),
       text: z.string(),
       sender: z.string(),
+      files: z.array(z.string()).optional(),
     }),
   )
   .output(
@@ -19,8 +20,10 @@ export const createMessage = protectedProcedure
       text: z.string(),
     }),
   )
-  .query(
-    async ({ input: { sessionId, threadId, assistantId, sender, text } }) => {
+  .mutation(
+    async ({
+      input: { sessionId, threadId, assistantId, sender, text, files },
+    }) => {
       const openai = new OpenAI({
         apiKey: process.env.OPENAI_API_KEY as string,
       });
@@ -36,10 +39,30 @@ export const createMessage = protectedProcedure
       }
 
       try {
-        await openai.beta.threads.messages.create(threadId, {
+        const messagePayload: any = {
           role: sender as "user" | "assistant",
           content: text,
-        });
+          attachments: [],
+        };
+
+        if (files && files.length > 0) {
+          const fileAttachments = await Promise.all(
+            files.map(async (fileUrl) => {
+              const response = await fetch(fileUrl);
+              const file = await openai.files.create({
+                file: response,
+                purpose: "user_data", // Use a valid purpose value
+              });
+              return {
+                file_id: file.id,
+                tools: [{ type: "file_search" }],
+              };
+            }),
+          );
+          messagePayload.attachments.push(...fileAttachments);
+        }
+
+        await openai.beta.threads.messages.create(threadId, messagePayload);
 
         const run = await openai.beta.threads.runs.createAndPoll(threadId, {
           assistant_id: assistantId,
