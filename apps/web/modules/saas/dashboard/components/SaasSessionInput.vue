@@ -97,9 +97,20 @@
 
     emit("messageCreated", {
       id: Math.random().toString(36).substring(7),
+      sender: "user",
+      text,
+    });
+
+    emit("messageCreated", {
+      id: Math.random().toString(36).substring(7),
       sender: "assistant",
       text: "Writing a message...",
     });
+
+    const uploadedFilesCopy = [...uploadedFiles.value];
+
+    resetForm();
+    uploadedFiles.value = [];
 
     const response = await apiCaller.chat.createMessage.mutate({
       sessionId: props.selectedSession.id,
@@ -107,14 +118,12 @@
       assistantId: props.selectedSession.assistantId,
       sender: "user",
       text,
-      files: uploadedFiles.value.map((file) => file.url),
+      files: uploadedFilesCopy.map((file) => file.url),
     });
 
     emit("messageReceived");
     emit("messageCreated", response);
 
-    resetForm();
-    uploadedFiles.value = [];
     pending.value = false;
   });
 
