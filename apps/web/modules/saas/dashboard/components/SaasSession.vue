@@ -71,7 +71,7 @@
 
 <template>
   <div
-    class="bg-card text-foreground container mt-4 h-full max-w-6xl rounded-lg border p-8"
+    class="container mt-4 h-full max-w-6xl rounded-lg border bg-card p-8 text-foreground"
   >
     <div class="relative flex h-full flex-col">
       <div class="scroll-hidden h-full overflow-y-scroll pb-24">
@@ -85,9 +85,9 @@
               <div class="rounded-full bg-slate-300 p-2">
                 <UserIcon
                   v-if="message.sender === 'user'"
-                  class="text-primary-foreground size-4"
+                  class="size-4 text-primary-foreground"
                 />
-                <BotIcon v-else class="text-primary-foreground size-4" />
+                <BotIcon v-else class="size-4 text-primary-foreground" />
               </div>
               <div class="flex">
                 <div
