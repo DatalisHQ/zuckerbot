@@ -23,7 +23,7 @@
     }),
   );
 
-  const emit = defineEmits(["messageCreated"]);
+  const emit = defineEmits(["messageCreated", "messageReceived"]);
 
   const pending = ref(false);
   const uploading = ref(false);
@@ -95,6 +95,12 @@
 
     pending.value = true;
 
+    emit("messageCreated", {
+      id: Math.random().toString(36).substring(7),
+      sender: "assistant",
+      text: "Writing a message...",
+    });
+
     const response = await apiCaller.chat.createMessage.mutate({
       sessionId: props.selectedSession.id,
       threadId: props.selectedSession.threadId,
@@ -104,7 +110,7 @@
       files: uploadedFiles.value.map((file) => file.url),
     });
 
-    // Handle response if needed
+    emit("messageReceived");
     emit("messageCreated", response);
 
     resetForm();
@@ -112,7 +118,6 @@
     pending.value = false;
   });
 
-  // Define the type for the file input reference
   const fileInputRef = ref<HTMLInputElement | null>(null);
 </script>
 
@@ -143,6 +148,7 @@
       <input
         type="file"
         multiple
+        accept=".pdf,.txt,.md,.html,.xml,.csv,.tsv,.json,.yaml,.yml,.tex,.latex,.rtf,.epub,.odt,.ott,.sxw,.stw,.fodt,.uot,.doc,.docx,.dot,.dotx,.ppt,.pptx,.pps,.ppsx,.odp,.otp,.fodp,.uop"
         @change="onFilesSelected"
         class="hidden"
         ref="fileInputRef"
