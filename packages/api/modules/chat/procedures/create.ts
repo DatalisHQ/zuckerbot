@@ -15,7 +15,7 @@ export const create = protectedProcedure
       apiKey: process.env.OPENAI_API_KEY as string,
     });
 
-    const knowledgeSignedUrl = await getSignedUrl("/knowledge.pdf", {
+    const knowledgeSignedUrl = await getSignedUrl("/knowledge.json", {
       bucket: "datalis-avatars",
       expiresIn: 360,
     });
