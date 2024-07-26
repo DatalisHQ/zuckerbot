@@ -2,8 +2,10 @@
   const props = withDefaults(
     defineProps<{
       withLabel?: boolean;
+      size?: string;
     }>(),
     {
+      size: "size-10",
       withLabel: true,
     },
   );
@@ -11,7 +13,7 @@
 
 <template>
   <span class="text-primary flex items-center font-semibold leading-none">
-    <img class="block size-10 max-w-none" src="/logo.png" />
+    <img :class="size" class="block max-w-none" src="/logo.png" />
     <span
       v-if="props.withLabel"
       class="text-foreground ml-1 hidden text-lg md:block"
