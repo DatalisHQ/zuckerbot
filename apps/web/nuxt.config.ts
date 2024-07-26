@@ -124,7 +124,7 @@ export default defineNuxtConfig({
 
   // @nuxtjs/color-mode
   colorMode: {
-    preference: "system",
+    preference: "light",
     fallback: "light",
     classSuffix: "",
     storageKey: "NUXT_COLOR_MODE",
