@@ -24,7 +24,7 @@
   "dependencies": {
     "eslint": "8.57.0",
     "eslint-config-custom": "workspace:*",
-    "turbo": "^2.0.9"
+    "turbo": "^2.0.10"
   },
   "packageManager": "pnpm@9.1.0"
 }
