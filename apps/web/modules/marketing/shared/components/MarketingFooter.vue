@@ -9,9 +9,10 @@
       </div>
 
       <div class="flex flex-col gap-2">
-        <NuxtLinkLocale to="/blog" class="block"> Blog </NuxtLinkLocale>
-        <a href="#" class="block"> Features </a>
-        <a href="#" class="block"> Pricing </a>
+        <NuxtLinkLocale to="/changelog" class="block">
+          Changlog
+        </NuxtLinkLocale>
+        <NuxtLinkLocale to="/pricing" class="block"> Pricing </NuxtLinkLocale>
       </div>
 
       <div class="flex flex-col gap-2">
