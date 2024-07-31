@@ -21,8 +21,19 @@
       answer: t("faq.answers.changePlan"),
     },
     {
-      question: t("faq.questions.freeTrial"),
-      answer: t("faq.answers.freeTrial"),
+      question: "How does ZuckerBot work?",
+      answer:
+        "uses advanced AI to automate the ad creation process. Simply input your requirements, and our AI will generate ads that align with your brand and target audience.",
+    },
+    {
+      question: "What are some upcoming features?",
+      answer:
+        "We are continuously working to enhance ZuckerBot with new features to better serve your ad automation needs. Upcoming features include: Automated Video Ad Creation: Generate high-quality video ads with AI, using your existing content and templates. Multi-Platform Integration: Expand beyond Facebook Ads to include integration with Google Ads, Instagram, and TikTok. Enhanced Audience Targeting: Utilize advanced AI algorithms to refine and optimize your audience targeting, ensuring your ads reach the most relevant users.",
+    },
+    {
+      question: "How does ZuckerBot help eCommerce and marketing agencies?",
+      answer:
+        "ZuckerBot offers powerful tools tailored to the needs of eCommerce businesses and marketing agencies: For eCommerce Businesses: Easily create and manage ad campaigns that drive sales and increase brand visibility. Our AI-driven approach ensures your ads are optimized for engagement and conversion, helping you grow your business with minimal effort. For Marketing Agencies: Streamline your ad creation process and manage multiple client accounts with ease. ZuckerBot allows you to deliver high-performing ad campaigns efficiently, freeing up your team to focus on strategy and creative innovation.",
     },
   ];
 </script>
@@ -44,7 +55,7 @@
           v-for="(item, i) of faqItems"
           :key="i"
           :value="`faq-item-${i}`"
-          class="rounded-xl border bg-card px-6 py-4"
+          class="bg-card rounded-xl border px-6 py-4"
         >
           <AccordionTrigger class="py-2 text-lg">
             {{ item.question }}
