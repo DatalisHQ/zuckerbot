@@ -38,16 +38,8 @@
       to: "/pricing",
     },
     {
-      label: t("common.menu.blog"),
-      to: "/blog",
-    },
-    {
       label: t("common.menu.changelog"),
       to: "/changelog",
-    },
-    {
-      label: t("common.menu.docs"),
-      to: "/docs",
     },
   ]);
 </script>
@@ -78,7 +70,7 @@
             v-for="menuItem of menuItems"
             :key="menuItem.to"
             :to="menuItem.to"
-            class="block shrink-0 px-3 py-2 text-sm text-foreground/80"
+            class="text-foreground/80 block shrink-0 px-3 py-2 text-sm"
             :class="[isMenuItemActive(menuItem.to) ? 'font-bold' : '']"
           >
             {{ menuItem.label }}

@@ -23,14 +23,11 @@
     <h1
       class="text-foreground mx-auto max-w-3xl text-balance text-5xl font-bold lg:text-7xl"
     >
-    Powering Smarter Ads With AI
+      Transform Your Ad Campaigns with AI Precision
     </h1>
 
     <p class="text-foreground/60 mx-auto mt-4 max-w-xl text-balance text-lg">
-      Revolutionize your e-commerce and marketing campaigns with zuckerbot.ai
-    </p>
-    <p class="text-foreground/60 mx-auto mt-4 max-w-xl text-balance text-lg">
-      Join our community of brands and agencies leveraging AI for smarter, faster, and more effective ads
+      Discover the Future of Digital Advertising with ZuckerBot
     </p>
 
     <div
@@ -41,9 +38,6 @@
           Get started
           <ArrowRightIcon class="ml-2 size-4" />
         </NuxtLink>
-      </Button>
-      <Button variant="outline" size="lg" asChild>
-        <NuxtLink href="/docs">Documentation</NuxtLink>
       </Button>
     </div>
 
