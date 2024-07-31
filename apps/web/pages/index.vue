@@ -8,5 +8,5 @@
   <MarketingHero />
   <MarketingFeatures />
   <MarketingFaqSection />
-  <MarketingNewsletter />
+  <!-- <MarketingNewsletter /> -->
 </template>

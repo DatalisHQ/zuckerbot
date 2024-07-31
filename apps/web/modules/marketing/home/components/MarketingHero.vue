@@ -44,9 +44,6 @@
           <ArrowRightIcon class="ml-2 size-4" />
         </NuxtLink>
       </Button>
-      <Button variant="outline" size="lg" asChild>
-        <NuxtLink href="/docs">Documentation</NuxtLink>
-      </Button>
     </div>
 
     <!-- <div class="mt-16 px-8 text-center">
