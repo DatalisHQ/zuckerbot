@@ -27,8 +27,8 @@
           return aLocale === locale.value
             ? -1
             : bLocale === locale.value
-              ? 1
-              : 0;
+            ? 1
+            : 0;
         })
         .shift();
     },
@@ -46,14 +46,14 @@
 </script>
 
 <template>
-  <div v-if="page" class="container max-w-6xl pb-16">
+  <div v-if="page" class="container max-w-6xl pb-16 pt-32">
     <div class="mx-auto max-w-2xl">
       <h1 class="text-center text-4xl font-bold">{{ page.title }}</h1>
     </div>
 
     <ContentRendererMarkdown
       :value="page"
-      class="prose mx-auto mt-6 max-w-2xl dark:prose-invert"
+      class="prose dark:prose-invert mx-auto mt-6 max-w-2xl"
     />
   </div>
 </template>
