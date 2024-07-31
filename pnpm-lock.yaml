@@ -154,8 +154,8 @@ importers:
         specifier: workspace:*
         version: link:../storage
       stripe:
-        specifier: ^16.4.0
-        version: 16.4.0
+        specifier: ^16.5.0
+        version: 16.5.0
       tsconfig:
         specifier: workspace:*
         version: link:../../tooling/typescript
@@ -6512,8 +6512,8 @@ packages:
   strip-literal@2.1.0:
     resolution: {integrity: sha512-Op+UycaUt/8FbN/Z2TWPBLge3jWrP3xj10f3fnYxf052bKuS3EKs1ZQcVGjnEMdsNVAM+plXRdmjrZ/KgG3Skw==}
 
-  stripe@16.4.0:
-    resolution: {integrity: sha512-rFIcDJaF+z28BsR4GXoy0YhAjE24D0AymJRsrAS0YbQAIJi0gOO/4mctbhNzrySS+bLVJOQLefdblDQMMNm58Q==}
+  stripe@16.5.0:
+    resolution: {integrity: sha512-5qY2Va8pmnqS/dcKsQKJnk9kkYCtS6hqjN7kktZEmdxVohZHvbT9pOWK8UUKRInTXYkCNl6x505tO5416KLPsQ==}
     engines: {node: '>=12.*'}
 
   strnum@1.0.5:
@@ -15611,9 +15611,9 @@ snapshots:
     dependencies:
       js-tokens: 9.0.0
 
-  stripe@16.4.0:
+  stripe@16.5.0:
     dependencies:
-      '@types/node': 20.14.11
+      '@types/node': 20.14.12
       qs: 6.12.1
 
   strnum@1.0.5: {}
