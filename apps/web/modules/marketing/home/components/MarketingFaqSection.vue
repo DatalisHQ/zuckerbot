@@ -35,6 +35,10 @@
       answer:
         "ZuckerBot offers powerful tools tailored to the needs of eCommerce businesses and marketing agencies: For eCommerce Businesses: Easily create and manage ad campaigns that drive sales and increase brand visibility. Our AI-driven approach ensures your ads are optimized for engagement and conversion, helping you grow your business with minimal effort. For Marketing Agencies: Streamline your ad creation process and manage multiple client accounts with ease. ZuckerBot allows you to deliver high-performing ad campaigns efficiently, freeing up your team to focus on strategy and creative innovation.",
     },
+    {
+      question: "Where to contact us?",
+      answer: "You can contact us at support@zuckerbot.ai.",
+    },
   ];
 </script>
 
