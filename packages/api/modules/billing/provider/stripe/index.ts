@@ -92,6 +92,7 @@ export const createCheckoutLink: CreateCheckoutLink = async function ({
       },
     ],
     subscription_data: {
+      trial_period_days: 14,
       metadata: {
         team_id: teamId,
       },
