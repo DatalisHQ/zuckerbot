@@ -5,7 +5,7 @@
     "@nuxt/image": "1.7.0",
     "@nuxtjs/color-mode": "^3.4.2",
     "@nuxtjs/google-fonts": "^3.2.0",
-    "@nuxtjs/i18n": "8.3.1",
+    "@nuxtjs/i18n": "8.3.3",
     "@nuxtjs/seo": "2.0.0-rc.16",
     "@nuxtjs/tailwindcss": "^6.12.1",
     "@tanstack/vue-table": "^8.19.3",
