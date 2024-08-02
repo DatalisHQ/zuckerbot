@@ -9,6 +9,10 @@
 
   const faqItems: FAQ[] = [
     {
+      question: t("faq.questions.freeTrial"),
+      answer: t("faq.answers.freeTrial"),
+    },
+    {
       question: t("faq.questions.refundPolicy"),
       answer: t("faq.answers.refundPolicy"),
     },
