@@ -15,14 +15,14 @@
         <div
           class="bg-card/50 grid items-center gap-8 rounded-2xl border p-8 lg:grid-cols-2 lg:gap-16"
         >
-          <div class="bg-primary/10 overflow-hidden rounded-xl p-12">
+          <div class="bg-[#B4C6D8] overflow-hidden rounded-xl p-12">
             <NuxtImg
-              src="/images/feature-image.svg"
+              src="/images/minimalist_illustration_analytics_final.png"
               class="block dark:hidden"
               alt="Feature 1"
             />
             <NuxtImg
-              src="/images/feature-image-dark.svg"
+              src="/images/minimalist_illustration_analytics_final.png"
               class="hidden dark:block"
               alt="Feature 1"
             />
@@ -47,14 +47,14 @@
         <div
           class="bg-card/50 grid items-center gap-8 rounded-2xl border p-8 lg:grid-cols-2 lg:gap-16"
         >
-          <div class="bg-primary/10 overflow-hidden rounded-xl p-12 lg:order-2">
+          <div class="bg-[#B2CBD8] overflow-hidden rounded-xl p-12 lg:order-2">
             <NuxtImg
-              src="/images/feature-image.svg"
+              src="/images/minimalist_illustration_comprehensive_analytics_final.png"
               class="block dark:hidden"
               alt="Feature 2"
             />
             <NuxtImg
-              src="/images/feature-image-dark.svg"
+              src="/images/minimalist_illustration_comprehensive_analytics_final.png"
               class="hidden dark:block"
               alt="Feature 2"
             />
@@ -84,16 +84,16 @@
         <div
           class="bg-card/50 grid items-center gap-8 rounded-2xl border p-8 lg:grid-cols-2 lg:gap-16"
         >
-          <div class="bg-primary/10 overflow-hidden rounded-xl p-12">
+          <div class="bg-[#B4C6D8] overflow-hidden rounded-xl p-12">
             <NuxtImg
-              src="/images/feature-image.svg"
+              src="/images/minimalist_illustration_analytics_final.png"
               class="block dark:hidden"
-              alt="Feature 3"
+              alt="Feature 1"
             />
             <NuxtImg
-              src="/images/feature-image-dark.svg"
+              src="/images/minimalist_illustration_analytics_final.png"
               class="hidden dark:block"
-              alt="Feature 3"
+              alt="Feature 1"
             />
           </div>
 
@@ -115,14 +115,14 @@
         <div
           class="bg-card/50 grid items-center gap-8 rounded-2xl border p-8 lg:grid-cols-2 lg:gap-16"
         >
-          <div class="bg-primary/10 overflow-hidden rounded-xl p-12 lg:order-2">
+          <div class="bg-[#B2CBD8] overflow-hidden rounded-xl p-12 lg:order-2">
             <NuxtImg
-              src="/images/feature-image.svg"
+              src="/images/minimalist_illustration_comprehensive_analytics_final.png"
               class="block dark:hidden"
               alt="Feature 2"
             />
             <NuxtImg
-              src="/images/feature-image-dark.svg"
+              src="/images/minimalist_illustration_comprehensive_analytics_final.png"
               class="hidden dark:block"
               alt="Feature 2"
             />
@@ -145,16 +145,16 @@
         <div
           class="bg-card/50 grid items-center gap-8 rounded-2xl border p-8 lg:grid-cols-2 lg:gap-16"
         >
-          <div class="bg-primary/10 overflow-hidden rounded-xl p-12">
+          <div class="bg-[#B4C6D8] overflow-hidden rounded-xl p-12">
             <NuxtImg
-              src="/images/feature-image.svg"
+              src="/images/minimalist_illustration_analytics_final.png"
               class="block dark:hidden"
-              alt="Feature 3"
+              alt="Feature 1"
             />
             <NuxtImg
-              src="/images/feature-image-dark.svg"
+              src="/images/minimalist_illustration_analytics_final.png"
               class="hidden dark:block"
-              alt="Feature 3"
+              alt="Feature 1"
             />
           </div>
 
