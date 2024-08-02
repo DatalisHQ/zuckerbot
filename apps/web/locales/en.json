@@ -215,7 +215,7 @@
         "title": "Subscribed"
       }
     },
-    "submit": "Subscribe",
+    "submit": "Try it for 14 days",
     "subtitle": "Be among the first to get access to ZuckerBot.",
     "title": "Get early access"
   },
@@ -245,7 +245,7 @@
     "description": "Revolutionize your e-commerce and marketing campaigns with zuckerbot.ai.",
     "month": "month",
     "monthly": "Monthly",
-    "subscribe": "Subscribe",
+    "subscribe": "Try it for 14 days",
     "title": "Pricing",
     "year": "year",
     "yearly": "Yearly"
@@ -341,7 +341,7 @@
           "trialing": "Trialing",
           "unpaid": "Unpaid"
         },
-        "subscribe": "Subscribe",
+        "subscribe": "Try it for 14 days",
         "switchToPlan": "Switch to this plan",
         "updateBillingDetails": "Update billing details",
         "upgradePlan": "Upgrade your plan",

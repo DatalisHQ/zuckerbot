@@ -81,7 +81,7 @@
         </div>
         <Button>
           <NuxtLinkLocale to="/app/settings/team/billing" class="block py-1.5">
-            Subscribe Now
+            Try it for 14 days
           </NuxtLinkLocale>
         </Button>
       </div>
