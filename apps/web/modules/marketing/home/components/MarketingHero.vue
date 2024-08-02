@@ -23,7 +23,7 @@
     <h1
       class="text-foreground mx-auto max-w-3xl text-balance text-5xl font-bold lg:text-7xl"
     >
-      Transform Your Ad Campaigns with AI Precision
+      Boost Your Ad Performance with Instant Expertise
     </h1>
 
     <p class="text-foreground/60 mx-auto mt-4 max-w-xl text-balance text-lg">
