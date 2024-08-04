@@ -1,6 +1,6 @@
 import { createResolver, defineNuxtModule, addImportsDir } from "nuxt/kit";
 
-const providerPath = "./provider/custom";
+const providerPath = "./provider/mixpanel";
 
 export default defineNuxtModule({
   meta: {
