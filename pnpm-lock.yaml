@@ -83,6 +83,9 @@ importers:
       mail:
         specifier: workspace:*
         version: link:../../packages/mail
+      mixpanel-browser:
+        specifier: ^2.55.0
+        version: 2.55.0
       nuxt:
         specifier: 3.12.4
         version: 3.12.4(@parcel/watcher@2.4.1)(@types/node@22.1.0)(encoding@0.1.13)(eslint@8.57.0)(ioredis@5.4.1)(magicast@0.3.4)(optionator@0.9.4)(rollup@4.18.1)(terser@5.31.2)(typescript@5.5.4)(vite@5.3.4(@types/node@22.1.0)(terser@5.31.2))
@@ -2030,6 +2033,9 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@rrweb/types@2.0.0-alpha.17':
+    resolution: {integrity: sha512-AfDTVUuCyCaIG0lTSqYtrZqJX39ZEYzs4fYKnexhQ+id+kbZIpIJtaut5cto6dWZbB3SEe4fW0o90Po3LvTmfg==}
+
   '@rushstack/eslint-patch@1.10.2':
     resolution: {integrity: sha512-hw437iINopmQuxWPSUEvqE56NCPsiU8N4AYtfHmJFckclktzK9YQJieD3XkDCDH4OjL+C7zgPUh73R/nrcHrqw==}
 
@@ -2301,6 +2307,9 @@ packages:
 
   '@tybys/wasm-util@0.8.3':
     resolution: {integrity: sha512-Z96T/L6dUFFxgFJ+pQtkPpne9q7i6kIPYCFnQBHSgSPV9idTsKfIhCss0h5iM9irweZCatkrdeP8yi5uM1eX6Q==}
+
+  '@types/css-font-loading-module@0.0.7':
+    resolution: {integrity: sha512-nl09VhutdjINdWyXxHWN/w9zlNCfr60JUqJbd24YXUuCwgeL0TpFSdElCwb6cxfB6ybE19Gjj4g0jsgkXxKv1Q==}
 
   '@types/debug@4.1.12':
     resolution: {integrity: sha512-vIChWdVG3LG1SMxEvI/AK+FWJthlrqlTu7fbrlywTkkaONwk/UAGaULXRlf8vkzFBLVm0zkMdCquhL5aOjhXPQ==}
@@ -2672,6 +2681,9 @@ packages:
   '@vueuse/shared@11.0.0-beta.2':
     resolution: {integrity: sha512-NQ9fLd/OmJYhfY6nMGYk6EQ6WgAVB7AdWIgjU2/9Y7R+qL1+yI21scj6lFVdlW5TNeePVxhnCBJmV+TzuA4vlQ==}
 
+  '@xstate/fsm@1.6.5':
+    resolution: {integrity: sha512-b5o1I6aLNeYlU/3CPlj/Z91ybk1gUsKT+5NAJI+2W4UjvS5KLG28K9v5UvNoFVjHV8PajVZ00RH3vnjyQO7ZAw==}
+
   abbrev@1.1.1:
     resolution: {integrity: sha512-nne9/IiQ/hzIhY6pdDnbBtz7DjPTKrY00P/zvPSm5pOFkl6xuGrGnXn/VtTNNfNtAfZ9/1RtehkszU9qcTii0Q==}
 
@@ -2886,6 +2898,10 @@ packages:
 
   bare-stream@1.0.0:
     resolution: {integrity: sha512-KhNUoDL40iP4gFaLSsoGE479t0jHijfYdIcxRn/XtezA2BaUD0NRf/JGRpsMq6dMNM+SrCrB0YSSo/5wBY4rOQ==}
+
+  base64-arraybuffer@1.0.2:
+    resolution: {integrity: sha512-I3yl4r9QB5ZRY3XuJVEPfc2XhZO6YweFPI+UovAzn+8/hb3oJ6lnysaFcjVpkCPfVWFUDvoZ8kmVDP7WyRtYtQ==}
+    engines: {node: '>= 0.6.0'}
 
   base64-js@0.0.8:
     resolution: {integrity: sha512-3XSA2cR/h/73EzlXXdU6YNycmYI7+kicTxks4eJg2g39biHR84slg2+des+p7iHYhbRg/udIS4TD53WabcOUkw==}
@@ -4116,6 +4132,9 @@ packages:
   fastq@1.17.1:
     resolution: {integrity: sha512-sRVD3lWVIXWg6By68ZN7vho9a1pQcN/WBFaAAsDDFzlJjvoGx0P8z7V1t72grFJfJhu3YPZBuu25f7Kaw2jN1w==}
 
+  fflate@0.4.8:
+    resolution: {integrity: sha512-FJqqoDBR00Mdj9ppamLa/Y7vxm+PRmNWA67N846RvsoYVMKB4q3y/de5PA7gUmRMYK/8CMz2GDZQmCRN1wBcWA==}
+
   fflate@0.7.4:
     resolution: {integrity: sha512-5u2V/CDW15QM1XbbgS+0DfPxVB+jUKhWEKuuFuHncbk3tEEqzmoXL+2KyOFuKGqOnmdIy0/davWF1CkuwtibCw==}
 
@@ -5284,6 +5303,9 @@ packages:
   mitt@3.0.1:
     resolution: {integrity: sha512-vKivATfr97l2/QBCYAkXYDbrIWPM2IIKEl7YPhjCvKlG3kE2gm+uBo6nEXK3M5/Ffh/FLpKExzOQ3JJoJGFKBw==}
 
+  mixpanel-browser@2.55.0:
+    resolution: {integrity: sha512-7gn9DucCoEXFfJ5y28ycpb6BGguyGLsoPCrDmPXyEcmBQ7JarPI9ZkFDiX5xonnWAVR/+fix+22/lLvFb+IdWQ==}
+
   mkdirp-classic@0.5.3:
     resolution: {integrity: sha512-gKLcREMhtuZRwRAfqP3RFW+TK4JqApVBtOIftVgjuABpAtpxhPGaDcfvbhNvD0B8iD1oUr/txX35NjcaY6Ns/A==}
 
@@ -6179,8 +6201,17 @@ packages:
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
 
+  rrdom@2.0.0-alpha.17:
+    resolution: {integrity: sha512-b6caDiNcFO96Opp7TGdcVd4OLGSXu5dJe+A0IDiAu8mk7OmhqZCSDlgQdTKmdO5wMf4zPsUTgb8H/aNvR3kDHA==}
+
   rrweb-cssom@0.6.0:
     resolution: {integrity: sha512-APM0Gt1KoXBz0iIkkdB/kfvGOwC4UuJFeG/c+yV7wSc7q96cG/kJ0HiYCnzivD9SB53cLV1MlHFNfOuPaadYSw==}
+
+  rrweb-snapshot@2.0.0-alpha.17:
+    resolution: {integrity: sha512-GBg5pV8LHOTbeVmH2VHLEFR0mc2QpQMzAvcoxEGfPNWgWHc8UvKCyq7pqN1vA+fDZ+yXXbixeO0kB2pzVvFCBw==}
+
+  rrweb@2.0.0-alpha.13:
+    resolution: {integrity: sha512-a8GXOCnzWHNaVZPa7hsrLZtNZ3CGjiL+YrkpLo0TfmxGLhjNZbWY2r7pE06p+FcjFNlgUVTmFrSJbK3kO7yxvw==}
 
   run-applescript@7.0.0:
     resolution: {integrity: sha512-9by4Ij99JUr/MCFBUkDKLWK3G9HVXmabKz9U5MlIAIuvuzkiOicRYs8XJLxX+xahD+mLiiCYDqF9dKAgtzKP1A==}
@@ -9653,6 +9684,10 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.18.1':
     optional: true
 
+  '@rrweb/types@2.0.0-alpha.17':
+    dependencies:
+      rrweb-snapshot: 2.0.0-alpha.17
+
   '@rushstack/eslint-patch@1.10.2': {}
 
   '@sec-ant/readable-stream@0.4.1': {}
@@ -10027,6 +10062,8 @@ snapshots:
       tslib: 2.6.2
     optional: true
 
+  '@types/css-font-loading-module@0.0.7': {}
+
   '@types/debug@4.1.12':
     dependencies:
       '@types/ms': 0.7.34
@@ -10379,7 +10416,12 @@ snapshots:
     dependencies:
       '@vue-email/compiler': 0.8.14(typescript@5.5.4)(vue@3.4.33(typescript@5.5.4))
     transitivePeerDependencies:
+      - bufferutil
+      - canvas
+      - supports-color
+      - ts-node
       - typescript
+      - utf-8-validate
       - vue
 
   '@vue-email/compiler@0.8.14(typescript@5.5.4)(vue@3.4.33(typescript@5.5.4))':
@@ -10638,6 +10680,8 @@ snapshots:
     transitivePeerDependencies:
       - '@vue/composition-api'
       - vue
+
+  '@xstate/fsm@1.6.5': {}
 
   abbrev@1.1.1: {}
 
@@ -10909,6 +10953,8 @@ snapshots:
     dependencies:
       streamx: 2.16.1
     optional: true
+
+  base64-arraybuffer@1.0.2: {}
 
   base64-js@0.0.8: {}
 
@@ -11877,7 +11923,7 @@ snapshots:
       '@typescript-eslint/parser': 5.62.0(eslint@8.57.0)(typescript@5.5.4)
       eslint: 8.57.0
       eslint-import-resolver-node: 0.3.9
-      eslint-import-resolver-typescript: 2.7.1(eslint-plugin-import@2.29.1)(eslint@8.57.0)
+      eslint-import-resolver-typescript: 2.7.1(eslint-plugin-import@2.29.1(eslint@8.57.0))(eslint@8.57.0)
       eslint-plugin-import: 2.29.1(@typescript-eslint/parser@5.62.0(eslint@8.57.0)(typescript@5.5.4))(eslint-import-resolver-typescript@2.7.1)(eslint@8.57.0)
       eslint-plugin-jsx-a11y: 6.8.0(eslint@8.57.0)
       eslint-plugin-react: 7.34.1(eslint@8.57.0)
@@ -11909,7 +11955,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-import-resolver-typescript@2.7.1(eslint-plugin-import@2.29.1)(eslint@8.57.0):
+  eslint-import-resolver-typescript@2.7.1(eslint-plugin-import@2.29.1(eslint@8.57.0))(eslint@8.57.0):
     dependencies:
       debug: 4.3.5
       eslint: 8.57.0
@@ -11921,14 +11967,14 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-module-utils@2.8.1(@typescript-eslint/parser@5.62.0(eslint@8.57.0)(typescript@5.5.4))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@2.7.1(eslint-plugin-import@2.29.1)(eslint@8.57.0))(eslint@8.57.0):
+  eslint-module-utils@2.8.1(@typescript-eslint/parser@5.62.0(eslint@8.57.0)(typescript@5.5.4))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@2.7.1(eslint-plugin-import@2.29.1(eslint@8.57.0))(eslint@8.57.0))(eslint@8.57.0):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
       '@typescript-eslint/parser': 5.62.0(eslint@8.57.0)(typescript@5.5.4)
       eslint: 8.57.0
       eslint-import-resolver-node: 0.3.9
-      eslint-import-resolver-typescript: 2.7.1(eslint-plugin-import@2.29.1)(eslint@8.57.0)
+      eslint-import-resolver-typescript: 2.7.1(eslint-plugin-import@2.29.1(eslint@8.57.0))(eslint@8.57.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -11995,7 +12041,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 8.57.0
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.8.1(@typescript-eslint/parser@5.62.0(eslint@8.57.0)(typescript@5.5.4))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@2.7.1(eslint-plugin-import@2.29.1)(eslint@8.57.0))(eslint@8.57.0)
+      eslint-module-utils: 2.8.1(@typescript-eslint/parser@5.62.0(eslint@8.57.0)(typescript@5.5.4))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@2.7.1(eslint-plugin-import@2.29.1(eslint@8.57.0))(eslint@8.57.0))(eslint@8.57.0)
       hasown: 2.0.2
       is-core-module: 2.14.0
       is-glob: 4.0.3
@@ -12354,6 +12400,8 @@ snapshots:
   fastq@1.17.1:
     dependencies:
       reusify: 1.0.4
+
+  fflate@0.4.8: {}
 
   fflate@0.7.4: {}
 
@@ -13838,6 +13886,10 @@ snapshots:
 
   mitt@3.0.1: {}
 
+  mixpanel-browser@2.55.0:
+    dependencies:
+      rrweb: 2.0.0-alpha.13
+
   mkdirp-classic@0.5.3:
     optional: true
 
@@ -15161,7 +15213,26 @@ snapshots:
       '@rollup/rollup-win32-x64-msvc': 4.18.1
       fsevents: 2.3.3
 
+  rrdom@2.0.0-alpha.17:
+    dependencies:
+      rrweb-snapshot: 2.0.0-alpha.17
+
   rrweb-cssom@0.6.0: {}
+
+  rrweb-snapshot@2.0.0-alpha.17:
+    dependencies:
+      postcss: 8.4.39
+
+  rrweb@2.0.0-alpha.13:
+    dependencies:
+      '@rrweb/types': 2.0.0-alpha.17
+      '@types/css-font-loading-module': 0.0.7
+      '@xstate/fsm': 1.6.5
+      base64-arraybuffer: 1.0.2
+      fflate: 0.4.8
+      mitt: 3.0.1
+      rrdom: 2.0.0-alpha.17
+      rrweb-snapshot: 2.0.0-alpha.17
 
   run-applescript@7.0.0: {}
 
