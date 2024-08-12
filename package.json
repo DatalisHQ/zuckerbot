@@ -22,7 +22,7 @@
     "db:studio": "pnpm --filter database run db:studio"
   },
   "dependencies": {
-    "eslint": "8.57.0",
+    "eslint": "9.9.0",
     "eslint-config-custom": "workspace:*",
     "turbo": "^2.0.10"
   },
