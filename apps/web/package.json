@@ -25,7 +25,7 @@
     "nuxt": "3.12.4",
     "radix-vue": "^1.9.2",
     "shadcn-nuxt": "^0.10.2",
-    "tailwind-merge": "^2.4.0",
+    "tailwind-merge": "^2.5.1",
     "trpc-nuxt": "^0.10.22",
     "ufo": "^1.5.4",
     "utils": "workspace:*",
