@@ -3,7 +3,7 @@
     "@internationalized/date": "^3.5.5",
     "@nuxt/content": "^2.13.2",
     "@nuxt/image": "1.7.0",
-    "@nuxtjs/color-mode": "^3.4.2",
+    "@nuxtjs/color-mode": "^3.4.4",
     "@nuxtjs/google-fonts": "^3.2.0",
     "@nuxtjs/i18n": "8.3.3",
     "@nuxtjs/seo": "2.0.0-rc.16",
