@@ -21,12 +21,12 @@
     </div> -->
 
     <h1
-      class="text-foreground mx-auto max-w-3xl text-balance text-5xl font-bold lg:text-7xl"
+      class="mx-auto max-w-3xl text-balance text-5xl font-bold text-foreground lg:text-7xl"
     >
-      Boost Your Ad Performance with Instant Expertise
+      ZuckerBot - AI-Powered Ad Creation for eCommerce & Marketing Agencies
     </h1>
 
-    <p class="text-foreground/60 mx-auto mt-4 max-w-xl text-balance text-lg">
+    <p class="mx-auto mt-4 max-w-xl text-balance text-lg text-foreground/60">
       Discover the Future of Digital Advertising with ZuckerBot
     </p>
 
@@ -149,7 +149,7 @@
     </div> -->
 
     <div
-      class="bg-card/50 dark:shadow-foreground/10 mt-16 rounded-2xl border p-2 shadow-lg"
+      class="mt-16 rounded-2xl border bg-card/50 p-2 shadow-lg dark:shadow-foreground/10"
     >
       <NuxtImg
         src="/images/hero-image.png"
