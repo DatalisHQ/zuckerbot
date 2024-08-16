@@ -3,6 +3,12 @@
     layout: "marketing",
   });
 
+  useSeoMeta({
+    title: "ZuckerBot Pricing - Affordable Plans for Every Business",
+    description:
+      "Check out ZuckerBot's pricing plans. Whether you're a small business or a large agency, find the perfect plan to suit your advertising needs and budget.",
+  });
+
   const { apiCaller } = useApiCaller();
 
   const { data: plans } = await apiCaller.billing.plans.useQuery();
