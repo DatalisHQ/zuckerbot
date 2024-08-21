@@ -17,10 +17,10 @@
             title: t("settings.menu.team.members"),
             to: "/app/settings/team/members",
           },
-          {
-            title: t("settings.menu.team.billing"),
-            to: "/app/settings/team/billing",
-          },
+          // {
+          //   title: t("settings.menu.team.billing"),
+          //   to: "/app/settings/team/billing",
+          // },
         ],
       },
       {
