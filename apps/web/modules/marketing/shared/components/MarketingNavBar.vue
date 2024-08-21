@@ -33,14 +33,14 @@
     to: string;
   };
   const menuItems = computed<MenuItem[]>(() => [
-    {
-      label: t("common.menu.pricing"),
-      to: "/pricing",
-    },
-    {
-      label: t("common.menu.changelog"),
-      to: "/changelog",
-    },
+    // {
+    //   label: t("common.menu.pricing"),
+    //   to: "/pricing",
+    // },
+    // {
+    //   label: t("common.menu.changelog"),
+    //   to: "/changelog",
+    // },
   ]);
 </script>
 
@@ -70,7 +70,7 @@
             v-for="menuItem of menuItems"
             :key="menuItem.to"
             :to="menuItem.to"
-            class="text-foreground/80 block shrink-0 px-3 py-2 text-sm"
+            class="block shrink-0 px-3 py-2 text-sm text-foreground/80"
             :class="[isMenuItemActive(menuItem.to) ? 'font-bold' : '']"
           >
             {{ menuItem.label }}

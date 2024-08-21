@@ -36,6 +36,9 @@
   const paidEmails = ["brieuc@datalis.app", "davis@datalis.app"];
 
   const isPaidUser = computed(() => {
+    // Allow all users to access the dashboard for now
+    return true;
+
     if (user.value) {
       return user.value.isPaidUser || paidEmails.includes(user.value.email);
     }
