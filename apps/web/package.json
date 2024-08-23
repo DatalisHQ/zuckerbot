@@ -22,7 +22,7 @@
     "lucide-vue-next": "^0.424.0",
     "mail": "workspace:*",
     "mixpanel-browser": "^2.55.0",
-    "nuxt": "3.12.4",
+    "nuxt": "3.13.0",
     "radix-vue": "^1.9.2",
     "shadcn-nuxt": "^0.10.2",
     "tailwind-merge": "^2.4.0",
