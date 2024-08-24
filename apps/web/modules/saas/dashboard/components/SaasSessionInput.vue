@@ -19,7 +19,7 @@
 
   const formSchema = toTypedSchema(
     z.object({
-      text: z.string().min(1),
+      text: z.string().min(0),
     }),
   );
 
@@ -87,9 +87,11 @@
   });
 
   const sendMessage = handleSubmit(async () => {
-    const { text } = values;
+    let { text } = values;
 
-    if (!text || text === "") {
+    if ((!text || text === "") && files.value.length > 0) {
+      text = "Uploaded files";
+    } else if (!text || text === "") {
       return;
     }
 
@@ -132,7 +134,7 @@
 
 <template>
   <div>
-    <div class="bg-card absolute bottom-0 left-0 w-full">
+    <div class="absolute bottom-0 left-0 w-full bg-card">
       <form
         @submit.prevent="sendMessage"
         class="flex w-full items-center space-x-2"
@@ -143,7 +145,7 @@
               <FormControl>
                 <Input
                   v-bind="componentField"
-                  class="bg-card text-foreground pl-12"
+                  class="bg-card pl-12 text-foreground"
                 />
               </FormControl>
             </FormItem>
@@ -172,7 +174,7 @@
         v-if="uploading"
         class="absolute inset-0 flex items-center justify-center"
       >
-        <LoaderIcon class="text-primary size-6 animate-spin" />
+        <LoaderIcon class="size-6 animate-spin text-primary" />
       </div>
       <div
         v-if="uploadedFiles.length > 0"
