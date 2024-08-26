@@ -23,7 +23,7 @@
     "mail": "workspace:*",
     "mixpanel-browser": "^2.55.0",
     "nuxt": "3.12.4",
-    "radix-vue": "^1.9.2",
+    "radix-vue": "^1.9.5",
     "shadcn-nuxt": "^0.10.2",
     "tailwind-merge": "^2.4.0",
     "trpc-nuxt": "^0.10.22",
