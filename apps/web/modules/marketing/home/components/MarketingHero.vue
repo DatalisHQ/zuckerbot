@@ -24,15 +24,11 @@
     <h1
       class="text-foreground mx-auto max-w-3xl text-balance text-5xl font-bold lg:text-7xl"
     >
-      Powering Smarter Ads With AI
+      ZuckerBot - AI-Powered Ad Creation for eCommerce & Marketing Agencies
     </h1>
 
     <p class="text-foreground/60 mx-auto mt-4 max-w-xl text-balance text-lg">
-      Revolutionize your e-commerce and marketing campaigns with zuckerbot.ai
-    </p>
-    <p class="text-foreground/60 mx-auto mt-4 max-w-xl text-balance text-lg">
-      Join our community of brands and agencies leveraging AI for smarter,
-      faster, and more effective ads
+      Discover the Future of Digital Advertising with ZuckerBot
     </p>
 
     <div

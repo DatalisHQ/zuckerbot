@@ -1,24 +1,6 @@
 export const config = {
   i18n: {
     locales: {
-      de: {
-        label: "Deutsch",
-        numberFormats: {
-          currency: {
-            style: "currency",
-            currency: "USD",
-            notation: "standard",
-          },
-          number: {
-            style: "decimal",
-            maximumFractionDigits: 0,
-          },
-          percent: {
-            style: "percent",
-            useGrouping: false,
-          },
-        },
-      },
       en: {
         label: "English",
         numberFormats: {
