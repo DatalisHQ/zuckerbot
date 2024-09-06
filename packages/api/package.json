@@ -6,7 +6,7 @@
     "lint": "eslint \"**/*.ts\""
   },
   "dependencies": {
-    "@lemonsqueezy/lemonsqueezy.js": "^3.2.0",
+    "@lemonsqueezy/lemonsqueezy.js": "^3.3.0",
     "auth": "workspace:*",
     "chargebee-typescript": "^2.39.0",
     "database": "workspace:*",
