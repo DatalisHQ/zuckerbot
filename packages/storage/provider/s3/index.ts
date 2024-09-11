@@ -59,7 +59,7 @@ export const getSignedUploadUrl: GetSignedUploadUrlHandler = async (
       s3Client,
       new PutObjectCommand({ Bucket: bucket, Key: path }),
       {
-        expiresIn: 60,
+        expiresIn: 86400,
       },
     );
   } catch (e) {
