@@ -53,7 +53,14 @@
       },
     });
 
-    return { name: file.name, url: uploadUrl.split("?")[0] }; // Return the URL without query parameters
+    const getSignedUrlMutation = apiCaller.uploads.signedUrl.useMutation();
+
+    const signedUrl = await getSignedUrlMutation.mutate({
+      path,
+      bucket: "datalis-avatars",
+    });
+
+    return { name: file.name, url: signedUrl };
   };
 
   const onFilesSelected = async (event: Event) => {
