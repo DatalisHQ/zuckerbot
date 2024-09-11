@@ -38,7 +38,7 @@
     const path = `uploads/${uuid()}-${file.name}`;
     const uploadUrl = await getSignedUploadUrlMutation.mutate({
       path,
-      bucket: "datalis-avatars", // Replace with your bucket name
+      bucket: "datalis-avatars",
     });
 
     if (!uploadUrl) {
@@ -134,7 +134,7 @@
 
 <template>
   <div>
-    <div class="absolute bottom-0 left-0 w-full bg-card">
+    <div class="bg-card absolute bottom-0 left-0 w-full">
       <form
         @submit.prevent="sendMessage"
         class="flex w-full items-center space-x-2"
@@ -145,7 +145,7 @@
               <FormControl>
                 <Input
                   v-bind="componentField"
-                  class="bg-card pl-12 text-foreground"
+                  class="bg-card text-foreground pl-12"
                 />
               </FormControl>
             </FormItem>
@@ -159,7 +159,7 @@
       <input
         type="file"
         multiple
-        accept=".pdf,.txt,.md,.html,.xml,.tsv,.json,.yaml,.yml,.tex,.latex,.rtf,.epub,.odt,.ott,.sxw,.stw,.fodt,.uot,.doc,.docx,.dot,.dotx,.ppt,.pptx,.pps,.ppsx,.odp,.otp,.fodp,.uop"
+        accept=".png,.jpg,.jpeg,.pdf,.txt,.md,.html,.xml,.tsv,.json,.yaml,.yml,.tex,.latex,.rtf,.epub,.odt,.ott,.sxw,.stw,.fodt,.uot,.doc,.docx,.dot,.dotx,.ppt,.pptx,.pps,.ppsx,.odp,.otp,.fodp,.uop"
         @change="onFilesSelected"
         class="hidden"
         ref="fileInputRef"
@@ -174,7 +174,7 @@
         v-if="uploading"
         class="absolute inset-0 flex items-center justify-center"
       >
-        <LoaderIcon class="size-6 animate-spin text-primary" />
+        <LoaderIcon class="text-primary size-6 animate-spin" />
       </div>
       <div
         v-if="uploadedFiles.length > 0"

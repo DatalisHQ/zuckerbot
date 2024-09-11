@@ -28,11 +28,17 @@ export const createMessage = protectedProcedure
         apiKey: process.env.OPENAI_API_KEY as string,
       });
 
+      let message = text;
+      if (message === "" && files.length === 0) {
+        const filenames = files.map((fileUrl) => getFileNameFromUrl(fileUrl));
+        message = `Uploaded files: ${filenames.join(", ")}`;
+      }
+
       if (sender === "user") {
         await db.message.create({
           data: {
             sessionId,
-            text,
+            text: message,
             sender,
           },
         });
@@ -41,25 +47,26 @@ export const createMessage = protectedProcedure
       try {
         const messagePayload: any = {
           role: sender as "user" | "assistant",
-          content: text,
+          content: [
+            {
+              type: "text",
+              text,
+            },
+          ],
           attachments: [],
         };
 
         if (files && files.length > 0) {
-          const fileAttachments = await Promise.all(
-            files.map(async (fileUrl) => {
-              const response = await fetch(fileUrl);
-              const file = await openai.files.create({
-                file: response,
-                purpose: "user_data", // Use a valid purpose value
+          for (const fileUrl of files) {
+            const fileType = await getFileTypeFromUrl(fileUrl);
+
+            if (fileType === "image") {
+              messagePayload.content.push({
+                type: "image_url",
+                image_url: { url: fileUrl },
               });
-              return {
-                file_id: file.id,
-                tools: [{ type: "file_search" }],
-              };
-            }),
-          );
-          messagePayload.attachments.push(...fileAttachments);
+            }
+          }
         }
 
         const initialMessage =
@@ -80,6 +87,19 @@ export const createMessage = protectedProcedure
         }
 
         const messages = await openai.beta.threads.messages.list(threadId);
+
+        // console.log("messages", messages);
+        // messages.data.forEach(async (message: any) => {
+        //   // console.log("message", message);
+
+        //   message.forEach(async (data: any) => {
+        //     console.log("data", data);
+        //     console.log("MESSAGE:");
+        //     data.content.forEach((content: any) => {
+        //       console.log("content", content);
+        //     });
+        //   });
+        // });
 
         const response = await db.message.create({
           data: {
@@ -102,3 +122,18 @@ export const createMessage = protectedProcedure
       }
     },
   );
+
+function getFileTypeFromUrl(url: string): "image" | "other" {
+  const imageExtensions = ["jpg", "jpeg", "png", "gif", "bmp"];
+  const fileExtension = url.split(".").pop()?.toLowerCase();
+
+  if (fileExtension && imageExtensions.includes(fileExtension)) {
+    return "image";
+  }
+  return "other";
+}
+
+function getFileNameFromUrl(url: string): string | null {
+  const fileName = url.split("/").pop();
+  return fileName || null;
+}
