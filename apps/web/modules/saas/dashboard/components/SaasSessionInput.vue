@@ -97,7 +97,8 @@
     let { text } = values;
 
     if ((!text || text === "") && files.value.length > 0) {
-      text = "Uploaded files";
+      const filenames = uploadedFiles.value.map((file) => file.name);
+      text = `Uploaded files: ${filenames.join(", ")}\n\n${text}`;
     } else if (!text || text === "") {
       return;
     }

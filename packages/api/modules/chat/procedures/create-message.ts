@@ -28,17 +28,11 @@ export const createMessage = protectedProcedure
         apiKey: process.env.OPENAI_API_KEY as string,
       });
 
-      let message = text;
-      if (message === "" && files.length === 0) {
-        const filenames = files.map((fileUrl) => getFileNameFromUrl(fileUrl));
-        message = `Uploaded files: ${filenames.join(", ")}`;
-      }
-
       if (sender === "user") {
         await db.message.create({
           data: {
             sessionId,
-            text: message,
+            text,
             sender,
           },
         });
@@ -61,9 +55,21 @@ export const createMessage = protectedProcedure
             const fileType = await getFileTypeFromUrl(fileUrl);
 
             if (fileType === "image") {
+              // Push images into the content array
               messagePayload.content.push({
                 type: "image_url",
                 image_url: { url: fileUrl },
+              });
+            } else {
+              // Handle other files by uploading them to OpenAI
+              const response = await fetch(fileUrl);
+              const file = await openai.files.create({
+                file: response,
+                purpose: "assistants",
+              });
+              messagePayload.attachments.push({
+                file_id: file.id,
+                tools: [{ type: "file_search" }],
               });
             }
           }
@@ -87,19 +93,6 @@ export const createMessage = protectedProcedure
         }
 
         const messages = await openai.beta.threads.messages.list(threadId);
-
-        // console.log("messages", messages);
-        // messages.data.forEach(async (message: any) => {
-        //   // console.log("message", message);
-
-        //   message.forEach(async (data: any) => {
-        //     console.log("data", data);
-        //     console.log("MESSAGE:");
-        //     data.content.forEach((content: any) => {
-        //       console.log("content", content);
-        //     });
-        //   });
-        // });
 
         const response = await db.message.create({
           data: {
@@ -125,15 +118,15 @@ export const createMessage = protectedProcedure
 
 function getFileTypeFromUrl(url: string): "image" | "other" {
   const imageExtensions = ["jpg", "jpeg", "png", "gif", "bmp"];
-  const fileExtension = url.split(".").pop()?.toLowerCase();
+
+  // Remove query parameters by splitting at the "?"
+  const cleanUrl = url.split("?")[0];
+
+  // Extract the file extension
+  const fileExtension = cleanUrl.split(".").pop()?.toLowerCase();
 
   if (fileExtension && imageExtensions.includes(fileExtension)) {
     return "image";
   }
   return "other";
-}
-
-function getFileNameFromUrl(url: string): string | null {
-  const fileName = url.split("/").pop();
-  return fileName || null;
 }
