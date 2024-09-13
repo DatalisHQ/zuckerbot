@@ -16,7 +16,7 @@
   "devDependencies": {
     "@prisma/client": "^5.19.0",
     "dotenv-cli": "^7.4.0",
-    "eslint": "8.57.0",
+    "eslint": "9.10.0",
     "prisma": "^5.19.0",
     "zod": "^3.23.8",
     "zod-prisma-types": "^3.1.8"

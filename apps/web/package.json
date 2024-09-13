@@ -64,7 +64,7 @@
     "cypress": "^13.14.0",
     "database": "workspace:*",
     "dotenv-cli": "^7.3.0",
-    "eslint": "8.57.0",
+    "eslint": "9.10.0",
     "eslint-config-custom": "*",
     "lucide-vue-next": "^0.436.0",
     "nuxt": "3.13.0",
