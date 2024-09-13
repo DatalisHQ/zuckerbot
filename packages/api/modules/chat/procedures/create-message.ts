@@ -22,11 +22,120 @@ export const createMessage = protectedProcedure
   )
   .mutation(
     async ({
+      ctx: { user },
       input: { sessionId, threadId, assistantId, sender, text, files },
     }) => {
       const openai = new OpenAI({
         apiKey: process.env.OPENAI_API_KEY as string,
       });
+
+      const handleRequiresAction = async (run) => {
+        if (
+          run.required_action &&
+          run.required_action.submit_tool_outputs &&
+          run.required_action.submit_tool_outputs.tool_calls
+        ) {
+          const toolOutputs = await Promise.all(
+            run.required_action.submit_tool_outputs.tool_calls.map(
+              async (tool) => {
+                if (tool.function.name === "getFacebookInsights") {
+                  const { campaign_id } = JSON.parse(tool.arguments);
+
+                  // Fetch user from the database (sessionId is linked to the user)
+                  const currentUser = await db.user.findUnique({
+                    where: { id: user.id },
+                  });
+
+                  console.log(currentUser);
+
+                  // Step 1: Check if the token exists and is not expired
+                  const token = currentUser?.facebookAccessToken;
+                  const tokenExpiresAt = currentUser?.facebookTokenExpiresAt;
+
+                  if (!token || new Date() > new Date(tokenExpiresAt)) {
+                    // Step 2: Token is missing or expired, generate the authorization URL
+                    const clientId = process.env.FACEBOOK_APP_ID; // Your Facebook App ID
+                    const redirectUri = process.env.FACEBOOK_REDIRECT_URI; // Your Redirect URI
+                    const authUrl = `https://www.facebook.com/v12.0/dialog/oauth?client_id=${clientId}&redirect_uri=${redirectUri}&scope=ads_read&response_type=token`;
+
+                    return {
+                      tool_call_id: tool.id,
+                      output: JSON.stringify({
+                        message:
+                          "Access token is missing or expired. Please authorize the app to obtain a new token by visiting the following URL:",
+                        authorization_url: authUrl,
+                      }),
+                    };
+                  }
+
+                  // Step 3: Fetch insights from the Facebook Marketing API if the token is valid
+                  try {
+                    const insightsResponse = await fetch(
+                      `https://graph.facebook.com/v12.0/${campaign_id}/insights?access_token=${token}`,
+                    );
+
+                    const insightsData = await insightsResponse.json();
+
+                    return {
+                      tool_call_id: tool.id,
+                      output: JSON.stringify(insightsData),
+                    };
+                  } catch (error) {
+                    return {
+                      tool_call_id: tool.id,
+                      output: JSON.stringify({
+                        message:
+                          "Error fetching insights. Please check your access token and campaign ID.",
+                      }),
+                    };
+                  }
+                }
+              },
+            ),
+          );
+
+          // Submit all tool outputs after collecting them
+          if (toolOutputs.length > 0) {
+            run = await openai.beta.threads.runs.submitToolOutputsAndPoll(
+              threadId,
+              run.id,
+              { tool_outputs: toolOutputs },
+            );
+            console.log("Tool outputs submitted successfully.");
+          }
+
+          return handleRunStatus(run);
+        }
+      };
+
+      const handleRunStatus = async (run) => {
+        // Check if the run is completed
+        if (run.status === "completed") {
+          const messages = await openai.beta.threads.messages.list(threadId);
+          console.log(messages.data);
+
+          const response = await db.message.create({
+            data: {
+              sessionId,
+              sender: messages.data[0].role,
+              text: messages.data[0].content[0].text.value,
+            },
+          });
+
+          return {
+            id: response.id,
+            sessionId: response.sessionId,
+            sender: response.sender,
+            text: response.text,
+            createdAt: response.createdAt,
+          };
+        } else if (run.status === "requires_action") {
+          console.log(run.status);
+          return await handleRequiresAction(run);
+        } else {
+          console.error("Run did not complete:", run);
+        }
+      };
 
       if (sender === "user") {
         await db.message.create({
@@ -78,8 +187,9 @@ export const createMessage = protectedProcedure
         const initialMessage =
           "Welcome to ZuckerBot, your AI-powered assistant designed to revolutionize your advertising efforts. Whether you're a small business owner or an entrepreneur without a dedicated marketing team, ZuckerBot is here to simplify the complexities of online advertising. With ZuckerBot, you can create, manage, and optimize your ad campaigns across multiple platforms through a simple text chat interface. Please note that ZuckerBot currently does not support uploading files with .xlsx or .csv extensions. For best results, convert these files to PDF or TXT format before uploading.";
 
+        let run;
         if (text === initialMessage) {
-          await openai.beta.threads.runs.createAndPoll(threadId, {
+          run = await openai.beta.threads.runs.createAndPoll(threadId, {
             assistant_id: assistantId,
           });
         }
@@ -87,28 +197,12 @@ export const createMessage = protectedProcedure
         await openai.beta.threads.messages.create(threadId, messagePayload);
 
         if (text !== initialMessage) {
-          await openai.beta.threads.runs.createAndPoll(threadId, {
+          run = await openai.beta.threads.runs.createAndPoll(threadId, {
             assistant_id: assistantId,
           });
         }
 
-        const messages = await openai.beta.threads.messages.list(threadId);
-
-        const response = await db.message.create({
-          data: {
-            sessionId,
-            sender: messages.data[0].role,
-            text: messages.data[0].content[0].text.value,
-          },
-        });
-
-        return {
-          id: response.id,
-          sessionId: response.sessionId,
-          sender: response.sender,
-          text: response.text,
-          createdAt: response.createdAt,
-        };
+        return handleRunStatus(run);
       } catch (error) {
         console.error("Error processing chat message:", error);
         throw error;

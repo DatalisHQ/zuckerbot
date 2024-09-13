@@ -31,6 +31,8 @@ model User {
   createdAt          DateTime                @default(now())
   hashedPassword     String?
   onboardingComplete Boolean                 @default(false)
+  facebookAccessToken String?   // Store the Facebook access token
+  facebookTokenExpiresAt DateTime? // Store the expiration date of the Facebook token
   oauthAccounts      UserOauthAccount[]
   sessions           UserSession[]
   memberships        TeamMembership[]
@@ -50,11 +52,11 @@ model UserSession {
 }
 
 model UserOauthAccount {
-  id             String @id @default(cuid())
-  providerId     String
-  providerUserId String
-  userId         String
-  user           User   @relation(references: [id], fields: [userId], onDelete: Cascade)
+  id                  String   @id @default(cuid())
+  providerId          String
+  providerUserId      String
+  userId              String
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([providerId, providerUserId])
 }
