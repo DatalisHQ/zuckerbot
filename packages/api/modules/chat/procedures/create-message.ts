@@ -30,23 +30,29 @@ export const createMessage = protectedProcedure
       });
 
       const handleRequiresAction = async (run) => {
+        // Check if there are tools that require outputs
         if (
           run.required_action &&
           run.required_action.submit_tool_outputs &&
           run.required_action.submit_tool_outputs.tool_calls
         ) {
+          // Loop through each tool in the required action section
           const toolOutputs = await Promise.all(
             run.required_action.submit_tool_outputs.tool_calls.map(
               async (tool) => {
                 if (tool.function.name === "getFacebookInsights") {
-                  const { campaign_id } = JSON.parse(tool.arguments);
-
                   // Fetch user from the database (sessionId is linked to the user)
                   const currentUser = await db.user.findUnique({
                     where: { id: user.id },
                   });
 
-                  console.log(currentUser);
+                  if (!currentUser) {
+                    return {
+                      tool_call_id: tool.id,
+                      output:
+                        "User not found. Please ensure you are logged in.",
+                    };
+                  }
 
                   // Step 1: Check if the token exists and is not expired
                   const token = currentUser?.facebookAccessToken;
@@ -54,47 +60,28 @@ export const createMessage = protectedProcedure
 
                   if (!token || new Date() > new Date(tokenExpiresAt)) {
                     // Step 2: Token is missing or expired, generate the authorization URL
-                    const clientId = process.env.FACEBOOK_APP_ID; // Your Facebook App ID
-                    const redirectUri = process.env.FACEBOOK_REDIRECT_URI; // Your Redirect URI
-                    const authUrl = `https://www.facebook.com/v12.0/dialog/oauth?client_id=${clientId}&redirect_uri=${redirectUri}&scope=ads_read&response_type=token`;
+                    const clientId = "1119807469249263"; // process.env.FACEBOOK_APP_ID; // Your Facebook App ID
+                    const redirectUri =
+                      "http://localhost:3000/auth/facebook/callback"; // process.env.FACEBOOK_REDIRECT_URI; // Your Redirect URI
+                    const authUrl = `https://www.facebook.com/v20.0/dialog/oauth?client_id=${clientId}&redirect_uri=${redirectUri}&scope=ads_read&response_type=token`;
 
+                    // Return the URL as a string
                     return {
                       tool_call_id: tool.id,
-                      output: JSON.stringify({
-                        message:
-                          "Access token is missing or expired. Please authorize the app to obtain a new token by visiting the following URL:",
-                        authorization_url: authUrl,
-                      }),
+                      output: `Access token is missing or expired. Please authorize the app by visiting: ${authUrl}`,
                     };
                   }
 
-                  // Step 3: Fetch insights from the Facebook Marketing API if the token is valid
-                  try {
-                    const insightsResponse = await fetch(
-                      `https://graph.facebook.com/v12.0/${campaign_id}/insights?access_token=${token}`,
-                    );
-
-                    const insightsData = await insightsResponse.json();
-
-                    return {
-                      tool_call_id: tool.id,
-                      output: JSON.stringify(insightsData),
-                    };
-                  } catch (error) {
-                    return {
-                      tool_call_id: tool.id,
-                      output: JSON.stringify({
-                        message:
-                          "Error fetching insights. Please check your access token and campaign ID.",
-                      }),
-                    };
-                  }
+                  return {
+                    tool_call_id: tool.id,
+                    output: `Impressions: 12057, clicks: 345, currentUser`,
+                  };
                 }
               },
             ),
           );
 
-          // Submit all tool outputs after collecting them
+          // Submit all tool outputs at once after collecting them in a list
           if (toolOutputs.length > 0) {
             run = await openai.beta.threads.runs.submitToolOutputsAndPoll(
               threadId,
@@ -102,8 +89,11 @@ export const createMessage = protectedProcedure
               { tool_outputs: toolOutputs },
             );
             console.log("Tool outputs submitted successfully.");
+          } else {
+            console.log("No tool outputs to submit.");
           }
 
+          // Check status after submitting tool outputs
           return handleRunStatus(run);
         }
       };
