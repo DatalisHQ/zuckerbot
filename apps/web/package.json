@@ -35,6 +35,7 @@
     "date-fns": "^3.6.0",
     "lucide-vue-next": "^0.436.0",
     "mail": "workspace:*",
+    "marked": "^14.1.2",
     "mixpanel-browser": "^2.55.1",
     "nuxt": "3.13.0",
     "radix-vue": "^1.9.5",
