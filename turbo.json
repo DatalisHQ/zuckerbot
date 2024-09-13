@@ -35,7 +35,10 @@
     "PLUNK_API_KEY",
     "RESEND_API_KEY",
     "POSTMARK_API_KEY",
-    "POSTMARK_SERVER_TOKEN"
+    "POSTMARK_SERVER_TOKEN",
+    "FACEBOOK_ACCESS_TOKEN",
+    "FACEBOOK_APP_ID",
+    "FACEBOOK_REDIRECT_URI"
   ],
   "tasks": {
     "build": {
