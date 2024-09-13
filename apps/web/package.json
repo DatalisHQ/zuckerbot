@@ -70,7 +70,7 @@
     "nuxt": "3.13.0",
     "nuxt-simple-robots": "^3.1.9",
     "radix-vue": "^1.9.5",
-    "start-server-and-test": "^2.0.3",
+    "start-server-and-test": "^2.0.7",
     "tailwind-config": "workspace:*",
     "tailwind-merge": "^2.3.0",
     "trpc-nuxt": "^0.10.21",
