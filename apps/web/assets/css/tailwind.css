@@ -69,6 +69,9 @@
   .scroll-hidden::-webkit-scrollbar {
     display: none; /* Chrome, Safari, Opera */
   }
+  .session-message a {
+    @apply text-primary underline font-bold;
+  }
 }
 
 @tailwind base;
