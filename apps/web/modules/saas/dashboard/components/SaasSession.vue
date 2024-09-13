@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import { UserIcon, BotIcon } from "lucide-vue-next";
+  import { marked } from "marked";
 
   const props = defineProps({
     selectedSession: {
@@ -10,6 +11,20 @@
 
   const { apiCaller } = useApiCaller();
   const messages = ref<any[]>([]);
+
+  const formatMessage = (text: string) => {
+    // Create a custom renderer
+    const renderer = new marked.Renderer();
+
+    // Override the default link rendering method to include target="_blank"
+    renderer.link = ({ href, title, text }) => {
+      const titleAttr = title ? ` title="${title}"` : "";
+      return `<a href="${href}" target="_blank" rel="noopener noreferrer"${titleAttr}>${text}</a>`;
+    };
+
+    // Parse the text with the custom renderer
+    return marked.parse(text, { renderer });
+  };
 
   const initChat = async () => {
     try {
@@ -101,14 +116,14 @@
                   ]"
                 >
                   <span
-                    class="max-w-lg break-words"
+                    class="session-message max-w-lg break-words"
                     :class="[
                       message.sender === 'user'
                         ? 'text-primary-foreground'
                         : 'text-primary-background',
                     ]"
-                    >{{ message.text }}</span
-                  >
+                    v-html="formatMessage(message.text)"
+                  ></span>
                 </div>
               </div>
             </li>
