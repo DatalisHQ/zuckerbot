@@ -60,10 +60,14 @@ export const createMessage = protectedProcedure
 
                   if (!token || new Date() > new Date(tokenExpiresAt)) {
                     // Step 2: Token is missing or expired, generate the authorization URL
-                    const clientId = "1119807469249263"; // process.env.FACEBOOK_APP_ID; // Your Facebook App ID
+                    const clientId = "1119807469249263";
                     const redirectUri =
-                      "https://zuckerbot.ai/auth/facebook/callback"; // process.env.FACEBOOK_REDIRECT_URI; // Your Redirect URI
-                    const authUrl = `https://www.facebook.com/v20.0/dialog/oauth?client_id=${clientId}&redirect_uri=${redirectUri}&scope=ads_read&response_type=token`;
+                      "https://zuckerbot.ai/auth/facebook/callback";
+                    const state = encodeURIComponent(
+                      JSON.stringify({ userId: user.id }),
+                    );
+
+                    const authUrl = `https://www.facebook.com/v20.0/dialog/oauth?client_id=${clientId}&redirect_uri=${redirectUri}&state=${state}&scope=ads_read&response_type=token`;
 
                     // Return the URL as a string
                     return {
