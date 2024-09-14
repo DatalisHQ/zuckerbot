@@ -9,14 +9,28 @@ export const update = protectedProcedure
       name: z.string().min(1).optional(),
       avatarUrl: z.string().min(1).optional(),
       onboardingComplete: z.boolean().optional(),
+      accessToken: z.string().optional(),
+      facebookTokenExpiresAt: z.date().optional(),
     }),
   )
   .mutation(async ({ ctx: { user }, input }) => {
+    const { accessToken, facebookTokenExpiresAt, ...otherData } = input;
+
+    // Prepare data for update
+    const data: any = { ...otherData };
+
+    // If access token and expiration time are provided, update them
+    if (accessToken && facebookTokenExpiresAt) {
+      data.facebookAccessToken = accessToken;
+      data.facebookTokenExpiresAt = facebookTokenExpiresAt;
+    }
+
+    // Update the user in the database
     const updatedUser = await db.user.update({
       where: {
         id: user.id,
       },
-      data: input,
+      data,
       select: {
         id: true,
         email: true,
@@ -24,6 +38,8 @@ export const update = protectedProcedure
         avatarUrl: true,
         name: true,
         onboardingComplete: true,
+        facebookAccessToken: true, // Optionally select these fields to return them
+        facebookTokenExpiresAt: true, // Optionally select these fields to return them
       },
     });
 
