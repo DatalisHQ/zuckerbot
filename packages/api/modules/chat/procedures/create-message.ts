@@ -29,19 +29,25 @@ export const createMessage = protectedProcedure
         apiKey: process.env.OPENAI_API_KEY as string,
       });
 
+      // Fetch current session context
+      const session = await db.chatSession.findUnique({
+        where: { id: sessionId },
+      });
+
       const handleRequiresAction = async (run) => {
-        // Check if there are tools that require outputs
         if (
           run.required_action &&
           run.required_action.submit_tool_outputs &&
           run.required_action.submit_tool_outputs.tool_calls
         ) {
-          // Loop through each tool in the required action section
           const toolOutputs = await Promise.all(
             run.required_action.submit_tool_outputs.tool_calls.map(
               async (tool) => {
-                if (tool.function.name === "getFacebookInsights") {
-                  // Fetch user from the database (sessionId is linked to the user)
+                if (
+                  tool.function.name === "getFacebookInsights" ||
+                  tool.function.name === "listAccounts" ||
+                  tool.function.name === "listCampaigns"
+                ) {
                   const currentUser = await db.user.findUnique({
                     where: { id: user.id },
                   });
@@ -54,38 +60,26 @@ export const createMessage = protectedProcedure
                     };
                   }
 
-                  // Step 1: Check if the token exists and is not expired
                   const token = currentUser?.facebookAccessToken;
                   const tokenExpiresAt = currentUser?.facebookTokenExpiresAt;
 
                   if (!token || new Date() > new Date(tokenExpiresAt)) {
-                    // Step 2: Token is missing or expired, generate the authorization URL
-                    const clientId = "1119807469249263";
-                    const redirectUri =
-                      "https://zuckerbot.ai/auth/facebook/callback";
-                    const state = encodeURIComponent(
-                      JSON.stringify({ userId: user.id }),
-                    );
-
-                    const authUrl = `https://www.facebook.com/v20.0/dialog/oauth?client_id=${clientId}&redirect_uri=${redirectUri}&state=${state}&scope=ads_read&response_type=token`;
-
-                    // Return the URL as a string
-                    return {
-                      tool_call_id: tool.id,
-                      output: `Access token is missing or expired. Please authorize the app by visiting: ${authUrl}`,
-                    };
+                    authUser(currentUser, tool);
                   }
 
-                  return {
-                    tool_call_id: tool.id,
-                    output: `Impressions: 12057, clicks: 345, currentUser`,
-                  };
+                  if (tool.function.name === "listAccounts") {
+                    return await listAccounts(token, sessionId, tool);
+                  } else if (tool.function.name === "listCampaigns") {
+                    return await listCampaigns(token, sessionId, tool);
+                  } else if (tool.function.name === "getFacebookInsights") {
+                    return await fetchFacebookInsights(token, tool);
+                  }
                 }
               },
             ),
           );
 
-          // Submit all tool outputs at once after collecting them in a list
+          // Submit all tool outputs at once
           if (toolOutputs.length > 0) {
             run = await openai.beta.threads.runs.submitToolOutputsAndPoll(
               threadId,
@@ -97,17 +91,13 @@ export const createMessage = protectedProcedure
             console.log("No tool outputs to submit.");
           }
 
-          // Check status after submitting tool outputs
           return handleRunStatus(run);
         }
       };
 
       const handleRunStatus = async (run) => {
-        // Check if the run is completed
         if (run.status === "completed") {
           const messages = await openai.beta.threads.messages.list(threadId);
-          console.log(messages.data);
-
           const response = await db.message.create({
             data: {
               sessionId,
@@ -124,7 +114,6 @@ export const createMessage = protectedProcedure
             createdAt: response.createdAt,
           };
         } else if (run.status === "requires_action") {
-          console.log(run.status);
           return await handleRequiresAction(run);
         } else {
           console.error("Run did not complete:", run);
@@ -153,18 +142,16 @@ export const createMessage = protectedProcedure
           attachments: [],
         };
 
+        // Handle file uploads if any
         if (files && files.length > 0) {
           for (const fileUrl of files) {
             const fileType = await getFileTypeFromUrl(fileUrl);
-
             if (fileType === "image") {
-              // Push images into the content array
               messagePayload.content.push({
                 type: "image_url",
                 image_url: { url: fileUrl },
               });
             } else {
-              // Handle other files by uploading them to OpenAI
               const response = await fetch(fileUrl);
               const file = await openai.files.create({
                 file: response,
@@ -178,6 +165,7 @@ export const createMessage = protectedProcedure
           }
         }
 
+        // Initial welcome message
         const initialMessage =
           "Welcome to ZuckerBot, your AI-powered assistant designed to revolutionize your advertising efforts. Whether you're a small business owner or an entrepreneur without a dedicated marketing team, ZuckerBot is here to simplify the complexities of online advertising. With ZuckerBot, you can create, manage, and optimize your ad campaigns across multiple platforms through a simple text chat interface. Please note that ZuckerBot currently does not support uploading files with .xlsx or .csv extensions. For best results, convert these files to PDF or TXT format before uploading.";
 
@@ -204,17 +192,159 @@ export const createMessage = protectedProcedure
     },
   );
 
-function getFileTypeFromUrl(url: string): "image" | "other" {
-  const imageExtensions = ["jpg", "jpeg", "png", "gif", "bmp"];
+// Utility function to fetch ad accounts
+async function fetchAdAccounts(token) {
+  const response = await fetch(
+    `https://graph.facebook.com/v20.0/me/adaccounts?access_token=${token}`,
+  );
+  const data = await response.json();
+  return data.data.map((account) => account.id); // Return an array of ad account IDs
+}
 
-  // Remove query parameters by splitting at the "?"
-  const cleanUrl = url.split("?")[0];
-
-  // Extract the file extension
-  const fileExtension = cleanUrl.split(".").pop()?.toLowerCase();
-
-  if (fileExtension && imageExtensions.includes(fileExtension)) {
-    return "image";
+// Utility function to fetch campaigns
+async function fetchCampaigns(adAccountId, token) {
+  if (adAccountId.startsWith("act_")) {
+    adAccountId = adAccountId.split("act_")[1];
   }
-  return "other";
+
+  const response = await fetch(
+    `https://graph.facebook.com/v20.0/act_${adAccountId}/campaigns?access_token=${token}`,
+  );
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error.message || "Failed to fetch campaigns");
+  }
+  // Extracting campaign IDs from the response
+  return data.data.map((campaign) => campaign.id);
+}
+
+// Utility function to get the file type
+function getFileTypeFromUrl(url: string): "image" | "other" {
+  const cleanUrl = url.split("?")[0];
+  const fileExtension = cleanUrl.split(".").pop()?.toLowerCase();
+  return fileExtension && imageExtensions.includes(fileExtension)
+    ? "image"
+    : "other";
+}
+
+function authUser(currentUser, tool) {
+  const clientId = "1119807469249263";
+  const redirectUri = "https://zuckerbot.ai/auth/facebook/callback";
+  const state = encodeURIComponent(JSON.stringify({ userId: currentUser.id }));
+
+  const authUrl = `https://www.facebook.com/v20.0/dialog/oauth?client_id=${clientId}&redirect_uri=${redirectUri}&state=${state}&scope=ads_management&response_type=token`;
+
+  return {
+    tool_call_id: tool.id,
+    output: `Access token is missing or expired. Please authorize the app by visiting: ${authUrl}`,
+  };
+}
+
+async function listAccounts(token, sessionId, tool) {
+  const adAccounts = await fetchAdAccounts(token);
+  if (adAccounts.length > 1) {
+    return {
+      tool_call_id: tool.id,
+      output: `Please select an ad account: ${adAccounts.join(", ")}`,
+    };
+  } else if (adAccounts.length === 1) {
+    await db.chatSession.update({
+      where: {
+        id: sessionId,
+      },
+      data: {
+        adAccountId: adAccounts[0],
+      },
+    });
+
+    return {
+      tool_call_id: tool.id,
+      output: `Only one ad account found: ${adAccounts[0]} selected`,
+    };
+  } else {
+    return {
+      tool_call_id: tool.id,
+      output: `No ad accounts found.`,
+    };
+  }
+}
+
+async function listCampaigns(token, sessionId, tool) {
+  const args = JSON.parse(tool.function.arguments);
+  const adAccountId = args.ad_account_id;
+
+  const campaigns = await fetchCampaigns(adAccountId, token);
+
+  if (campaigns.length > 1) {
+    return {
+      tool_call_id: tool.id,
+      output: `Here are the available campaigns for Ad Account ${adAccountId}: ${campaigns.join(
+        ", ",
+      )}`,
+    };
+  } else if (campaigns.length === 1) {
+    const campaignId = campaigns[0];
+
+    await db.chatSession.update({
+      where: {
+        id: sessionId,
+      },
+      data: {
+        campaignId,
+      },
+    });
+
+    return {
+      tool_call_id: tool.id,
+      output: `Only one campaign found: ${campaignId} selected`,
+    };
+  } else {
+    return {
+      tool_call_id: tool.id,
+      output: `No campaigns found for Ad Account ${adAccountId}.`,
+    };
+  }
+}
+
+async function fetchFacebookInsights(token, tool) {
+  const args = JSON.parse(tool.function.arguments);
+  const campaignId = args.campaignId;
+
+  const insightsUrl = `https://graph.facebook.com/v20.0/${campaignId}/insights?fields=impressions,clicks,spend&date_preset=${args.campaignId}&access_token=${token}`;
+  try {
+    const response = await fetch(insightsUrl, {
+      method: "GET",
+    });
+    const data = await response.json();
+
+    if (!response.ok || !data.data || data.data.length === 0) {
+      return {
+        tool_call_id: tool.id,
+        output: `No insights data available for this campaign. Please try another date range. Possible values: today, yesterday, this_month, last_month, this_quarter, maximum, data_maximum, last_3d, last_7d, last_14d, last_28d, last_30d, last_90d, last_week_mon_sun, last_week_sun_sat, last_quarter, last_year, this_week_mon_today, this_week_sun_today, this_year.`,
+      };
+    }
+
+    const insights = data.data![0];
+
+    const formattedOutput = {
+      account_id: insights.account_id,
+      campaign_id: insights.campaign_id,
+      clicks: insights.clicks || "0",
+      impressions: insights.impressions || "0",
+      spend: insights.spend || "0.00",
+      date_start: insights.date_start,
+      date_stop: insights.date_stop,
+    };
+
+    return {
+      tool_call_id: tool.id,
+      output: JSON.stringify(formattedOutput),
+    };
+  } catch (error) {
+    return {
+      tool_call_id: tool.id,
+      output: `Error fetching insights: ${error.message}`,
+    };
+  }
 }
