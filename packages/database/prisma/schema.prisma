@@ -155,6 +155,9 @@ model ChatSession {
   threadId    String
   createdAt   DateTime    @default(now())
   messages    Message[]
+  currentStep   String?
+  adAccountId   String?
+  campaignId    String?
 }
 
 model Message {

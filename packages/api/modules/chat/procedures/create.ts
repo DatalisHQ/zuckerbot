@@ -40,11 +40,11 @@ export const create = protectedProcedure
         { type: "file_search" },
         { type: "code_interpreter" },
         {
-          type: "function", // Define the tool type as 'function'
+          type: "function",
           function: {
             name: "getFacebookInsights",
             description:
-              "Retrieve insights from the Facebook Marketing API for a specific campaign.",
+              "Retrieve insights from the Facebook Marketing API for a specific campaign. Call this whenever you need to list the insights of a specific campaign ID. A date_present argument can be passed, possible values: today, yesterday, this_month, last_month, this_quarter, maximum, data_maximum, last_3d, last_7d, last_14d, last_28d, last_30d, last_90d, last_week_mon_sun, last_week_sun_sat, last_quarter, last_year, this_week_mon_today, this_week_sun_today, this_year.",
             parameters: {
               type: "object",
               properties: {
@@ -52,8 +52,40 @@ export const create = protectedProcedure
                   type: "string",
                   description: "The ID of the Facebook ad campaign",
                 },
+                date_preset: {
+                  type: "string",
+                  description:
+                    "The time range for fetching insights. Defaults to 'last_30d' when not provided. Possible values: today, yesterday, this_month, last_month, this_quarter, maximum, data_maximum, last_3d, last_7d, last_14d, last_28d, last_30d, last_90d, last_week_mon_sun, last_week_sun_sat, last_quarter, last_year, this_week_mon_today, this_week_sun_today, this_year.",
+                  default: "last_30d",
+                },
               },
               required: ["campaign_id"],
+            },
+          },
+        },
+        {
+          type: "function",
+          function: {
+            name: "listAccounts",
+            description:
+              "Retrieve the facebook ad accounts and list them as ids. Call this whenebver you need to list the ad accounts.",
+          },
+        },
+        {
+          type: "function",
+          function: {
+            name: "listCampaigns",
+            description:
+              "Retrieve the facebook campaigns for a specific ad account. Call this wheneber you need to list the campaigns Ids.",
+            parameters: {
+              type: "object",
+              properties: {
+                ad_account_id: {
+                  type: "string",
+                  description: "The ID of the ad account",
+                },
+              },
+              required: ["ad_account_id"],
             },
           },
         },
