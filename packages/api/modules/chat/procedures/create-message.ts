@@ -309,9 +309,10 @@ async function listCampaigns(token, sessionId, tool) {
 
 async function fetchFacebookInsights(token, tool) {
   const args = JSON.parse(tool.function.arguments);
-  const campaignId = args.campaignId;
+  const campaignId = args.campaign_id;
 
-  const insightsUrl = `https://graph.facebook.com/v20.0/${campaignId}/insights?fields=impressions,clicks,spend&date_preset=${args.campaignId}&access_token=${token}`;
+  const insightsUrl = `https://graph.facebook.com/v20.0/${campaignId}/insights?fields=impressions,clicks,spend&date_preset=${args.date_preset}&access_token=${token}`;
+
   try {
     const response = await fetch(insightsUrl, {
       method: "GET",
@@ -327,19 +328,9 @@ async function fetchFacebookInsights(token, tool) {
 
     const insights = data.data![0];
 
-    const formattedOutput = {
-      account_id: insights.account_id,
-      campaign_id: insights.campaign_id,
-      clicks: insights.clicks || "0",
-      impressions: insights.impressions || "0",
-      spend: insights.spend || "0.00",
-      date_start: insights.date_start,
-      date_stop: insights.date_stop,
-    };
-
     return {
       tool_call_id: tool.id,
-      output: JSON.stringify(formattedOutput),
+      output: `Impressions: ${insights.impressions}, clicks: ${insights.clicks}, spend: ${insights.spend}`,
     };
   } catch (error) {
     return {
