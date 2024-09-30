@@ -20,7 +20,7 @@
     "@nuxtjs/color-mode": "^3.4.4",
     "@nuxtjs/google-fonts": "^3.2.0",
     "@nuxtjs/i18n": "8.5.1",
-    "@nuxtjs/seo": "2.0.0-rc.19",
+    "@nuxtjs/seo": "2.0.0-rc.23",
     "@nuxtjs/tailwindcss": "^6.12.1",
     "@tanstack/vue-table": "^8.20.5",
     "@vee-validate/nuxt": "^4.13.2",
