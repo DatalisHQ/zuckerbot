@@ -26,6 +26,6 @@
     "axios": "^1.7.7",
     "eslint": "8.57.0",
     "eslint-config-custom": "workspace:*",
-    "turbo": "^2.1.0"
+    "turbo": "^2.1.3"
   }
 }
