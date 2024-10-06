@@ -3,10 +3,6 @@
   import { Wand2Icon, MessageSquareMoreIcon } from "lucide-vue-next";
 
   const props = defineProps({
-    sessions: {
-      type: Array,
-      required: true,
-    },
     selectedSession: {
       type: Object,
       default: null,
@@ -17,11 +13,40 @@
     },
   });
 
+  const emit = defineEmits(["sessionCreating"]);
+
+  const { user } = useUser();
   const { apiCaller } = useApiCaller();
-  const emit = defineEmits(["sessionSelected", "sessionCreating"]);
+  const router = useRouter();
+
+  const sessions = ref<ChatSession[]>([]);
 
   const selectSession = (session: ChatSession) => {
-    emit("sessionSelected", session);
+    // Navigate to the session page
+    // Assuming you're using Nuxt's useRouter
+    const router = useRouter();
+    router.push(`/app/dashboard/${session.id}`);
+  };
+
+  const paidEmails = ["brieuc@datalis.app", "davis@datalis.app"];
+
+  const isPaidUser = computed(() => {
+    // Allow all users to access the dashboard for now
+    return true;
+
+    // if (user.value) {
+    //   return user.value.isPaidUser || paidEmails.includes(user.value.email);
+    // }
+    // return false;
+  });
+
+  const fetchSessions = async () => {
+    try {
+      const response = await apiCaller.chat.sessions.query();
+      sessions.value = response;
+    } catch (error) {
+      console.error("Error fetching sessions:", error);
+    }
   };
 
   const createSession = async () => {
@@ -34,11 +59,13 @@
       const response = await apiCaller.chat.create.mutate({
         name: "New session",
       });
-      emit("sessionSelected", response);
+      router.push(`/app/dashboard/${response.id}`);
     } catch (error) {
       console.error("Error creating session:", error);
     }
   };
+
+  onMounted(fetchSessions);
 </script>
 
 <template>
