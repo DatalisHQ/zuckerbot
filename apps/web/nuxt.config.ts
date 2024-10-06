@@ -23,7 +23,7 @@ export default defineNuxtConfig({
       siteUrl: baseUrl,
       s3AvatarsBucketName: process.env.NUXT_PUBLIC_S3_AVATARS_BUCKET_NAME,
       analytics: {
-        // googleAnalyticsId: process.env.NUXT_PUBLIC_GOOGLE_ANALYTICS_ID,
+        googleAnalyticsId: process.env.NUXT_PUBLIC_GOOGLE_ANALYTICS_ID,
         mixpanelToken: process.env.NUXT_PUBLIC_MIXPANEL_TOKEN,
         // pirschCode: process.env.NUXT_PUBLIC_PIRSCH_CODE,
         // plausibleUrl: process.env.NUXT_PUBLIC_PLAUSIBLE_URL,

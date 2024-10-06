@@ -1,6 +1,7 @@
 import { createResolver, defineNuxtModule, addImportsDir } from "nuxt/kit";
 
-const providerPath = "./provider/mixpanel";
+const mixpanelProviderPath = "./provider/mixpanel";
+const gaProviderPath = "./provider/google";
 
 export default defineNuxtModule({
   meta: {
@@ -8,6 +9,7 @@ export default defineNuxtModule({
   },
   setup() {
     const { resolve } = createResolver(import.meta.url);
-    addImportsDir(resolve(providerPath));
+    addImportsDir(resolve(mixpanelProviderPath));
+    addImportsDir(resolve(gaProviderPath));
   },
 });
