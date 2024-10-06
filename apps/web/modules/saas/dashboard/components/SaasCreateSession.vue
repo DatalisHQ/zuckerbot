@@ -4,6 +4,8 @@
   const { apiCaller } = useApiCaller();
   const emit = defineEmits(["sessionSelected", "sessionCreating"]);
 
+  const router = useRouter();
+
   const props = defineProps({
     creatingSession: {
       type: Boolean,
@@ -21,7 +23,7 @@
       const response = await apiCaller.chat.create.mutate({
         name: "New session",
       });
-      emit("sessionSelected", response);
+      router.push(`/app/dashboard/${response.id}`);
     } catch (error) {
       console.error("Error creating session:", error);
     }
