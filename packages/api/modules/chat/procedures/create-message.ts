@@ -46,7 +46,9 @@ export const createMessage = protectedProcedure
                 if (
                   tool.function.name === "getFacebookInsights" ||
                   tool.function.name === "listAccounts" ||
-                  tool.function.name === "listCampaigns"
+                  tool.function.name === "listCampaigns" ||
+                  tool.function.name === "connectFacebookAccount" ||
+                  tool.function.name === "checkAccountConnection"
                 ) {
                   const currentUser = await db.user.findUnique({
                     where: { id: user.id },
@@ -63,8 +65,20 @@ export const createMessage = protectedProcedure
                   const token = currentUser?.facebookAccessToken;
                   const tokenExpiresAt = currentUser?.facebookTokenExpiresAt;
 
+                  console.log(token);
+
                   if (!token || new Date() > new Date(tokenExpiresAt)) {
-                    authUser(currentUser, tool);
+                    return authUser(currentUser, tool);
+                  }
+
+                  if (
+                    tool.function.name === "connectFacebookAccount" ||
+                    tool.function.name === "checkAccountConnection"
+                  ) {
+                    return {
+                      tool_call_id: tool.id,
+                      output: `User has connected their Facebook account`,
+                    };
                   }
 
                   if (tool.function.name === "listAccounts") {
