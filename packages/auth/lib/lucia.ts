@@ -35,6 +35,8 @@ export const lucia = new Lucia(adapter, {
       role: data.role,
       avatarUrl: data.avatarUrl,
       onboardingComplete: data.onboardingComplete,
+      facebookAccessToken: data.facebookAccessToken,
+      facebookTokenExpiresAt: data.facebookTokenExpiresAt,
     };
   },
   getSessionAttributes: (databaseSession) => {

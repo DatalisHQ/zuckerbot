@@ -53,6 +53,8 @@ export const loginWithPassword = publicProcedure
         name: true,
         role: true,
         avatarUrl: true,
+        facebookAccessToken: true,
+        facebookTokenExpiresAt: true,
       }),
     }),
   )
