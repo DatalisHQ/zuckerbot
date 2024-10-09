@@ -2,6 +2,7 @@ import OpenAI from "openai";
 import { db } from "database";
 import { z } from "zod";
 import { protectedProcedure } from "../../trpc";
+import { getFacebookAuthUrl, isFacebookAuth } from "utils";
 
 export const createMessage = protectedProcedure
   .input(
@@ -27,11 +28,6 @@ export const createMessage = protectedProcedure
     }) => {
       const openai = new OpenAI({
         apiKey: process.env.OPENAI_API_KEY as string,
-      });
-
-      // Fetch current session context
-      const session = await db.chatSession.findUnique({
-        where: { id: sessionId },
       });
 
       const handleRequiresAction = async (run) => {
@@ -62,12 +58,7 @@ export const createMessage = protectedProcedure
                     };
                   }
 
-                  const token = currentUser?.facebookAccessToken;
-                  const tokenExpiresAt = currentUser?.facebookTokenExpiresAt;
-
-                  console.log(token);
-
-                  if (!token || new Date() > new Date(tokenExpiresAt)) {
+                  if (!isFacebookAuth(currentUser)) {
                     return authUser(currentUser, tool);
                   }
 
@@ -179,20 +170,36 @@ export const createMessage = protectedProcedure
           }
         }
 
-        // Initial welcome message
-        const initialMessage =
-          "Welcome to ZuckerBot, your AI-powered assistant designed to revolutionize your advertising efforts. Whether you're a small business owner or an entrepreneur without a dedicated marketing team, ZuckerBot is here to simplify the complexities of online advertising. With ZuckerBot, you can create, manage, and optimize your ad campaigns across multiple platforms through a simple text chat interface. Please note that ZuckerBot currently does not support uploading files with .xlsx or .csv extensions. For best results, convert these files to PDF or TXT format before uploading.";
-
         let run;
-        if (text === initialMessage) {
+
+        // Determine if the message is the initial welcome message
+        const initialMessageStart = "Welcome to ZuckerBot!";
+        const isInitialMessage = text.includes(initialMessageStart);
+
+        if (isInitialMessage) {
           run = await openai.beta.threads.runs.createAndPoll(threadId, {
             assistant_id: assistantId,
           });
+
+          const response = await db.message.create({
+            data: {
+              sessionId,
+              sender,
+              text,
+            },
+          });
+
+          return {
+            id: response.id,
+            sessionId: response.sessionId,
+            sender: response.sender,
+            text: response.text,
+            createdAt: response.createdAt,
+          };
         }
 
-        await openai.beta.threads.messages.create(threadId, messagePayload);
-
-        if (text !== initialMessage) {
+        if (!isInitialMessage) {
+          await openai.beta.threads.messages.create(threadId, messagePayload);
           run = await openai.beta.threads.runs.createAndPoll(threadId, {
             assistant_id: assistantId,
           });
@@ -243,11 +250,7 @@ function getFileTypeFromUrl(url: string): "image" | "other" {
 }
 
 function authUser(currentUser, tool) {
-  const clientId = "1119807469249263";
-  const redirectUri = "https://zuckerbot.ai/auth/facebook/callback";
-  const state = encodeURIComponent(JSON.stringify({ userId: currentUser.id }));
-
-  const authUrl = `https://www.facebook.com/v20.0/dialog/oauth?client_id=${clientId}&redirect_uri=${redirectUri}&state=${state}&scope=ads_management&response_type=token`;
+  const authUrl = getFacebookAuthUrl(currentUser);
 
   return {
     tool_call_id: tool.id,

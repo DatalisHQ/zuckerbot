@@ -1,6 +1,7 @@
 <script setup lang="ts">
   import { UserIcon, BotIcon } from "lucide-vue-next";
   import { marked } from "marked";
+  import { getInitialMessage } from "utils";
 
   const props = defineProps({
     selectedSession: {
@@ -9,6 +10,7 @@
     },
   });
 
+  const { user } = useUser();
   const { apiCaller } = useApiCaller();
   const messages = ref<any[]>([]);
 
@@ -34,12 +36,15 @@
         text: "Writing a message...",
       });
 
+      // Initial welcome message
+      const initialMessage = getInitialMessage(user);
+
       const response = await apiCaller.chat.createMessage.mutate({
         sessionId: props.selectedSession.id,
         threadId: props.selectedSession.threadId,
         assistantId: props.selectedSession.assistantId,
         sender: "assistant",
-        text: "Welcome to ZuckerBot, your AI-powered assistant designed to revolutionize your advertising efforts. Whether you're a small business owner or an entrepreneur without a dedicated marketing team, ZuckerBot is here to simplify the complexities of online advertising. With ZuckerBot, you can create, manage, and optimize your ad campaigns across multiple platforms through a simple text chat interface. Please note that ZuckerBot currently does not support uploading files with .xlsx or .csv extensions. For best results, convert these files to PDF or TXT format before uploading.",
+        text: initialMessage,
       });
 
       messages.value.splice(messages.value.length - 1, 1);
