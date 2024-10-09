@@ -2,7 +2,13 @@ import OpenAI from "openai";
 import { db } from "database";
 import { z } from "zod";
 import { protectedProcedure } from "../../trpc";
-import { getFacebookAuthUrl, isFacebookAuth } from "utils";
+import {
+  isFacebookAuth,
+  listAccounts,
+  listCampaigns,
+  authUser,
+  fetchFacebookInsights,
+} from "utils";
 
 export const createMessage = protectedProcedure
   .input(
@@ -73,11 +79,24 @@ export const createMessage = protectedProcedure
                   }
 
                   if (tool.function.name === "listAccounts") {
-                    return await listAccounts(token, sessionId, tool);
+                    return await listAccounts(
+                      currentUser.facebookAccessToken,
+                      sessionId,
+                      tool,
+                      db,
+                    );
                   } else if (tool.function.name === "listCampaigns") {
-                    return await listCampaigns(token, sessionId, tool);
+                    return await listCampaigns(
+                      currentUser.facebookAccessToken,
+                      sessionId,
+                      tool,
+                      db,
+                    );
                   } else if (tool.function.name === "getFacebookInsights") {
-                    return await fetchFacebookInsights(token, tool);
+                    return await fetchFacebookInsights(
+                      currentUser.facebookAccessToken,
+                      tool,
+                    );
                   }
                 }
               },
@@ -213,33 +232,6 @@ export const createMessage = protectedProcedure
     },
   );
 
-// Utility function to fetch ad accounts
-async function fetchAdAccounts(token) {
-  const response = await fetch(
-    `https://graph.facebook.com/v20.0/me/adaccounts?access_token=${token}`,
-  );
-  const data = await response.json();
-  return data.data.map((account) => account.id); // Return an array of ad account IDs
-}
-
-// Utility function to fetch campaigns
-async function fetchCampaigns(adAccountId, token) {
-  if (adAccountId.startsWith("act_")) {
-    adAccountId = adAccountId.split("act_")[1];
-  }
-
-  const response = await fetch(
-    `https://graph.facebook.com/v20.0/act_${adAccountId}/campaigns?access_token=${token}`,
-  );
-
-  const data = await response.json();
-  if (!response.ok) {
-    throw new Error(data.error.message || "Failed to fetch campaigns");
-  }
-  // Extracting campaign IDs from the response
-  return data.data.map((campaign) => campaign.id);
-}
-
 // Utility function to get the file type
 function getFileTypeFromUrl(url: string): "image" | "other" {
   const cleanUrl = url.split("?")[0];
@@ -247,112 +239,4 @@ function getFileTypeFromUrl(url: string): "image" | "other" {
   return fileExtension && imageExtensions.includes(fileExtension)
     ? "image"
     : "other";
-}
-
-function authUser(currentUser, tool) {
-  const authUrl = getFacebookAuthUrl(currentUser);
-
-  return {
-    tool_call_id: tool.id,
-    output: `Access token is missing or expired. Please authorize the app by visiting: ${authUrl}`,
-  };
-}
-
-async function listAccounts(token, sessionId, tool) {
-  const adAccounts = await fetchAdAccounts(token);
-  if (adAccounts.length > 1) {
-    return {
-      tool_call_id: tool.id,
-      output: `Please select an ad account: ${adAccounts.join(", ")}`,
-    };
-  } else if (adAccounts.length === 1) {
-    await db.chatSession.update({
-      where: {
-        id: sessionId,
-      },
-      data: {
-        adAccountId: adAccounts[0],
-      },
-    });
-
-    return {
-      tool_call_id: tool.id,
-      output: `Only one ad account found: ${adAccounts[0]} selected`,
-    };
-  } else {
-    return {
-      tool_call_id: tool.id,
-      output: `No ad accounts found.`,
-    };
-  }
-}
-
-async function listCampaigns(token, sessionId, tool) {
-  const args = JSON.parse(tool.function.arguments);
-  const adAccountId = args.ad_account_id;
-
-  const campaigns = await fetchCampaigns(adAccountId, token);
-
-  if (campaigns.length > 1) {
-    return {
-      tool_call_id: tool.id,
-      output: `Here are the available campaigns for Ad Account ${adAccountId}: ${campaigns.join(
-        ", ",
-      )}`,
-    };
-  } else if (campaigns.length === 1) {
-    const campaignId = campaigns[0];
-
-    await db.chatSession.update({
-      where: {
-        id: sessionId,
-      },
-      data: {
-        campaignId,
-      },
-    });
-
-    return {
-      tool_call_id: tool.id,
-      output: `Only one campaign found: ${campaignId} selected`,
-    };
-  } else {
-    return {
-      tool_call_id: tool.id,
-      output: `No campaigns found for Ad Account ${adAccountId}.`,
-    };
-  }
-}
-
-async function fetchFacebookInsights(token, tool) {
-  const args = JSON.parse(tool.function.arguments);
-  const campaignId = args.campaign_id;
-
-  const insightsUrl = `https://graph.facebook.com/v20.0/${campaignId}/insights?fields=impressions,clicks,spend&date_preset=${args.date_preset}&access_token=${token}`;
-
-  try {
-    const response = await fetch(insightsUrl, {
-      method: "GET",
-    });
-    const data = await response.json();
-
-    if (!response.ok || !data.data || data.data.length === 0) {
-      return {
-        tool_call_id: tool.id,
-        output: `No insights data available for this campaign. Please try another date range. Possible values: today, yesterday, this_month, last_month, this_quarter, maximum, data_maximum, last_3d, last_7d, last_14d, last_28d, last_30d, last_90d, last_week_mon_sun, last_week_sun_sat, last_quarter, last_year, this_week_mon_today, this_week_sun_today, this_year.`,
-      };
-    }
-
-    const insights = data.data![0];
-
-    return {
-      tool_call_id: tool.id,
-      output: `Impressions: ${insights.impressions}, clicks: ${insights.clicks}, spend: ${insights.spend}`,
-    };
-  } catch (error) {
-    return {
-      tool_call_id: tool.id,
-      output: `Error fetching insights: ${error.message}`,
-    };
-  }
 }
