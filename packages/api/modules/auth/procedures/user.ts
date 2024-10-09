@@ -12,6 +12,8 @@ export const user = publicProcedure
       avatarUrl: true,
       name: true,
       onboardingComplete: true,
+      facebookAccessToken: true,
+      facebookTokenExpiresAt: true,
     })
       .extend({
         teamMemberships: z
