@@ -129,7 +129,7 @@ export const fetchFacebookInsights = async (token: string, tool: any) => {
   const args = JSON.parse(tool.function.arguments);
   const campaignId = args.campaign_id;
 
-  const insightsUrl = `https://graph.facebook.com/v20.0/${campaignId}/insights?fields=impressions,clicks,spend&date_preset=${args.date_preset}&access_token=${token}`;
+  const insightsUrl = `https://graph.facebook.com/v20.0/${campaignId}/insights?fields=impressions,clicks,spend,cost_per_unique_click,cost_per_outbound_click,campaign_name,account_id,account_currency,conversion_rate_ranking,engagement_rate_ranking,cost_per_action_type,cost_per_inline_link_click,cost_per_inline_post_engagement,cost_per_unique_action_type,cost_per_unique_inline_link_click,cost_per_unique_outbound_click&date_preset=${args.date_preset}&access_token=${token}`;
 
   try {
     const response = await fetch(insightsUrl, {
@@ -148,7 +148,13 @@ export const fetchFacebookInsights = async (token: string, tool: any) => {
 
     return {
       tool_call_id: tool.id,
-      output: `Impressions: ${insights.impressions}, clicks: ${insights.clicks}, spend: ${insights.spend}`,
+      output: `
+      You are ZuckerBot, an AI assistant for managing Meta (Facebook) ad campaigns.
+      Based on the following campaign performance metrics, analyze whether the campaign is performing well or underperforming. Provide insights and recommendations.
+      insights: ${JSON.stringify(insights)}
+      Please provide your analysis and recommendations based on these metrics.
+      Ask the user if they would like to create a new campaign, you will need to generate the ad creative and copy for the new campaign, if you don't have enough information, ask the use to provide more details.
+      `,
     };
   } catch (error: any) {
     return {
@@ -156,4 +162,73 @@ export const fetchFacebookInsights = async (token: string, tool: any) => {
       output: `Error fetching insights: ${error.message}`,
     };
   }
+};
+
+export const createFacebookCampaign = async (
+  adAccountId: string,
+  token: string,
+  campaignDetails: any,
+) => {
+  const response = await fetch(
+    `https://graph.facebook.com/v20.0/${adAccountId}/campaigns&access_token=${token}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(campaignDetails),
+    },
+  );
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error.message || "Failed to create campaign.");
+  }
+  return data.id;
+};
+
+export const createFacebookAd = async (
+  adAccountId: string,
+  token: string,
+  adDetails: any,
+  campaignId?: string,
+) => {
+  let targetCampaignId = campaignId;
+  if (!campaignId) {
+    // Optionally, create a new campaign if campaignId isn't provided
+    targetCampaignId = await createFacebookCampaign(adAccountId, token, {
+      name: "New Campaign",
+      objective: "LINK_CLICKS",
+    });
+  }
+  const response = await fetch(
+    `https://graph.facebook.com/v20.0/${adAccountId}/ads&access_token=${token}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...adDetails, campaign_id: targetCampaignId }),
+    },
+  );
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error.message || "Failed to create ad.");
+  }
+  return data.id;
+};
+
+export const updateFacebookAd = async (
+  adId: string,
+  token: string,
+  updateFields: any,
+) => {
+  const response = await fetch(
+    `https://graph.facebook.com/v20.0/${adId}&access_token=${token}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updateFields),
+    },
+  );
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error.message || "Failed to update ad.");
+  }
+  return data.id;
 };
