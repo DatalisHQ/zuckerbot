@@ -27,7 +27,7 @@ export const user = publicProcedure
           id: true,
           name: true,
         }).nullish(),
-        isPaidUser: z.boolean(), // Include the isPaidUser field
+        isPaidUser: z.boolean(),
       })
       .nullable(),
   )
@@ -77,6 +77,6 @@ export const user = publicProcedure
       avatarUrl: await getUserAvatarUrl(user.avatarUrl),
       impersonatedBy,
       teamMemberships,
-      isPaidUser, // Return the isPaidUser status
+      isPaidUser,
     };
   });

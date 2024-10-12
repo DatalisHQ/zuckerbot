@@ -1,5 +1,5 @@
 <template>
-  <footer class="bg-muted text-muted-foreground py-12">
+  <footer class="bg-muted py-12 text-muted-foreground">
     <div class="container grid grid-cols-1 gap-6 lg:grid-cols-3">
       <div>
         <Logo class="opacity-50 grayscale" />
@@ -8,12 +8,12 @@
         </p>
       </div>
 
-      <!-- <div class="flex flex-col gap-2">
-        <NuxtLinkLocale to="/changelog" class="block">
+      <div class="flex flex-col gap-2">
+        <!-- <NuxtLinkLocale to="/changelog" class="block">
           Changlog
-        </NuxtLinkLocale>
+        </NuxtLinkLocale> -->
         <NuxtLinkLocale to="/pricing" class="block"> Pricing </NuxtLinkLocale>
-      </div> -->
+      </div>
 
       <div class="flex flex-col gap-2">
         <NuxtLink to="/legal/privacy" class="block"> Privacy policy </NuxtLink>
