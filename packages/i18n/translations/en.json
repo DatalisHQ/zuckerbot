@@ -196,7 +196,7 @@
       "refundPolicy": "We offer a 30-day money-back guarantee if you're not happy with our product.",
       "cancelSubscription": "You can cancel your subscription by visiting the billing page.",
       "changePlan": "Yes, you can change your plan at any time by visiting the billing page.",
-      "freeTrial": "Yes, we offer a 14-day free trial."
+      "freeTrial": "No, we do not offer a free trial at the moment. But we have a 30-day money-back guarantee. We understand that not everyone may be ready or able to pay for ZuckerBot at this time, and we don’t want that to stop you from benefiting from the platform. If that’s the case, please feel free to contact us directly at support@zuckerbot.ai. We’d love to hear from you, gather your feedback, and see how we can continue to support you."
     }
   },
   "newsletter": {
@@ -212,7 +212,7 @@
         "title": "Subscribed"
       }
     },
-    "submit": "Try it for 14 days",
+    "submit": "Upgrade now",
     "subtitle": "Be among the first to get access to ZuckerBot.",
     "title": "Get early access"
   },
@@ -244,7 +244,7 @@
     "description": "Revolutionize your e-commerce and marketing campaigns with zuckerbot.ai.",
     "month": "month",
     "monthly": "Monthly",
-    "subscribe": "Try it for 14 days",
+    "subscribe": "Subscribe",
     "title": "Affordable Pricing Plans for Every Business",
     "year": "year",
     "yearly": "Yearly"
@@ -340,7 +340,7 @@
           "trialing": "Trialing",
           "unpaid": "Unpaid"
         },
-        "subscribe": "Try it for 14 days",
+        "subscribe": "Subscribe",
         "switchToPlan": "Switch to this plan",
         "updateBillingDetails": "Update billing details",
         "upgradePlan": "Upgrade your plan",

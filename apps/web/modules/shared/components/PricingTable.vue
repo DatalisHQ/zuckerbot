@@ -71,7 +71,7 @@
       </Tabs>
     </div>
 
-    <div class="grid gap-4 @md:grid-cols-3">
+    <div class="@md:grid-cols-3 grid gap-4">
       <PricingTableItem
         v-for="plan of sortedAndFilteredPlans"
         :onSelectPlan="props.onSelectPlan"

@@ -175,92 +175,19 @@ export const assistantConfig = {
           "Check if the user has already connected their Facebook ad account. Returns a boolean indicating the connection status.",
       },
     },
-    // {
-    //   type: "function",
-    //   function: {
-    //     name: "updateFacebookAd",
-    //     description:
-    //       "Update an existing Facebook ad. Provide the ad ID and fields to update.",
-    //     parameters: {
-    //       type: "object",
-    //       properties: {
-    //         ad_id: {
-    //           type: "string",
-    //           description: "The ID of the ad to update",
-    //         },
-    //         update_fields: {
-    //           type: "object",
-    //           description: "Fields to update in the ad",
-    //         },
-    //       },
-    //       required: ["ad_id", "update_fields"],
-    //     },
-    //   },
-    // },
-    // {
-    //   type: "function",
-    //   function: {
-    //     name: "createFacebookAd",
-    //     description:
-    //       "Create a new Facebook ad under a specified campaign. Optionally create a new campaign if needed.",
-    //     parameters: {
-    //       type: "object",
-    //       properties: {
-    //         ad_account_id: {
-    //           type: "string",
-    //           description: "The ID of the ad account",
-    //         },
-    //         campaign_id: {
-    //           type: "string",
-    //           description: "The ID of the campaign",
-    //         },
-    //         ad_details: {
-    //           type: "object",
-    //           description: "Details of the ad to create",
-    //         },
-    //       },
-    //       required: ["ad_account_id", "ad_details"],
-    //     },
-    //   },
-    // },
-    // {
-    //   type: "function",
-    //   function: {
-    //     name: "listAdsUnderCampaign",
-    //     description: "List all ads under a specific campaign ID.",
-    //     parameters: {
-    //       type: "object",
-    //       properties: {
-    //         campaign_id: {
-    //           type: "string",
-    //           description: "The ID of the campaign",
-    //         },
-    //       },
-    //       required: ["campaign_id"],
-    //     },
-    //   },
-    // },
-    // {
-    //   type: "function",
-    //   function: {
-    //     name: "createFacebookCampaign",
-    //     description: "Create a new Facebook campaign with specified details.",
-    //     parameters: {
-    //       type: "object",
-    //       properties: {
-    //         ad_account_id: {
-    //           type: "string",
-    //           description: "The ID of the ad account",
-    //         },
-    //         campaign_details: {
-    //           type: "object",
-    //           description: "Details for the new campaign",
-    //         },
-    //       },
-    //       required: ["ad_account_id", "campaign_details"],
-    //     },
-    //   },
-    // },
   ],
   model: "gpt-4-turbo",
+};
+
+export const isPaidUser = (user: any) => {
+  const paidEmails = [
+    "brieuc@btribouillet.com",
+    "brieuc@datalis.app",
+    "davis@datalis.app",
+  ];
+
+  if (user) {
+    return user.isPaidUser || paidEmails.includes(user.email);
+  }
+  return false;
 };

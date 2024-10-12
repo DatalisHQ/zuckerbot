@@ -28,18 +28,6 @@
     router.push(`/app/dashboard/${session.id}`);
   };
 
-  const paidEmails = ["brieuc@datalis.app", "davis@datalis.app"];
-
-  const isPaidUser = computed(() => {
-    // Allow all users to access the dashboard for now
-    return true;
-
-    // if (user.value) {
-    //   return user.value.isPaidUser || paidEmails.includes(user.value.email);
-    // }
-    // return false;
-  });
-
   const fetchSessions = async () => {
     try {
       const response = await apiCaller.chat.sessions.query();
