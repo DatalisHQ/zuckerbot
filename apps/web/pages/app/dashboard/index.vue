@@ -1,29 +1,9 @@
 <script setup lang="ts">
-  import type { ChatSession } from "database";
-
-  const { t } = useTranslations();
-  const { user } = useUser();
-
   definePageMeta({
     layout: "saas-chat",
   });
 
-  const { apiCaller } = useApiCaller();
-
-  const sessions = ref<ChatSession[]>([]);
   const creatingSession = ref(false);
-
-  const paidEmails = ["brieuc@datalis.app", "davis@datalis.app"];
-
-  const isPaidUser = computed(() => {
-    // Allow all users to access the dashboard for now
-    return true;
-
-    // if (user.value) {
-    //   return user.value.isPaidUser || paidEmails.includes(user.value.email);
-    // }
-    // return false;
-  });
 
   const handleSessionCreating = () => {
     creatingSession.value = true;
@@ -33,34 +13,17 @@
 <template>
   <div class="h-full p-8">
     <div class="flex h-full flex-col items-start gap-8 md:flex-row">
-      <template v-if="isPaidUser">
-        <div class="size-full md:max-w-[200px]">
-          <SaasSessionsSidebar
-            :creatingSession="creatingSession"
-            @session-creating="handleSessionCreating"
-          />
-        </div>
-
-        <SaasCreateSession
+      <div class="size-full md:max-w-[200px]">
+        <SaasSessionsSidebar
           :creatingSession="creatingSession"
           @session-creating="handleSessionCreating"
         />
-      </template>
-      <div
-        v-else
-        class="flex size-full flex-col content-center items-center justify-center"
-      >
-        <Logo size="size-32" :with-label="false" />
-        <div class="mb-4 max-w-96 text-center">
-          A subscription is required to use ZuckerBot. Please subscribe to start
-          using ZuckerBot.
-        </div>
-        <Button>
-          <NuxtLinkLocale to="/app/settings/team/billing" class="block py-1.5">
-            Try it for 14 days
-          </NuxtLinkLocale>
-        </Button>
       </div>
+
+      <SaasCreateSession
+        :creatingSession="creatingSession"
+        @session-creating="handleSessionCreating"
+      />
     </div>
   </div>
 </template>
