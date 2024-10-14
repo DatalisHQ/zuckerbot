@@ -28,7 +28,7 @@ export const config = {
     redirectAfterLogout: "/",
   },
   mailing: {
-    from: "hello@your-domain.com",
+    from: "noreply@zuckerbot.ai",
   },
   teams: {
     avatarColors: ["#4E6DF5", "#E5A158", "#9DBEE5", "#CED3D9"],
