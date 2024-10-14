@@ -37,10 +37,12 @@
               for success without needing expert knowledge.
             </p>
 
-            <Button variant="secondary" size="sm" class="mt-4">
-              Try it now
-              <ArrowRightIcon class="ml-2 size-4" />
-            </Button>
+            <NuxtLinkLocale to="/app/dashboard">
+              <Button variant="secondary" size="sm" class="mt-4">
+                Try it now
+                <ArrowRightIcon class="ml-2 size-4" />
+              </Button>
+            </NuxtLinkLocale>
           </div>
         </div>
 
@@ -74,10 +76,12 @@
               real-time insights and superior ROI without the high costs of an
               agency or dedicated employee.
             </p>
-            <Button variant="secondary" size="sm" class="mt-4">
-              Try it now
-              <ArrowRightIcon class="ml-2 size-4" />
-            </Button>
+            <NuxtLinkLocale to="/app/dashboard">
+              <Button variant="secondary" size="sm" class="mt-4">
+                Try it now
+                <ArrowRightIcon class="ml-2 size-4" />
+              </Button>
+            </NuxtLinkLocale>
           </div>
         </div>
 
@@ -105,10 +109,12 @@
               to focus on growing your business. Save both time and money while
               achieving better results.
             </p>
-            <Button variant="secondary" size="sm" class="mt-4">
-              Try it now
-              <ArrowRightIcon class="ml-2 size-4" />
-            </Button>
+            <NuxtLinkLocale to="/app/dashboard">
+              <Button variant="secondary" size="sm" class="mt-4">
+                Try it now
+                <ArrowRightIcon class="ml-2 size-4" />
+              </Button>
+            </NuxtLinkLocale>
           </div>
         </div>
 
@@ -135,10 +141,12 @@
               easy-to-read reports. Make informed, data-driven decisions to
               continuously improve your campaigns and drive more leads or sales.
             </p>
-            <Button variant="secondary" size="sm" class="mt-4">
-              Try it now
-              <ArrowRightIcon class="ml-2 size-4" />
-            </Button>
+            <NuxtLinkLocale to="/app/dashboard">
+              <Button variant="secondary" size="sm" class="mt-4">
+                Try it now
+                <ArrowRightIcon class="ml-2 size-4" />
+              </Button>
+            </NuxtLinkLocale>
           </div>
         </div>
 
@@ -168,10 +176,12 @@
               Text-to-Image Capabilities: Create stunning visuals from simple
               text prompts.
             </p>
-            <Button variant="secondary" size="sm" class="mt-4">
-              Try it now
-              <ArrowRightIcon class="ml-2 size-4" />
-            </Button>
+            <NuxtLinkLocale to="/app/dashboard">
+              <Button variant="secondary" size="sm" class="mt-4">
+                Try it now
+                <ArrowRightIcon class="ml-2 size-4" />
+              </Button>
+            </NuxtLinkLocale>
           </div>
         </div>
       </div>
