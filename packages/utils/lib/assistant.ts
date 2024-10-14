@@ -184,6 +184,7 @@ export const isPaidUser = (user: any) => {
     "brieuc@btribouillet.com",
     "brieuc@datalis.app",
     "davis@datalis.app",
+    "dkkdek2536@gmail.com",
   ];
 
   if (user) {
