@@ -30,7 +30,7 @@ export const config = {
     sessionCookieMaxAge: 60 * 60 * 24 * 30,
   },
   mails: {
-    from: "hello@your-domain.com",
+    from: "noreply@zuckerbot.ai",
   },
   teams: {
     avatarColors: ["#4E6DF5", "#E5A158", "#9DBEE5", "#CED3D9"],
