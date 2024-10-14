@@ -152,16 +152,17 @@
     <div
       class="bg-card/50 dark:shadow-foreground/10 mt-16 rounded-2xl border p-2 shadow-lg"
     >
-      <NuxtImg
-        src="/images/hero-image.png"
-        alt="Our application"
-        class="block w-full rounded-xl dark:hidden"
-      />
-      <NuxtImg
-        src="/images/hero-image-dark.png"
-        alt="Our application"
-        class="hidden w-full rounded-xl dark:block"
-      />
+      <video
+        width="100%"
+        height="674"
+        autoplay
+        loop
+        muted
+        playsinline
+        class="block w-full rounded-xl"
+      >
+        <source src="/hero-video.mp4" type="video/mp4" />
+      </video>
     </div>
   </div>
 </template>
