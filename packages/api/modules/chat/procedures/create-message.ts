@@ -146,23 +146,33 @@ export const createMessage = protectedProcedure
       };
 
       if (sender === "user") {
-        const currentUser = await db.user.findUnique({
-          where: { id: user.id },
+        const assistantMessageCount = await db.message.count({
+          where: {
+            sessionId,
+            sender: "assistant",
+          },
         });
 
-        if (!isPaidUser(currentUser)) {
-          const upgradeLink = "https://zuckerbot.ai/app/settings/team/billing";
-          const message = `To continue using the chat, please upgrade your plan. Visit ${upgradeLink} for more details.
+        if (assistantMessageCount >= 4) {
+          const currentUser = await db.user.findUnique({
+            where: { id: user.id },
+          });
+
+          if (!isPaidUser(currentUser)) {
+            const upgradeLink =
+              "https://zuckerbot.ai/app/settings/team/billing";
+            const message = `To continue using the chat, please upgrade your plan. Visit ${upgradeLink} for more details.
   
   **A Special Note:**
   We understand that not everyone may be ready or able to pay for ZuckerBot at this time, and we don’t want that to stop you from benefiting from the platform. If that’s the case, please feel free to contact us directly at support@zuckerbot.ai. We’d love to hear from you, gather your feedback, and see how we can continue to support you.
   
   Thank you for being part of the ZuckerBot community! Your support helps us build something truly valuable, and we can’t wait to continue this journey with you.`;
 
-          return {
-            sender: "assistant",
-            text: message,
-          };
+            return {
+              sender: "assistant",
+              text: message,
+            };
+          }
         }
 
         await db.message.create({
