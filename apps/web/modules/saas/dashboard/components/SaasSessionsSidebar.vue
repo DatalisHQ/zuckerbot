@@ -21,6 +21,17 @@
 
   const sessions = ref<ChatSession[]>([]);
 
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+
   const selectSession = (session: ChatSession) => {
     // Navigate to the session page
     // Assuming you're using Nuxt's useRouter
@@ -75,15 +86,21 @@
           @click="selectSession(session)"
         >
           <Button
-            class="w-full justify-start bg-slate-300"
+            class="flex h-12 w-full justify-start bg-slate-300"
             :class="{
               'bg-primary/50':
                 selectedSession && session.id === selectedSession.id,
             }"
-            ><MessageSquareMoreIcon class="mr-2 size-4" />{{
-              session.name
-            }}</Button
-          >
+            ><MessageSquareMoreIcon class="mr-2 size-4" />
+            <div class="px-1 text-left">
+              <div class="py-0.5 text-[10px] leading-none">
+                {{ formatDate(session.createdAt) }}
+              </div>
+              <div class="max-w-32 truncate py-0.5 text-sm leading-none">
+                {{ session.name }}
+              </div>
+            </div>
+          </Button>
         </li>
       </ul>
     </div>
