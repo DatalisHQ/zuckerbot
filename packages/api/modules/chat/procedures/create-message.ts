@@ -9,6 +9,7 @@ import {
   authUser,
   fetchFacebookInsights,
   isPaidUser,
+  generateSessionName,
 } from "utils";
 
 export const createMessage = protectedProcedure
@@ -104,7 +105,6 @@ export const createMessage = protectedProcedure
             ),
           );
 
-          // Submit all tool outputs at once
           if (toolOutputs.length > 0) {
             run = await openai.beta.threads.runs.submitToolOutputsAndPoll(
               threadId,
@@ -164,14 +164,44 @@ export const createMessage = protectedProcedure
             const message = `To continue using the chat, please upgrade your plan. Visit ${upgradeLink} for more details.
   
   **A Special Note:**
-  We understand that not everyone may be ready or able to pay for ZuckerBot at this time, and we don’t want that to stop you from benefiting from the platform. If that’s the case, please feel free to contact us directly at support@zuckerbot.ai. We’d love to hear from you, gather your feedback, and see how we can continue to support you.
+  We understand that not everyone may be ready or able to pay for ZuckerBot at this time, and we don't want that to stop you from benefiting from the platform. If that's the case, please feel free to contact us directly at support@zuckerbot.ai. We'd love to hear from you, gather your feedback, and see how we can continue to support you.
   
-  Thank you for being part of the ZuckerBot community! Your support helps us build something truly valuable, and we can’t wait to continue this journey with you.`;
+  Thank you for being part of the ZuckerBot community! Your support helps us build something truly valuable, and we can't wait to continue this journey with you.`;
 
             return {
               sender: "assistant",
               text: message,
             };
+          }
+        }
+
+        // Only handle name generation for non-welcome messages
+        if (!text.includes("Welcome to ZuckerBot!")) {
+          const userMessageCount = await db.message.count({
+            where: {
+              sessionId,
+              sender: "user",
+              NOT: {
+                text: {
+                  contains: "Welcome to ZuckerBot!",
+                },
+              },
+            },
+          });
+
+          console.log("userMessageCount", userMessageCount);
+
+          // Generate name on first real user message
+          if (userMessageCount === 0) {
+            const newName = await generateSessionName(
+              threadId,
+              assistantId,
+              openai,
+            );
+            await db.chatSession.update({
+              where: { id: sessionId },
+              data: { name: newName },
+            });
           }
         }
 
@@ -196,7 +226,6 @@ export const createMessage = protectedProcedure
           attachments: [],
         };
 
-        // Handle file uploads if any
         if (files && files.length > 0) {
           for (const fileUrl of files) {
             const fileType = await getFileTypeFromUrl(fileUrl);
@@ -221,7 +250,6 @@ export const createMessage = protectedProcedure
 
         let run;
 
-        // Determine if the message is the initial welcome message
         const initialMessageStart = "Welcome to ZuckerBot!";
         const isInitialMessage = text.includes(initialMessageStart);
 
