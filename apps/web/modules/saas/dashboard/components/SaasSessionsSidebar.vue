@@ -15,7 +15,6 @@
 
   const emit = defineEmits(["sessionCreating"]);
 
-  const { user } = useUser();
   const { apiCaller } = useApiCaller();
   const router = useRouter();
 
