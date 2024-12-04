@@ -13,11 +13,21 @@ export const update = protectedProcedure
       currentStep: z.string().optional(),
       adAccountId: z.string().optional(),
       campaignId: z.string().optional(),
+      assistantId: z.string().optional(),
+      threadId: z.string().optional(),
     }),
   )
   .mutation(async ({ input }) => {
-    const { currentStep, adAccountId, campaignId, name, id, ...otherData } =
-      input;
+    const {
+      currentStep,
+      adAccountId,
+      campaignId,
+      name,
+      id,
+      assistantId,
+      threadId,
+      ...otherData
+    } = input;
 
     const data: any = { ...otherData };
 
@@ -32,6 +42,14 @@ export const update = protectedProcedure
 
       if (campaignId) {
         data.campaignId = campaignId;
+      }
+
+      if (assistantId) {
+        data.assistantId = assistantId;
+      }
+
+      if (threadId) {
+        data.threadId = threadId;
       }
 
       if (name) {

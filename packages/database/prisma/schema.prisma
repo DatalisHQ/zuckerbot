@@ -151,8 +151,8 @@ model ChatSession {
   name        String
   user        User        @relation(fields: [userId], references: [id])
   userId      String
-  assistantId String
-  threadId    String
+  assistantId String?
+  threadId    String?
   createdAt   DateTime    @default(now())
   messages    Message[]
   currentStep   String?
@@ -167,4 +167,5 @@ model Message {
   sender      String      // 'user' or 'bot'
   text        String
   createdAt   DateTime    @default(now())
+  messageId   String?     // OpenAI's message ID
 }
