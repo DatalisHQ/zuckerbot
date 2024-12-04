@@ -23,6 +23,9 @@
     "db:studio": "pnpm --filter database run db:studio"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^1.0.6",
+    "@ai-sdk/vue": "^1.0.3",
+    "ai": "^4.0.10",
     "axios": "^1.7.7",
     "eslint": "8.57.0",
     "eslint-config-custom": "workspace:*",
