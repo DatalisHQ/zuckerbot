@@ -3,3 +3,5 @@ export * from "./sessions";
 export * from "./messages";
 export * from "./create-message";
 export * from "./session";
+export * from "./by-id";
+export * from "./update";
