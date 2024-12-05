@@ -57,6 +57,12 @@ export default defineEventHandler(async (event) => {
       createdAt: new Date(),
       messageId: createdMessage.id,
     });
+
+    // Trigger session name update
+    apiCaller.chat.update({
+      id: sessionId,
+      name: true,
+    });
     console.log("Initial user message saved:", createdMessage.id);
   } catch (error) {
     console.error("Error saving initial message:", error);

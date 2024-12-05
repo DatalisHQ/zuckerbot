@@ -3,7 +3,6 @@ import { z } from "zod";
 import { protectedProcedure } from "../../trpc";
 import { TRPCError } from "@trpc/server";
 import { generateSessionName } from "utils";
-import OpenAI from "openai";
 
 export const update = protectedProcedure
   .input(
@@ -59,15 +58,7 @@ export const update = protectedProcedure
         });
 
         if (session) {
-          const openai = new OpenAI({
-            apiKey: process.env.OPENAI_API_KEY as string,
-          });
-
-          const newName = await generateSessionName(
-            session.threadId,
-            session.assistantId,
-            openai,
-          );
+          const newName = await generateSessionName(session.threadId);
 
           data.name = newName;
         }
