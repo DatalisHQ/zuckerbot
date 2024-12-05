@@ -1,205 +1,65 @@
 <script setup lang="ts">
-  import { toTypedSchema } from "@vee-validate/zod";
-  import { useForm } from "vee-validate";
-  import { z } from "zod";
-  import {
-    LoaderIcon,
-    Trash2Icon,
-    PaperclipIcon,
-    SendHorizonalIcon,
-  } from "lucide-vue-next";
-  import { v4 as uuid } from "uuid";
+  const props = defineProps<{
+    modelValue: string;
+  }>();
 
-  const props = defineProps({
-    selectedSession: {
-      type: Object,
-      default: null,
-    },
-  });
+  const emit = defineEmits(["update:modelValue", "submit"]);
 
-  const formSchema = toTypedSchema(
-    z.object({
-      text: z.string().min(0),
-    }),
-  );
+  const textareaRef = ref<HTMLTextAreaElement | null>(null);
 
-  const emit = defineEmits(["messageCreated", "messageReceived"]);
-
-  const pending = ref(false);
-  const uploading = ref(false);
-  const files = ref<File[]>([]);
-  const uploadedFiles = ref<{ name: string; url: string }[]>([]);
-  const { apiCaller } = useApiCaller();
-
-  const getSignedUploadUrlMutation =
-    apiCaller.uploads.signedUploadUrl.useMutation();
-
-  const uploadFileToS3 = async (file: File) => {
-    const path = `uploads/${uuid()}-${file.name}`;
-    const uploadUrl = await getSignedUploadUrlMutation.mutate({
-      path,
-      bucket: "datalis-avatars",
-    });
-
-    if (!uploadUrl) {
-      throw new Error("Failed to get upload url");
+  const adjustHeight = async () => {
+    await nextTick();
+    if (textareaRef.value) {
+      textareaRef.value.style.height = "auto";
+      textareaRef.value.style.height = `${textareaRef.value.scrollHeight}px`;
     }
-
-    await fetch(uploadUrl, {
-      method: "PUT",
-      body: file,
-      headers: {
-        "Content-Type": file.type,
-      },
-    });
-
-    const getSignedUrlMutation = apiCaller.uploads.signedUrl.useMutation();
-
-    const signedUrl = await getSignedUrlMutation.mutate({
-      path,
-      bucket: "datalis-avatars",
-    });
-
-    return { name: file.name, url: signedUrl };
   };
 
-  const onFilesSelected = async (event: Event) => {
-    const input = event.target as HTMLInputElement;
-    const selectedFiles = input.files;
+  const handleInput = (e: Event) => {
+    const target = e.target as HTMLTextAreaElement;
+    emit("update:modelValue", target.value);
+    adjustHeight();
+  };
 
-    if (selectedFiles?.length) {
-      files.value = Array.from(selectedFiles);
-      uploading.value = true;
-
-      try {
-        const uploaded = await Promise.all(files.value.map(uploadFileToS3));
-        uploadedFiles.value.push(...uploaded);
-        uploading.value = false;
-      } catch (e) {
-        console.error("Error uploading files:", e);
-        uploading.value = false;
+  const handleKeydown = (e: KeyboardEvent) => {
+    if (e.key === "Enter") {
+      if (e.shiftKey) {
+        return;
+      }
+      e.preventDefault();
+      if (props.modelValue.trim()) {
+        emit("submit");
       }
     }
   };
 
-  const removeFile = (fileIndex: number) => {
-    uploadedFiles.value.splice(fileIndex, 1);
-  };
+  watch(() => props.modelValue, adjustHeight);
 
-  const { handleSubmit, values, resetForm } = useForm({
-    validationSchema: formSchema,
-    initialValues: {
-      text: "",
-    },
-  });
-
-  const sendMessage = handleSubmit(async () => {
-    let { text } = values;
-
-    if ((!text || text === "") && files.value.length > 0) {
-      const filenames = uploadedFiles.value.map((file) => file.name);
-      text = `Uploaded files: ${filenames.join(", ")}\n\n${text}`;
-    } else if (!text || text === "") {
-      return;
-    }
-
-    pending.value = true;
-
-    emit("messageCreated", {
-      id: Math.random().toString(36).substring(7),
-      sender: "user",
-      text,
-    });
-
-    emit("messageCreated", {
-      id: Math.random().toString(36).substring(7),
-      sender: "assistant",
-      text: "Writing a message...",
-    });
-
-    const uploadedFilesCopy = [...uploadedFiles.value];
-
-    resetForm();
-    uploadedFiles.value = [];
-
-    const response = await apiCaller.chat.createMessage.mutate({
-      sessionId: props.selectedSession.id,
-      threadId: props.selectedSession.threadId,
-      assistantId: props.selectedSession.assistantId,
-      sender: "user",
-      text,
-      files: uploadedFilesCopy.map((file) => file.url),
-    });
-
-    emit("messageReceived");
-    emit("messageCreated", response);
-
-    pending.value = false;
-  });
-
-  const fileInputRef = ref<HTMLInputElement | null>(null);
+  onMounted(adjustHeight);
 </script>
 
 <template>
-  <div>
-    <div class="bg-card absolute bottom-0 left-0 w-full">
-      <form
-        @submit.prevent="sendMessage"
-        class="flex w-full items-center space-x-2"
-      >
-        <div class="relative grow">
-          <FormField v-slot="{ componentField }" name="text">
-            <FormItem>
-              <FormControl>
-                <Input
-                  v-bind="componentField"
-                  class="bg-card text-foreground pl-12"
-                />
-              </FormControl>
-            </FormItem>
-          </FormField>
-        </div>
-
-        <Button class="shrink-0" :loading="pending">
-          <SendHorizonalIcon class="size-4" />
-        </Button>
-      </form>
-      <input
-        type="file"
-        multiple
-        accept=".png,.jpg,.jpeg,.pdf,.txt,.md,.html,.xml,.tsv,.json,.yaml,.yml,.tex,.latex,.rtf,.epub,.odt,.ott,.sxw,.stw,.fodt,.uot,.doc,.docx,.dot,.dotx,.ppt,.pptx,.pps,.ppsx,.odp,.otp,.fodp,.uop"
-        @change="onFilesSelected"
-        class="hidden"
-        ref="fileInputRef"
-      />
-      <div
-        class="absolute left-4 top-1/2 -translate-y-1/2 cursor-pointer"
-        @click="fileInputRef?.click()"
-      >
-        <PaperclipIcon class="size-5 cursor-pointer" />
-      </div>
-      <div
-        v-if="uploading"
-        class="absolute inset-0 flex items-center justify-center"
-      >
-        <LoaderIcon class="text-primary size-6 animate-spin" />
-      </div>
-      <div
-        v-if="uploadedFiles.length > 0"
-        class="absolute bottom-full mb-2 flex flex-col items-start gap-2"
-      >
-        <div
-          v-for="(file, index) in uploadedFiles"
-          :key="file.url"
-          class="relative flex items-center space-x-2 rounded bg-white p-2 shadow"
-        >
-          <span>{{ file.name }}</span>
-          <Trash2Icon
-            class="size-4 cursor-pointer text-red-500"
-            @click="removeFile(index)"
-          />
-        </div>
-      </div>
+  <div class="relative grow font-sans">
+    <textarea
+      ref="textareaRef"
+      :value="modelValue"
+      @input="handleInput"
+      @keydown="handleKeydown"
+      class="text-foreground placeholder:text-muted-foreground/60 min-h-12 w-full resize-none overflow-hidden rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-base focus:border-gray-300 focus:outline-0 focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
+      placeholder="Reply to ZuckerBot..."
+      rows="1"
+    ></textarea>
+    <div
+      class="pointer-events-none absolute right-2 flex items-center pr-3 text-gray-400"
+      style="bottom: 18px"
+    >
+      Press ⮐ to send
     </div>
   </div>
 </template>
+
+<style scoped>
+  textarea {
+    font-family: inherit;
+  }
+</style>
