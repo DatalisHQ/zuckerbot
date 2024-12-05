@@ -4,6 +4,7 @@
   import { useAssistant } from "@ai-sdk/vue";
   import { getInitialMessage } from "utils";
   import { marked } from "marked";
+  import { nextTick, ref, onMounted, watch } from "vue";
 
   const { user } = useUser();
   const { apiCaller } = useApiCaller();
@@ -16,6 +17,27 @@
   });
 
   const chatInstance = ref();
+  const messagesContainer = ref<HTMLElement | null>(null);
+
+  // Function to scroll to bottom
+  const scrollToBottom = async () => {
+    await nextTick();
+    if (messagesContainer.value) {
+      messagesContainer.value.scrollTo({
+        top: messagesContainer.value.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  };
+
+  // Watch for changes in messages to trigger scroll
+  watch(
+    () => chatInstance.value?.messages,
+    () => {
+      scrollToBottom();
+    },
+    { deep: true },
+  );
 
   useAsyncData(`chat-${props.selectedSession.id}`, async () => {
     // Fetch both session and messages in parallel
@@ -62,6 +84,9 @@
       chatInstance.value.messages = existingMessages;
     }
 
+    // Initial scroll after messages are loaded
+    await scrollToBottom();
+
     return {
       session,
       messages,
@@ -77,7 +102,19 @@
     return marked.parse(text, { renderer });
   };
 
+  // Modified form submission to include scroll
+  const handleSubmit = async (e: Event) => {
+    e.preventDefault();
+    await chatInstance.value.handleSubmit(e);
+    scrollToBottom();
+  };
+
   const isReady = computed(() => Boolean(chatInstance.value));
+
+  // Scroll to bottom when component is mounted
+  onMounted(() => {
+    scrollToBottom();
+  });
 </script>
 
 <template>
@@ -85,7 +122,10 @@
     class="bg-card text-foreground container mt-4 h-full max-w-6xl rounded-lg border p-8"
   >
     <div class="relative flex h-full flex-col">
-      <div class="scroll-hidden h-full overflow-y-scroll pb-24">
+      <div
+        ref="messagesContainer"
+        class="scroll-hidden h-full overflow-y-scroll pb-24"
+      >
         <div v-if="isReady">
           <div
             v-for="message in chatInstance.messages"
@@ -121,7 +161,7 @@
 
           <div class="bg-card absolute bottom-0 left-0 w-full">
             <form
-              @submit="chatInstance.handleSubmit"
+              @submit="handleSubmit"
               class="flex w-full items-center space-x-2"
             >
               <div class="relative grow">
