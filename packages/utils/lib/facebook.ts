@@ -1,3 +1,4 @@
+// src/utils/facebook.ts
 export const getFacebookAuthUrl = (user: any) => {
   const clientId = "1119807469249263";
   const redirectUri = "https://zuckerbot.ai/auth/facebook/callback";
@@ -15,21 +16,12 @@ export const isFacebookAuth = (user: any) => {
   return isAuth;
 };
 
-export const authUser = (currentUser: any, tool: any) => {
-  const authUrl = getFacebookAuthUrl(currentUser);
-
-  return {
-    tool_call_id: tool.id,
-    output: `Access token is missing or expired. Please authorize the app by visiting: ${authUrl}`,
-  };
-};
-
 export const fetchAdAccounts = async (token: string) => {
   const response = await fetch(
     `https://graph.facebook.com/v20.0/me/adaccounts?access_token=${token}`,
   );
   const data = await response.json();
-  return data.data.map((account: any) => account.id); // Return an array of ad account IDs
+  return data.data.map((account: any) => account.id);
 };
 
 export const fetchCampaigns = async (adAccountId: string, token: string) => {
@@ -45,7 +37,6 @@ export const fetchCampaigns = async (adAccountId: string, token: string) => {
   if (!response.ok) {
     throw new Error(data.error.message || "Failed to fetch campaigns");
   }
-  // Extracting campaign IDs from the response
   return data.data.map((campaign: any) => campaign.id);
 };
 
@@ -53,7 +44,7 @@ export const listAccounts = async (
   token: string,
   sessionId: string,
   tool: any,
-  db: any,
+  apiCaller: any,
 ) => {
   const adAccounts = await fetchAdAccounts(token);
   if (adAccounts.length > 1) {
@@ -62,10 +53,8 @@ export const listAccounts = async (
       output: `Please select an ad account: ${adAccounts.join(", ")}`,
     };
   } else if (adAccounts.length === 1) {
-    await db.chatSession.update({
-      where: {
-        id: sessionId,
-      },
+    await apiCaller.chat.update({
+      id: sessionId,
       data: {
         adAccountId: adAccounts[0],
       },
@@ -87,7 +76,7 @@ export const listCampaigns = async (
   token: string,
   sessionId: string,
   tool: any,
-  db: any,
+  apiCaller: any,
 ) => {
   const args = JSON.parse(tool.function.arguments);
   const adAccountId = args.ad_account_id;
@@ -104,10 +93,8 @@ export const listCampaigns = async (
   } else if (campaigns.length === 1) {
     const campaignId = campaigns[0];
 
-    await db.chatSession.update({
-      where: {
-        id: sessionId,
-      },
+    await apiCaller.chat.update({
+      id: sessionId,
       data: {
         campaignId,
       },
@@ -162,73 +149,4 @@ export const fetchFacebookInsights = async (token: string, tool: any) => {
       output: `Error fetching insights: ${error.message}`,
     };
   }
-};
-
-export const createFacebookCampaign = async (
-  adAccountId: string,
-  token: string,
-  campaignDetails: any,
-) => {
-  const response = await fetch(
-    `https://graph.facebook.com/v20.0/${adAccountId}/campaigns&access_token=${token}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(campaignDetails),
-    },
-  );
-  const data = await response.json();
-  if (!response.ok) {
-    throw new Error(data.error.message || "Failed to create campaign.");
-  }
-  return data.id;
-};
-
-export const createFacebookAd = async (
-  adAccountId: string,
-  token: string,
-  adDetails: any,
-  campaignId?: string,
-) => {
-  let targetCampaignId = campaignId;
-  if (!campaignId) {
-    // Optionally, create a new campaign if campaignId isn't provided
-    targetCampaignId = await createFacebookCampaign(adAccountId, token, {
-      name: "New Campaign",
-      objective: "LINK_CLICKS",
-    });
-  }
-  const response = await fetch(
-    `https://graph.facebook.com/v20.0/${adAccountId}/ads&access_token=${token}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...adDetails, campaign_id: targetCampaignId }),
-    },
-  );
-  const data = await response.json();
-  if (!response.ok) {
-    throw new Error(data.error.message || "Failed to create ad.");
-  }
-  return data.id;
-};
-
-export const updateFacebookAd = async (
-  adId: string,
-  token: string,
-  updateFields: any,
-) => {
-  const response = await fetch(
-    `https://graph.facebook.com/v20.0/${adId}&access_token=${token}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updateFields),
-    },
-  );
-  const data = await response.json();
-  if (!response.ok) {
-    throw new Error(data.error.message || "Failed to update ad.");
-  }
-  return data.id;
 };
