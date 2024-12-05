@@ -1,6 +1,7 @@
 import { AssistantResponse } from "ai";
 import OpenAI from "openai";
 import { createApiCaller } from "api";
+import type { AssistantStream } from "openai/lib/AssistantStream";
 import {
   isFacebookAuth,
   getFacebookAuthUrl,
@@ -8,6 +9,10 @@ import {
   listCampaigns,
   fetchFacebookInsights,
 } from "utils";
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY || "",
+});
 
 export default defineEventHandler(async (event) => {
   const { message, sessionId } = await readBody(event);
@@ -26,10 +31,6 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404 });
   }
 
-  const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY || "",
-  });
-
   // Create thread if needed
   const threadId = session.threadId ?? (await openai.beta.threads.create()).id;
 
@@ -47,11 +48,97 @@ export default defineEventHandler(async (event) => {
     content: message,
   });
 
+  // Save the initial user message
+  try {
+    await apiCaller.chat.createMessage({
+      sessionId,
+      text: message,
+      sender: "user",
+      createdAt: new Date(),
+      messageId: createdMessage.id,
+    });
+    console.log("Initial user message saved:", createdMessage.id);
+  } catch (error) {
+    console.error("Error saving initial message:", error);
+  }
+
+  // Keep separate sets for created and done messages
+  const createdMessageIds = new Set<string>();
+  const doneMessageIds = new Set<string>();
+
   return AssistantResponse(
     { threadId, messageId: createdMessage.id },
     async ({ forwardStream }) => {
       const runStream = openai.beta.threads.runs.stream(threadId, {
         assistant_id: process.env.OPENAI_ASSISTANT_ID || "",
+      });
+
+      // Add general stream error handling
+      runStream.on("error", (error) => {
+        console.error("Stream error:", error);
+      });
+
+      // Handle message events
+      (runStream as AssistantStream).on("messageCreated", async (message) => {
+        console.log("Message created event:", message.id, message.role);
+
+        if (createdMessageIds.has(message.id)) {
+          console.log("Skipping duplicate created message:", message.id);
+          return;
+        }
+
+        createdMessageIds.add(message.id);
+
+        if (message.role === "user") {
+          try {
+            await apiCaller.chat.createMessage({
+              sessionId,
+              text:
+                message.content[0]?.type === "text"
+                  ? message.content[0].text.value
+                  : "",
+              sender: "user",
+              createdAt: new Date(message.created_at),
+              messageId: message.id,
+            });
+            console.log("User message saved:", message.id);
+          } catch (error) {
+            console.error("Error saving user message:", error);
+          }
+        }
+      });
+
+      (runStream as AssistantStream).on("messageDone", async (message) => {
+        console.log("Message done event:", message.id, message.role);
+
+        if (doneMessageIds.has(message.id)) {
+          console.log("Skipping duplicate done message:", message.id);
+          return;
+        }
+
+        doneMessageIds.add(message.id);
+
+        if (message.role === "assistant") {
+          try {
+            const textContent = message.content
+              .filter((content) => content.type === "text")
+              .map((content) =>
+                content.type === "text" ? content.text.value : "",
+              )
+              .join("\n");
+
+            await apiCaller.chat.createMessage({
+              sessionId,
+              text: textContent,
+              sender: "assistant",
+              createdAt: new Date(message.created_at),
+              messageId: message.id,
+            });
+            console.log("Assistant message saved:", message.id);
+          } catch (error) {
+            console.error("Error saving assistant message:", error);
+          }
+        }
       });
 
       let runResult = await forwardStream(runStream);
@@ -60,6 +147,7 @@ export default defineEventHandler(async (event) => {
         runResult?.status === "requires_action" &&
         runResult.required_action?.type === "submit_tool_outputs"
       ) {
+        console.log("Processing tool outputs");
         const tool_outputs = await Promise.all(
           runResult.required_action.submit_tool_outputs.tool_calls.map(
             async (toolCall) => {
