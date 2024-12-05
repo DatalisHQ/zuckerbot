@@ -1,10 +1,11 @@
 <script setup lang="ts">
-  import { UserIcon, BotIcon, SendHorizonalIcon } from "lucide-vue-next";
+  import { UserIcon, BotIcon } from "lucide-vue-next";
   import type { Message } from "@ai-sdk/vue";
   import { useAssistant } from "@ai-sdk/vue";
   import { getInitialMessage, isPaidUser } from "utils";
   import { marked } from "marked";
-  import { nextTick, ref, onMounted, watch } from "vue";
+  import { nextTick, ref, onMounted, watch, computed } from "vue";
+  import SaasSessionInput from "./SaasSessionInput.vue";
 
   const { user } = useUser();
   const { apiCaller } = useApiCaller();
@@ -98,25 +99,22 @@
 
     renderer.link = ({ href, title, text: linkText }: any) => {
       const titleAttr = title ? ` title="${title}"` : "";
-      // Parse the link text in case it contains other markdown (like bold)
       const parsedText = marked.parseInline(linkText, { renderer });
       return `<a href="${href}" class="text-blue-500 hover:text-blue-700 underline" target="_blank" rel="noopener noreferrer"${titleAttr}>${parsedText}</a>`;
     };
 
     renderer.strong = ({ text: strongText }: any) => {
-      // Parse the strong text in case it contains other markdown (like links)
       const parsedText = marked.parseInline(strongText, { renderer });
       return `<strong class="font-bold">${parsedText}</strong>`;
     };
 
-    // First split into paragraphs
+    // Split into paragraphs
     const paragraphs = text.split(/\n\n/).filter((p) => p.trim());
 
-    // Process each paragraph with marked for inline elements, then wrap with proper spacing
+    // Process each paragraph with marked for inline elements
     return paragraphs
       .map((paragraph, index) => {
         const isLast = index === paragraphs.length - 1;
-        // Parse the markdown content first
         const parsedContent = marked
           .parse(paragraph, {
             renderer,
@@ -125,16 +123,14 @@
           })
           .replace(/<\/?p>/g, ""); // Remove paragraph tags added by marked
 
-        // Then wrap with our custom paragraph tag
         return `<p class="${isLast ? "m-0" : "mb-6"}">${parsedContent}</p>`;
       })
       .join("");
   };
 
-  // Modified form submission to include scroll
-  const handleSubmit = async (e: Event) => {
-    e.preventDefault();
-    await chatInstance.value.handleSubmit(e);
+  // Handle submission
+  const handleSubmit = async () => {
+    await chatInstance.value?.handleSubmit();
     scrollToBottom();
   };
 
@@ -234,20 +230,12 @@
             </div>
           </div>
           <div class="bg-card absolute bottom-0 left-0 w-full" v-else>
-            <form
-              @submit="handleSubmit"
-              class="flex w-full items-center space-x-2"
-            >
-              <div class="relative grow">
-                <Input
-                  v-model="chatInstance.input"
-                  class="bg-card text-foreground pl-12"
-                />
-              </div>
-              <Button class="shrink-0">
-                <SendHorizonalIcon class="size-4" />
-              </Button>
-            </form>
+            <div class="flex w-full items-center space-x-2">
+              <SaasSessionInput
+                v-model="chatInstance.input"
+                @submit="handleSubmit"
+              />
+            </div>
           </div>
         </div>
         <div v-else>Loading messages...</div>
