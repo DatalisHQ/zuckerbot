@@ -182,7 +182,7 @@ export const assistantConfig = {
 
 export const isPaidUser = (user: any) => {
   const paidEmails = [
-    "brieuc@btribouillet.com",
+    // "brieuc@btribouillet.com",
     "brieuc@datalis.app",
     "davis@datalis.app",
     "dkkdek2536@gmail.com",
