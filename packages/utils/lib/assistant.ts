@@ -1,5 +1,5 @@
 import { getFacebookAuthUrl, isFacebookAuth } from "./facebook";
-import type OpenAI from "openai";
+import OpenAI from "openai";
 
 export const getInitialMessage = (user: any) => {
   if (isFacebookAuth(user)) {
@@ -199,13 +199,15 @@ export const isPaidUser = (user: any) => {
 // Function to generate session name from conversation
 export const generateSessionName = async (
   threadId: string,
-  assistantId: string,
-  openai: OpenAI,
 ): Promise<string> => {
   try {
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY as string,
+    });
+
     // Create a separate run to analyze the conversation
     const nameGenerationRun = await openai.beta.threads.runs.create(threadId, {
-      assistant_id: assistantId,
+      assistant_id: (process.env.OPENAI_ASSISTANT_ID as string) || "",
       instructions: `Generate a concise, descriptive title for this conversation based on the user's goal or request. The title should:
 
 - Capture the main marketing objective or task
