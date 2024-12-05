@@ -2,7 +2,7 @@
   import { UserIcon, BotIcon, SendHorizonalIcon } from "lucide-vue-next";
   import type { Message } from "@ai-sdk/vue";
   import { useAssistant } from "@ai-sdk/vue";
-  import { getInitialMessage } from "utils";
+  import { getInitialMessage, isPaidUser } from "utils";
   import { marked } from "marked";
   import { nextTick, ref, onMounted, watch } from "vue";
 
@@ -158,8 +158,53 @@
               </div>
             </div>
           </div>
+          <div
+            v-if="!isPaidUser(user) && chatInstance.messages.length > 6"
+            class="absolute bottom-0 left-0 space-y-4 rounded-lg border border-red-200 bg-red-50 p-6"
+          >
+            <div class="flex flex-col space-y-6">
+              <div class="space-y-3">
+                <p class="text-lg font-semibold text-red-900">
+                  Ready to unlock unlimited conversations?
+                </p>
+                <p class="text-red-700">
+                  To continue using the chat, please
+                  <a
+                    href="https://zuckerbot.ai/app/settings/team/billing"
+                    class="font-medium text-red-600 underline hover:text-red-800"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    upgrade your plan </a
+                  >.
+                </p>
+              </div>
 
-          <div class="bg-card absolute bottom-0 left-0 w-full">
+              <div class="space-y-3">
+                <p class="font-semibold text-red-900">A Special Note:</p>
+                <p class="leading-relaxed text-red-700">
+                  We understand that not everyone may be ready or able to pay
+                  for ZuckerBot at this time, and we don't want that to stop you
+                  from benefiting from the platform. If that's the case, please
+                  feel free to contact us directly at
+                  <a
+                    href="mailto:support@zuckerbot.ai"
+                    class="font-medium text-red-600 underline hover:text-red-800"
+                  >
+                    support@zuckerbot.ai </a
+                  >.
+                </p>
+                <p class="leading-relaxed text-red-700">
+                  We'd love to hear from you, gather your feedback, and see how
+                  we can continue to support you. Thank you for being part of
+                  the ZuckerBot community! Your support helps us build something
+                  truly valuable, and we can't wait to continue this journey
+                  with you.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="bg-card absolute bottom-0 left-0 w-full" v-else>
             <form
               @submit="handleSubmit"
               class="flex w-full items-center space-x-2"
