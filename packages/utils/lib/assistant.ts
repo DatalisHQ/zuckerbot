@@ -45,13 +45,13 @@ To provide personalized insights and real-time recommendations, please connect y
 
 You can use the following commands to manage your ad campaigns:
 
-- **\`list my account ids\`**  
+**\`list my account ids\`**  
   Retrieves all your connected Facebook ad account IDs.
 
-- **\`list my campaign ids\`**  
+**\`list my campaign ids\`**  
   Displays the IDs of all your ad campaigns within your connected ad accounts.
 
-- **\`list my insights\`**  
+**\`list my insights\`**  
   Provides detailed insights and performance metrics for your ad campaigns.
     `.trim(); // Removes leading and trailing whitespace
 

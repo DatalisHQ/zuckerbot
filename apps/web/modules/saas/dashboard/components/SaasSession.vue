@@ -95,11 +95,40 @@
 
   const formatMessage = (text: string) => {
     const renderer = new marked.Renderer();
-    renderer.link = ({ href, title, text }) => {
+
+    renderer.link = ({ href, title, text: linkText }: any) => {
       const titleAttr = title ? ` title="${title}"` : "";
-      return `<a href="${href}" target="_blank" rel="noopener noreferrer"${titleAttr}>${text}</a>`;
+      // Parse the link text in case it contains other markdown (like bold)
+      const parsedText = marked.parseInline(linkText, { renderer });
+      return `<a href="${href}" class="text-blue-500 hover:text-blue-700 underline" target="_blank" rel="noopener noreferrer"${titleAttr}>${parsedText}</a>`;
     };
-    return marked.parse(text, { renderer });
+
+    renderer.strong = ({ text: strongText }: any) => {
+      // Parse the strong text in case it contains other markdown (like links)
+      const parsedText = marked.parseInline(strongText, { renderer });
+      return `<strong class="font-bold">${parsedText}</strong>`;
+    };
+
+    // First split into paragraphs
+    const paragraphs = text.split(/\n\n/).filter((p) => p.trim());
+
+    // Process each paragraph with marked for inline elements, then wrap with proper spacing
+    return paragraphs
+      .map((paragraph, index) => {
+        const isLast = index === paragraphs.length - 1;
+        // Parse the markdown content first
+        const parsedContent = marked
+          .parse(paragraph, {
+            renderer,
+            gfm: true,
+            breaks: true,
+          })
+          .replace(/<\/?p>/g, ""); // Remove paragraph tags added by marked
+
+        // Then wrap with our custom paragraph tag
+        return `<p class="${isLast ? "m-0" : "mb-6"}">${parsedContent}</p>`;
+      })
+      .join("");
   };
 
   // Modified form submission to include scroll
