@@ -1,9 +1,11 @@
-# supastarter for Nuxt
+# ZuckerBot
 
-supastarter is the ultimate starter kit for production-ready, scalable SaaS applications.
+ZuckerBot is an AI-Powered Ad Creation for eCommerce & Marketing Agencies
 
-## Helpful links
+## Install
 
-- [📘 Documentation](https://supastarter.dev/docs/nuxt)
-- [🚀 Demo](https://nuxt-demo.supastarter.dev)
-- [💬 Discord](https://discord.gg/BZDNtf8hqt)
+`pnpm run install`
+
+## Run
+
+`pnpm run start`
