@@ -2,7 +2,8 @@ import { db } from "database";
 import { z } from "zod";
 import { protectedProcedure } from "../../trpc";
 import { TRPCError } from "@trpc/server";
-import { generateSessionName } from "utils";
+
+// import { generateSessionName } from "utils";
 
 export const update = protectedProcedure
   .input(
@@ -51,18 +52,18 @@ export const update = protectedProcedure
         data.threadId = threadId;
       }
 
-      if (name) {
-        const session = await db.chatSession.findUnique({
-          where: { id },
-          select: { threadId: true, assistantId: true },
-        });
+      // if (name) {
+      //   const session = await db.chatSession.findUnique({
+      //     where: { id },
+      //     select: { threadId: true, assistantId: true },
+      //   });
 
-        if (session) {
-          const newName = await generateSessionName(session.threadId);
+      //   if (session) {
+      //     const newName = await generateSessionName(session.threadId);
 
-          data.name = newName;
-        }
-      }
+      //     data.name = newName;
+      //   }
+      // }
 
       await db.chatSession.update({
         where: {
