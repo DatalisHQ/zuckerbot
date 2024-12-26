@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { MessageSquareMoreIcon } from "lucide-vue-next";
+  import { MessageSquareMoreIcon, PlusIcon } from "lucide-vue-next";
 
   const { apiCaller } = useApiCaller();
   const emit = defineEmits(["sessionSelected", "sessionCreating"]);
@@ -38,6 +38,45 @@
 
   const message = ref("");
 
+  // Add quick actions
+  const quickActions = [
+    { id: 1, text: "I want to schedule posts" },
+    { id: 2, text: "I want to create an ad" },
+    { id: 3, text: "What are my best & least performing ad?" },
+    { id: 4, text: "I want to see my scheduled posts" },
+  ];
+
+  // Track if dropdown is open
+  const showMore = ref(false);
+
+  // Number of buttons to show before "more"
+  const visibleButtons = 2;
+
+  // Handle quick action click
+  const handleQuickAction = async (text: string) => {
+    if (props.creatingSession) {
+      return;
+    }
+
+    emit("sessionCreating");
+    showMore.value = false;
+
+    try {
+      const response = await apiCaller.chat.create.mutate({
+        name: "(New session)",
+      });
+
+      // Create a session-specific pending message state
+      const pendingMessage = useState<string>(`pending-message-${response.id}`);
+      pendingMessage.value = text; // Use the quick action text directly
+
+      // Navigate to the new session
+      await navigateTo(`/app/dashboard/${response.id}`);
+    } catch (error) {
+      console.error("Error creating session:", error);
+    }
+  };
+
   const handleSubmit = async () => {
     if (props.creatingSession || !message.value.trim()) {
       return;
@@ -67,6 +106,12 @@
       handleSubmit();
     }
   };
+
+  // Close dropdown when clicking outside
+  const dropdownRef = ref(null);
+  onClickOutside(dropdownRef, () => {
+    showMore.value = false;
+  });
 </script>
 
 <template>
@@ -74,6 +119,46 @@
     <div class="text-5xl">Hello, {{ user?.name }}.</div>
     <div class="text-5xl">How can I help you today?</div>
   </div>
+
+  <!-- Quick Actions -->
+  <div class="mb-4 flex flex-wrap gap-2">
+    <!-- Show first N buttons -->
+    <button
+      v-for="action in quickActions.slice(0, visibleButtons)"
+      :key="action.id"
+      @click="handleQuickAction(action.text)"
+      class="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm transition-colors hover:bg-gray-50"
+    >
+      {{ action.text }}
+    </button>
+
+    <!-- Dropdown for additional actions -->
+    <div class="relative" ref="dropdownRef">
+      <button
+        @click="showMore = !showMore"
+        class="rounded-full border border-gray-200 bg-white p-2 transition-colors hover:bg-gray-50"
+        :class="{ 'bg-gray-50': showMore }"
+      >
+        <PlusIcon class="size-5" />
+      </button>
+
+      <!-- Dropdown menu -->
+      <div
+        v-if="showMore"
+        class="absolute right-0 top-full z-50 mt-2 w-80 rounded-md border bg-white py-1 shadow-lg"
+      >
+        <button
+          v-for="action in quickActions.slice(visibleButtons)"
+          :key="action.id"
+          @click="handleQuickAction(action.text)"
+          class="block w-full px-4 py-2 text-left text-sm transition-colors hover:bg-gray-50"
+        >
+          {{ action.text }}
+        </button>
+      </div>
+    </div>
+  </div>
+
   <form @submit.prevent="handleSubmit" class="relative mb-16">
     <textarea
       v-model="message"
