@@ -59,7 +59,7 @@
       <li
         v-for="(name, key) of data"
         :key="key"
-        class="rounded-md border bg-muted p-4"
+        class="rounded-sm border bg-muted p-4"
       >
         {{ name }}
       </li>

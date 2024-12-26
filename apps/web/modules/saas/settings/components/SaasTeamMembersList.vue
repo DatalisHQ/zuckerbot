@@ -100,7 +100,7 @@
 </script>
 
 <template>
-  <div class="rounded-md border">
+  <div class="rounded-sm border">
     <Table>
       <TableBody v-if="props.memberships.length">
         <TableRow v-for="row of props.memberships" :key="row.id">

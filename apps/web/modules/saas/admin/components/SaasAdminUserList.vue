@@ -88,7 +88,7 @@
       class="mb-4"
     />
 
-    <div class="rounded-md border">
+    <div class="rounded-sm border">
       <Table class="w-full">
         <TableBody>
           <template v-if="users?.length > 0">
