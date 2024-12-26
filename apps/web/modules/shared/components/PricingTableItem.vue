@@ -60,7 +60,7 @@
 </script>
 
 <template>
-  <div v-if="variant" class="rounded-xl bg-card/50 p-6 shadow">
+  <div v-if="variant" class="rounded-sm bg-card/50 p-6 shadow">
     <div class="flex h-full flex-col justify-between gap-4">
       <div>
         <h3 class="mb-4 text-2xl font-bold">{{ props.plan.name }}</h3>
