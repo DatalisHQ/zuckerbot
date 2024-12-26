@@ -12,6 +12,7 @@ export const sessions = protectedProcedure
       orderBy: {
         createdAt: "desc",
       },
+      take: 15,
     });
 
     return sessions ?? [];
