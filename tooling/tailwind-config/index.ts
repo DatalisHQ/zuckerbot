@@ -74,9 +74,12 @@ export default {
       },
     },
     extend: {
+      borderWidth: {
+        "0.5": "0.5px",
+      },
       boxShadow: {
-        sm: "0 2px 8px 0 rgb(0, 0, 0, 0.025), 0 0 1px rgba(0,0,0,0.1)",
-        DEFAULT: "0 4px 16px 0 rgb(0, 0, 0, 0.05), 0 0 1px rgba(0,0,0,0.1)",
+        sm: "1px 1px 4px rgb(0, 0, 0, 0.08)",
+        DEFAULT: "1px 3px 9px rgba(21, 34, 50, 0.16)",
         md: "0 6px 24px 0 rgb(0, 0, 0, 0.075), 0 0 1px rgba(0,0,0,0.1)",
         lg: "0 8px 32px 0 rgb(0, 0, 0, 0.1), 0 0 1px rgba(0,0,0,0.1)",
         xl: "0 12px 48px 0 rgb(0, 0, 0, 0.125), 0 0 1px rgba(0,0,0,0.1)",
@@ -85,7 +88,7 @@ export default {
       borderRadius: {
         lg: "0.75rem",
         md: "calc(0.75rem - 2px)",
-        sm: "calc(0.75rem - 4px)",
+        sm: "5px",
       },
       fontFamily: {
         sans: ["Gotham", "sans-serif"],

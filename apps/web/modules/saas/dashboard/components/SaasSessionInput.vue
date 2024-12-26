@@ -45,7 +45,7 @@
       :value="modelValue"
       @input="handleInput"
       @keydown="handleKeydown"
-      class="text-foreground placeholder:text-muted-foreground/60 min-h-12 w-full resize-none overflow-hidden rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-base focus:border-gray-300 focus:outline-0 focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
+      class="text-foreground placeholder:text-muted-foreground/60 min-h-12 w-full resize-none overflow-hidden rounded-sm border border-gray-300 bg-white px-4 py-2.5 text-base focus:border-gray-300 focus:outline-0 focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
       placeholder="Reply to ZuckerBot..."
       rows="1"
     ></textarea>
