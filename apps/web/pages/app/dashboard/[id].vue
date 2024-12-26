@@ -36,34 +36,32 @@
 </script>
 
 <template>
+  <template v-if="selectedSession">
+    <SaasSessionsSidebar
+      @session-creating="handleSessionCreating"
+      :creating-session="creatingSession"
+      :selected-session="selectedSession"
+    />
+  </template>
   <div class="h-full p-8">
-    <div class="flex h-full flex-col items-start gap-8 md:flex-row">
-      <template v-if="selectedSession">
-        <div class="size-full md:max-w-[200px]">
-          <SaasSessionsSidebar
-            @session-creating="handleSessionCreating"
-            :creating-session="creatingSession"
-            :selected-session="selectedSession"
-          />
-        </div>
-        <SaasSession :selectedSession="selectedSession" />
-      </template>
+    <template v-if="selectedSession">
+      <SaasSession :selectedSession="selectedSession" />
+    </template>
 
-      <div
-        v-else
-        class="flex size-full flex-col content-center items-center justify-center"
-      >
-        <Logo size="size-32" :with-label="false" />
-        <div class="mb-4 max-w-96 text-center">
-          A subscription is required to use ZuckerBot. Please subscribe to start
-          using ZuckerBot.
-        </div>
-        <Button>
-          <NuxtLinkLocale to="/app/settings/team/billing" class="block py-1.5">
-            Subscribe
-          </NuxtLinkLocale>
-        </Button>
+    <div
+      v-else
+      class="flex size-full flex-col content-center items-center justify-center"
+    >
+      <Logo size="size-32" :with-label="false" />
+      <div class="mb-4 max-w-96 text-center">
+        A subscription is required to use ZuckerBot. Please subscribe to start
+        using ZuckerBot.
       </div>
+      <Button>
+        <NuxtLinkLocale to="/app/settings/team/billing" class="block py-1.5">
+          Subscribe
+        </NuxtLinkLocale>
+      </Button>
     </div>
   </div>
 </template>

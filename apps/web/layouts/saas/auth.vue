@@ -1,7 +1,7 @@
 <template>
   <div class="flex min-h-screen w-full p-8">
     <div class="flex w-full flex-col items-center justify-between gap-8">
-      <div class="container">
+      <div class="container max-w-none">
         <div class="flex items-center justify-between">
           <NuxtLinkLocale to="/" class="block">
             <Logo />

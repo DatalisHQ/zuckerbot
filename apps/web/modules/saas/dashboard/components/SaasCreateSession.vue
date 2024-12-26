@@ -21,7 +21,7 @@
     emit("sessionCreating");
     try {
       const response = await apiCaller.chat.create.mutate({
-        name: "New session",
+        name: "(New session)",
       });
       router.push(`/app/dashboard/${response.id}`);
     } catch (error) {
