@@ -144,7 +144,7 @@
 
 <template>
   <div
-    class="bg-card text-foreground container mt-4 h-full max-w-6xl rounded-lg border p-8"
+    class="bg-card text-foreground container mt-4 h-full max-w-6xl rounded-sm border p-8"
   >
     <div class="relative flex h-full flex-col">
       <div
@@ -166,7 +166,7 @@
             </div>
             <div class="flex">
               <div
-                class="whitespace-pre-line rounded-lg rounded-tl-none px-4 py-2"
+                class="whitespace-pre-line rounded-sm rounded-tl-none px-4 py-2"
                 :class="[
                   message.role === 'user' ? 'bg-primary' : 'bg-primary/5',
                 ]"
@@ -185,7 +185,7 @@
           </div>
           <div
             v-if="!isPaidUser(user) && chatInstance.messages.length > 6"
-            class="absolute bottom-0 left-0 space-y-4 rounded-lg border border-red-200 bg-red-50 p-6"
+            class="absolute bottom-0 left-0 space-y-4 rounded-sm border border-red-200 bg-red-50 p-6"
           >
             <div class="flex flex-col space-y-6">
               <div class="space-y-3">

@@ -22,7 +22,7 @@
 </script>
 
 <template>
-  <div class="w-full max-w-64 self-start rounded-lg border p-4">
+  <div class="w-full max-w-64 self-start rounded-sm border p-4">
     <h3 class="mb-2 text-base font-semibold">On this page</h3>
     <nav class="list-none space-y-2">
       <MarketingContentTableOfContentsItem
