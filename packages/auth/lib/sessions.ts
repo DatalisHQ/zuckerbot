@@ -55,6 +55,8 @@ export async function validateSessionToken(token: string): Promise<any> {
           name: true,
           onboardingComplete: true,
           role: true,
+          facebookAccessToken: true,
+          facebookTokenExpiresAt: true,
         },
       },
     },
