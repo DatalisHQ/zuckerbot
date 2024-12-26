@@ -3,8 +3,8 @@
 
   const { apiCaller } = useApiCaller();
   const emit = defineEmits(["sessionSelected", "sessionCreating"]);
-  const router = useRouter();
   const { user } = useUser();
+  const router = useRouter();
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString("en-US", {
@@ -36,8 +36,10 @@
     { immediate: true },
   );
 
+  const message = ref("");
+
   const handleSubmit = async () => {
-    if (props.creatingSession) {
+    if (props.creatingSession || !message.value.trim()) {
       return;
     }
 
@@ -47,14 +49,19 @@
       const response = await apiCaller.chat.create.mutate({
         name: "(New session)",
       });
-      router.push(`/app/dashboard/${response.id}`);
+
+      // Create a session-specific pending message state
+      const pendingMessage = useState<string>(`pending-message-${response.id}`);
+      pendingMessage.value = message.value;
+
+      // Navigate to the new session
+      await navigateTo(`/app/dashboard/${response.id}`);
     } catch (error) {
       console.error("Error creating session:", error);
     }
   };
 
   const handleKeyDown = (e: KeyboardEvent) => {
-    // Submit on Enter, but not when Shift is pressed
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSubmit();
@@ -69,6 +76,7 @@
   </div>
   <form @submit.prevent="handleSubmit" class="relative mb-16">
     <textarea
+      v-model="message"
       class="border-primary/10 focus:border-primary/10 min-h-44 w-full resize-none rounded-sm bg-white text-gray-700 placeholder:text-gray-700 focus:outline-0 focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
       placeholder="Chat with Zuckerbot..."
       @keydown="handleKeyDown"
@@ -86,6 +94,7 @@
   <div class="-mx-2 mb-16 flex flex-wrap">
     <div class="w-1/2 grow p-2" v-for="session in data" :key="session.id">
       <Card
+        @click="navigateTo(`/app/dashboard/${session.id}`)"
         class="text-primary hover:bg-primary/10 flex min-h-28 cursor-pointer flex-col justify-between p-4 text-black"
       >
         <div class="mb-3">

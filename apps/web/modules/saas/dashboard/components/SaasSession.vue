@@ -2,7 +2,7 @@
   import { UserIcon, BotIcon } from "lucide-vue-next";
   import type { Message } from "@ai-sdk/vue";
   import { useAssistant } from "@ai-sdk/vue";
-  import { getInitialMessage, isPaidUser } from "utils";
+  import { isPaidUser } from "utils";
   import { marked } from "marked";
   import { nextTick, ref, onMounted, watch, computed } from "vue";
   import SaasSessionInput from "./SaasSessionInput.vue";
@@ -15,12 +15,15 @@
       type: Object,
       required: true,
     },
+    initialMessage: {
+      type: [String, null],
+      default: null,
+    },
   });
 
   const chatInstance = ref();
   const messagesContainer = ref<HTMLElement | null>(null);
 
-  // Function to scroll to bottom
   const scrollToBottom = async () => {
     await nextTick();
     if (messagesContainer.value) {
@@ -31,7 +34,6 @@
     }
   };
 
-  // Watch for changes in messages to trigger scroll
   watch(
     () => chatInstance.value?.messages,
     () => {
@@ -41,7 +43,6 @@
   );
 
   useAsyncData(`chat-${props.selectedSession.id}`, async () => {
-    // Fetch both session and messages in parallel
     const [session, messages] = await Promise.all([
       apiCaller.chat.byId.query({
         id: props.selectedSession.id as string,
@@ -51,18 +52,6 @@
       }),
     ]);
 
-    // Add initial message if needed
-    const initialMessage = {
-      id: Math.random().toString(36).substring(7),
-      createdAt: new Date(),
-      sender: "assistant",
-      text: getInitialMessage(user),
-      sessionId: props.selectedSession.id,
-    };
-
-    messages.unshift(initialMessage);
-
-    // Initialize chat instance
     chatInstance.value = useAssistant({
       api: "/api/assistant",
       body: {
@@ -73,7 +62,6 @@
       }),
     });
 
-    // Set existing messages
     if (messages.length > 0) {
       const existingMessages: Message[] = messages.map((message) => ({
         id: message.id,
@@ -85,7 +73,12 @@
       chatInstance.value.messages = existingMessages;
     }
 
-    // Initial scroll after messages are loaded
+    if (props.initialMessage) {
+      chatInstance.value.input = props.initialMessage;
+      await nextTick();
+      handleSubmit();
+    }
+
     await scrollToBottom();
 
     return {
@@ -108,10 +101,8 @@
       return `<strong class="font-bold">${parsedText}</strong>`;
     };
 
-    // Split into paragraphs
     const paragraphs = text.split(/\n\n/).filter((p) => p.trim());
 
-    // Process each paragraph with marked for inline elements
     return paragraphs
       .map((paragraph, index) => {
         const isLast = index === paragraphs.length - 1;
@@ -121,14 +112,13 @@
             gfm: true,
             breaks: true,
           })
-          .replace(/<\/?p>/g, ""); // Remove paragraph tags added by marked
+          .replace(/<\/?p>/g, "");
 
         return `<p class="${isLast ? "m-0" : "mb-6"}">${parsedContent}</p>`;
       })
       .join("");
   };
 
-  // Handle submission
   const handleSubmit = async () => {
     await chatInstance.value?.handleSubmit();
     scrollToBottom();
@@ -136,7 +126,6 @@
 
   const isReady = computed(() => Boolean(chatInstance.value));
 
-  // Scroll to bottom when component is mounted
   onMounted(() => {
     scrollToBottom();
   });
@@ -166,7 +155,7 @@
             </div>
             <div class="flex">
               <div
-                class="whitespace-pre-line rounded-sm rounded-tl-none px-4 py-2"
+                class="whitespace-pre-line rounded-sm px-4 py-2"
                 :class="[
                   message.role === 'user' ? 'bg-primary' : 'bg-primary/5',
                 ]"
@@ -199,12 +188,10 @@
                     class="font-medium text-red-600 underline hover:text-red-800"
                     target="_blank"
                     rel="noopener noreferrer"
-                  >
-                    upgrade your plan </a
+                    >upgrade your plan</a
                   >.
                 </p>
               </div>
-
               <div class="space-y-3">
                 <p class="font-semibold text-red-900">A Special Note:</p>
                 <p class="leading-relaxed text-red-700">
@@ -215,8 +202,7 @@
                   <a
                     href="mailto:support@zuckerbot.ai"
                     class="font-medium text-red-600 underline hover:text-red-800"
-                  >
-                    support@zuckerbot.ai </a
+                    >support@zuckerbot.ai</a
                   >.
                 </p>
                 <p class="leading-relaxed text-red-700">
@@ -238,7 +224,7 @@
             </div>
           </div>
         </div>
-        <div v-else>Loading messages...</div>
+        <div v-else><!-- Loading messages... --></div>
       </div>
     </div>
   </div>
