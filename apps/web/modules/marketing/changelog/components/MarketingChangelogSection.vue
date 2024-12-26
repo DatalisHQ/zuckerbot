@@ -11,7 +11,7 @@
       <div
         v-for="(item, i) of items"
         :key="i"
-        class="rounded-xl bg-card/50 p-6"
+        class="rounded-sm bg-card/50 p-6"
       >
         <small
           className="inline-block rounded-full border border-highlight/50 px-2 py-0.5 text-xs font-semibold text-highlight"

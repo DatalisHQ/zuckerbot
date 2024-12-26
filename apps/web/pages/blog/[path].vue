@@ -107,7 +107,7 @@
 
       <div
         v-if="post.image?.src"
-        class="relative mt-6 aspect-[16/9] overflow-hidden rounded-xl"
+        class="relative mt-6 aspect-[16/9] overflow-hidden rounded-sm"
       >
         <NuxtImg
           :src="post.image.src"

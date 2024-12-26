@@ -55,7 +55,7 @@
 </script>
 
 <template>
-  <div class="rounded-md border">
+  <div class="rounded-sm border">
     <Table>
       <TableBody v-if="props.invitations.length">
         <TableRow v-for="row of props.invitations" :key="row.id">
