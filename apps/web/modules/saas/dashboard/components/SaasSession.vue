@@ -136,7 +136,7 @@
     <div class="relative h-[calc(100vh-85px)]" v-if="isReady">
       <div
         ref="messagesContainer"
-        class="scroll-hidden h-[calc(100vh-140px)] overflow-y-scroll py-8"
+        class="scroll-hidden h-[calc(100vh-139px)] overflow-y-scroll pb-24 pt-8"
       >
         <div class="my-16">
           <div class="text-5xl">Hello, {{ user?.name }}.</div>
