@@ -32,7 +32,7 @@
 <template>
   <SaasNavBar />
 
-  <main class="h-chat">
+  <main>
     <slot />
   </main>
 </template>

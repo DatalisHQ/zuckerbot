@@ -54,7 +54,7 @@
       :creating-session="creatingSession"
       :selected-session="selectedSession"
     />
-    <div class="mx-auto max-w-3xl p-8">
+    <div class="mx-auto max-w-3xl px-8">
       <SaasSession
         :selectedSession="selectedSession"
         :initialMessage="initialMessage"

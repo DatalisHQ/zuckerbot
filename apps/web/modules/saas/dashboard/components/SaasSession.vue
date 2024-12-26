@@ -132,100 +132,96 @@
 </script>
 
 <template>
-  <div
-    class="bg-card text-foreground container mt-4 h-full max-w-6xl rounded-sm border p-8"
-  >
-    <div class="relative flex h-full flex-col">
+  <div>
+    <div class="relative h-[calc(100vh-85px)]" v-if="isReady">
       <div
         ref="messagesContainer"
-        class="scroll-hidden h-full overflow-y-scroll pb-24"
+        class="scroll-hidden h-[calc(100vh-140px)] overflow-y-scroll py-8"
       >
-        <div v-if="isReady">
-          <div
-            v-for="message in chatInstance.messages"
-            :key="message.id"
-            class="mb-2 flex items-start gap-2"
-          >
-            <div class="rounded-full bg-slate-300 p-2">
-              <UserIcon
-                v-if="message.role === 'user'"
-                class="text-primary-foreground size-4"
-              />
-              <BotIcon v-else class="text-primary-foreground size-4" />
-            </div>
-            <div class="flex">
-              <div
-                class="whitespace-pre-line rounded-sm px-4 py-2"
+        <div class="my-16">
+          <div class="text-5xl">Hello, {{ user?.name }}.</div>
+        </div>
+        <div
+          v-for="message in chatInstance.messages"
+          :key="message.id"
+          class="mb-4 flex items-start gap-2"
+        >
+          <div class="rounded-full bg-slate-300 p-2">
+            <UserIcon
+              v-if="message.role === 'user'"
+              class="text-primary-foreground size-4"
+            />
+            <BotIcon v-else class="text-primary-foreground size-4" />
+          </div>
+          <div class="flex">
+            <div
+              class="whitespace-pre-line rounded-sm px-4 py-2"
+              :class="[message.role === 'user' ? 'bg-primary' : 'bg-primary/5']"
+            >
+              <span
+                class="session-message max-w-lg break-words"
                 :class="[
-                  message.role === 'user' ? 'bg-primary' : 'bg-primary/5',
+                  message.role === 'user'
+                    ? 'text-primary-foreground'
+                    : 'text-primary-background',
                 ]"
-              >
-                <span
-                  class="session-message max-w-lg break-words"
-                  :class="[
-                    message.role === 'user'
-                      ? 'text-primary-foreground'
-                      : 'text-primary-background',
-                  ]"
-                  v-html="formatMessage(message.content)"
-                ></span>
-              </div>
-            </div>
-          </div>
-          <div
-            v-if="!isPaidUser(user) && chatInstance.messages.length > 6"
-            class="absolute bottom-0 left-0 space-y-4 rounded-sm border border-red-200 bg-red-50 p-6"
-          >
-            <div class="flex flex-col space-y-6">
-              <div class="space-y-3">
-                <p class="text-lg font-semibold text-red-900">
-                  Ready to unlock unlimited conversations?
-                </p>
-                <p class="text-red-700">
-                  To continue using the chat, please
-                  <a
-                    href="https://zuckerbot.ai/app/settings/team/billing"
-                    class="font-medium text-red-600 underline hover:text-red-800"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    >upgrade your plan</a
-                  >.
-                </p>
-              </div>
-              <div class="space-y-3">
-                <p class="font-semibold text-red-900">A Special Note:</p>
-                <p class="leading-relaxed text-red-700">
-                  We understand that not everyone may be ready or able to pay
-                  for ZuckerBot at this time, and we don't want that to stop you
-                  from benefiting from the platform. If that's the case, please
-                  feel free to contact us directly at
-                  <a
-                    href="mailto:support@zuckerbot.ai"
-                    class="font-medium text-red-600 underline hover:text-red-800"
-                    >support@zuckerbot.ai</a
-                  >.
-                </p>
-                <p class="leading-relaxed text-red-700">
-                  We'd love to hear from you, gather your feedback, and see how
-                  we can continue to support you. Thank you for being part of
-                  the ZuckerBot community! Your support helps us build something
-                  truly valuable, and we can't wait to continue this journey
-                  with you.
-                </p>
-              </div>
-            </div>
-          </div>
-          <div class="bg-card absolute bottom-0 left-0 w-full" v-else>
-            <div class="flex w-full items-center space-x-2">
-              <SaasSessionInput
-                v-model="chatInstance.input"
-                @submit="handleSubmit"
-              />
+                v-html="formatMessage(message.content)"
+              ></span>
             </div>
           </div>
         </div>
-        <div v-else><!-- Loading messages... --></div>
+        <div
+          v-if="!isPaidUser(user) && chatInstance.messages.length > 6"
+          class="absolute bottom-0 left-0 space-y-4 rounded-sm border border-red-200 bg-red-50 p-6"
+        >
+          <div class="flex flex-col space-y-6">
+            <div class="space-y-3">
+              <p class="text-lg font-semibold text-red-900">
+                Ready to unlock unlimited conversations?
+              </p>
+              <p class="text-red-700">
+                To continue using the chat, please
+                <a
+                  href="https://zuckerbot.ai/app/settings/team/billing"
+                  class="font-medium text-red-600 underline hover:text-red-800"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >upgrade your plan</a
+                >.
+              </p>
+            </div>
+            <div class="space-y-3">
+              <p class="font-semibold text-red-900">A Special Note:</p>
+              <p class="leading-relaxed text-red-700">
+                We understand that not everyone may be ready or able to pay for
+                ZuckerBot at this time, and we don't want that to stop you from
+                benefiting from the platform. If that's the case, please feel
+                free to contact us directly at
+                <a
+                  href="mailto:support@zuckerbot.ai"
+                  class="font-medium text-red-600 underline hover:text-red-800"
+                  >support@zuckerbot.ai</a
+                >.
+              </p>
+              <p class="leading-relaxed text-red-700">
+                We'd love to hear from you, gather your feedback, and see how we
+                can continue to support you. Thank you for being part of the
+                ZuckerBot community! Your support helps us build something truly
+                valuable, and we can't wait to continue this journey with you.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="absolute bottom-0 left-0 w-full">
+        <div class="flex w-full items-center space-x-2">
+          <SaasSessionInput
+            v-model="chatInstance.input"
+            @submit="handleSubmit"
+          />
+        </div>
       </div>
     </div>
+    <div v-else><!-- Loading messages... --></div>
   </div>
 </template>
