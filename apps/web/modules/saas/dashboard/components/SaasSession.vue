@@ -1,11 +1,12 @@
 <script setup lang="ts">
-  import { UserIcon, BotIcon } from "lucide-vue-next";
+  import { UserIcon, BotIcon, ImagePlus } from "lucide-vue-next";
   import type { Message } from "@ai-sdk/vue";
   import { useAssistant } from "@ai-sdk/vue";
   import { isPaidUser } from "utils";
   import { marked } from "marked";
   import { nextTick, ref, onMounted, watch, computed } from "vue";
   import SaasSessionInput from "./SaasSessionInput.vue";
+  import { useDropZone } from "@vueuse/core";
 
   const { user } = useUser();
   const { apiCaller } = useApiCaller();
@@ -23,6 +24,22 @@
 
   const chatInstance = ref();
   const messagesContainer = ref<HTMLElement | null>(null);
+  const dropZoneRef = ref<HTMLDivElement>();
+
+  function onDrop(files: File[] | null) {
+    // called when files are dropped on zone
+    console.log("Dropped files:", files);
+  }
+
+  const { isOverDropZone } = useDropZone(dropZoneRef, {
+    onDrop,
+    // specify the types of data to be received.
+    dataTypes: ["image/jpeg"],
+    // control multi-file drop
+    multiple: true,
+    // whether to prevent default behavior for unhandled events
+    preventDefaultForUnhandled: false,
+  });
 
   const scrollToBottom = async () => {
     await nextTick();
@@ -132,7 +149,31 @@
 </script>
 
 <template>
-  <div>
+  <div ref="dropZoneRef">
+    <Transition
+      enter="transition-opacity duration-200"
+      enter-from="opacity-0"
+      enter-to="opacity-100"
+      leave="transition-opacity duration-200"
+      leave-from="opacity-100"
+      leave-to="opacity-0"
+    >
+      <div
+        v-if="isOverDropZone"
+        class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-blue-500/20 backdrop-blur-sm"
+      >
+        <div class="rounded-xl bg-white p-6 shadow-lg">
+          <div class="flex flex-col items-center gap-4">
+            <ImagePlus class="size-12 text-blue-500" />
+            <p class="text-lg font-medium text-gray-900">
+              Drop your images here
+            </p>
+            <p class="text-sm text-gray-500">Release to upload</p>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
     <div class="relative h-[calc(100vh-85px)]" v-if="isReady">
       <div
         ref="messagesContainer"
@@ -225,3 +266,18 @@
     <div v-else><!-- Loading messages... --></div>
   </div>
 </template>
+
+<style scoped>
+  .transition-opacity {
+    transition-property: opacity;
+  }
+  .duration-200 {
+    transition-duration: 200ms;
+  }
+  .opacity-0 {
+    opacity: 0;
+  }
+  .opacity-100 {
+    opacity: 1;
+  }
+</style>
