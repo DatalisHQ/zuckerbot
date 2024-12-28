@@ -13,10 +13,10 @@
 </script>
 
 <template>
-  <div class="rounded-2xl border bg-card/50 p-6">
+  <div class="rounded-sm border bg-card/50 p-6">
     <div
       v-if="props.post.image?.src"
-      class="relative -m-4 mb-4 aspect-[16/9] overflow-hidden rounded-xl"
+      class="relative -m-4 mb-4 aspect-[16/9] overflow-hidden rounded-sm"
     >
       <NuxtImg
         :src="props.post.image.src"

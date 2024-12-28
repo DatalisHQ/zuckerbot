@@ -42,10 +42,24 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  let content;
+  try {
+    content = JSON.parse(message);
+    console.log("Parsed content:", JSON.stringify(content, null, 2));
+  } catch (e) {
+    // If not JSON, treat as regular text message
+    content = [
+      {
+        type: "text",
+        text: message,
+      },
+    ];
+  }
+
   // Create the message in OpenAI thread
   const createdMessage = await openai.beta.threads.messages.create(threadId, {
     role: "user",
-    content: message,
+    content,
   });
 
   // Save the initial user message

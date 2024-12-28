@@ -1,5 +1,13 @@
+# components/SaasSession.vue
 <script setup lang="ts">
-  import { UserIcon, BotIcon, ImagePlus } from "lucide-vue-next";
+  import {
+    UserIcon,
+    BotIcon,
+    ImagePlus,
+    PaperclipIcon,
+    LoaderCircleIcon,
+    XIcon,
+  } from "lucide-vue-next";
   import type { Message } from "@ai-sdk/vue";
   import { useAssistant } from "@ai-sdk/vue";
   import { isPaidUser } from "utils";
@@ -7,9 +15,11 @@
   import { nextTick, ref, onMounted, watch, computed } from "vue";
   import SaasSessionInput from "./SaasSessionInput.vue";
   import { useDropZone } from "@vueuse/core";
+  import { v4 as uuid } from "uuid";
 
   const { user } = useUser();
   const { apiCaller } = useApiCaller();
+  const config = useRuntimeConfig();
 
   const props = defineProps({
     selectedSession: {
@@ -24,20 +34,92 @@
 
   const chatInstance = ref();
   const messagesContainer = ref<HTMLElement | null>(null);
+  const uploadingFiles = ref(false);
   const dropZoneRef = ref<HTMLDivElement>();
+  const fileInputRef = ref<HTMLInputElement | null>(null);
+  const uploadedFiles = ref<{ name: string; url: string }[]>([]);
+  const files = ref<File[]>([]);
 
-  function onDrop(files: File[] | null) {
-    // called when files are dropped on zone
-    console.log("Dropped files:", files);
-  }
+  const getSignedUploadUrlMutation =
+    apiCaller.uploads.signedUploadUrl.useMutation();
+
+  const uploadFileToS3 = async (file: File) => {
+    const path = `uploads/${uuid()}-${file.name}`;
+    const uploadUrl = await getSignedUploadUrlMutation.mutate({
+      path,
+      bucket: config.public.s3AvatarsBucketName,
+    });
+
+    if (!uploadUrl) {
+      throw new Error("Failed to get upload url");
+    }
+
+    await fetch(uploadUrl, {
+      method: "PUT",
+      body: file,
+      headers: {
+        "Content-Type": file.type,
+      },
+    });
+
+    // Construct public URL directly
+    const publicUrl = `${config.public.s3.endpoint}/${config.public.s3AvatarsBucketName}/${path}`;
+    console.log("Uploaded file to:", publicUrl);
+    return { name: file.name, url: publicUrl, path };
+  };
+
+  const handleFiles = async (newFiles: File[] | null) => {
+    if (!newFiles?.length) return;
+
+    files.value = Array.from(newFiles);
+    uploadingFiles.value = true;
+
+    // Process files in batches of 1
+    const batchSize = 1;
+    const fileBatches = Array.from(
+      { length: Math.ceil(files.value.length / batchSize) },
+      (_, i) => files.value.slice(i * batchSize, (i + 1) * batchSize),
+    );
+
+    try {
+      const allUploads = [];
+
+      // Process each batch sequentially
+      for (const batch of fileBatches) {
+        const batchResults = await Promise.all(
+          batch.map((file) => uploadFileToS3(file)),
+        );
+        allUploads.push(...batchResults);
+
+        // Optional: Add a small delay between batches
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
+
+      uploadedFiles.value.push(...allUploads);
+    } catch (e) {
+      console.error("Error uploading files:", e);
+    } finally {
+      uploadingFiles.value = false;
+    }
+  };
+
+  const onFilesSelected = async (event: Event) => {
+    const input = event.target as HTMLInputElement;
+    await handleFiles(input.files ? Array.from(input.files) : null);
+  };
+
+  const onDrop = async (droppedFiles: File[] | null) => {
+    await handleFiles(droppedFiles);
+  };
+
+  const removeFile = (fileIndex: number) => {
+    uploadedFiles.value.splice(fileIndex, 1);
+  };
 
   const { isOverDropZone } = useDropZone(dropZoneRef, {
     onDrop,
-    // specify the types of data to be received.
-    dataTypes: ["image/jpeg"],
-    // control multi-file drop
+    dataTypes: ["image/jpeg", "image/png", "image/gif", "image/webp"],
     multiple: true,
-    // whether to prevent default behavior for unhandled events
     preventDefaultForUnhandled: false,
   });
 
@@ -48,6 +130,69 @@
         top: messagesContainer.value.scrollHeight,
         behavior: "smooth",
       });
+    }
+  };
+
+  const formatMessage = (content: string) => {
+    const renderer = new marked.Renderer();
+
+    renderer.link = ({ href, title, text: linkText }: any) => {
+      const titleAttr = title ? ` title="${title}"` : "";
+      const parsedText = marked.parseInline(linkText, { renderer });
+      return `<a href="${href}" class="text-blue-500 hover:text-blue-700 underline" target="_blank" rel="noopener noreferrer"${titleAttr}>${parsedText}</a>`;
+    };
+
+    renderer.strong = ({ text: strongText }: any) => {
+      const parsedText = marked.parseInline(strongText, { renderer });
+      return `<strong class="font-bold">${parsedText}</strong>`;
+    };
+
+    const parseOptions = {
+      renderer,
+      gfm: true,
+      breaks: true,
+    };
+
+    try {
+      const parsed = JSON.parse(content);
+
+      // If it's not an array, process as regular markdown
+      if (!Array.isArray(parsed)) {
+        return marked.parse(content, parseOptions);
+      }
+
+      // Process each item separately and join with proper spacing
+      const formattedContent = parsed
+        .map((item, index, array) => {
+          if (item.type === "text") {
+            const parsedText = marked.parse(item.text, parseOptions);
+            // Remove outer <p> tags if present and wrap with our own paragraph
+            const cleanText = parsedText.replace(/<\/?p>/g, "").trim();
+            const isLast = index === array.length - 1;
+            return `<p class="${isLast ? "m-0" : "mb-3"}">${cleanText}</p>`;
+          }
+          if (item.type === "image_url") {
+            return `<div class="flex flex-wrap w-full">
+              <img 
+                src="${item.image_url.url}" 
+                alt="Image" 
+                class="w-full h-auto rounded max-w-[180px]" 
+                loading="lazy"
+              />
+            </div>`;
+          }
+          return "";
+        })
+        .filter(Boolean)
+        .join("\n");
+
+      return formattedContent;
+    } catch (e) {
+      // If parsing fails, treat as markdown
+      const parsedContent = marked.parse(content, parseOptions);
+      // Remove outer <p> tags if present and wrap with our own paragraph
+      const cleanContent = parsedContent.replace(/<\/?p>/g, "").trim();
+      return `<p class="m-0">${cleanContent}</p>`;
     }
   };
 
@@ -104,41 +249,46 @@
     };
   });
 
-  const formatMessage = (text: string) => {
-    const renderer = new marked.Renderer();
-
-    renderer.link = ({ href, title, text: linkText }: any) => {
-      const titleAttr = title ? ` title="${title}"` : "";
-      const parsedText = marked.parseInline(linkText, { renderer });
-      return `<a href="${href}" class="text-blue-500 hover:text-blue-700 underline" target="_blank" rel="noopener noreferrer"${titleAttr}>${parsedText}</a>`;
-    };
-
-    renderer.strong = ({ text: strongText }: any) => {
-      const parsedText = marked.parseInline(strongText, { renderer });
-      return `<strong class="font-bold">${parsedText}</strong>`;
-    };
-
-    const paragraphs = text.split(/\n\n/).filter((p) => p.trim());
-
-    return paragraphs
-      .map((paragraph, index) => {
-        const isLast = index === paragraphs.length - 1;
-        const parsedContent = marked
-          .parse(paragraph, {
-            renderer,
-            gfm: true,
-            breaks: true,
-          })
-          .replace(/<\/?p>/g, "");
-
-        return `<p class="${isLast ? "m-0" : "mb-6"}">${parsedContent}</p>`;
-      })
-      .join("");
-  };
-
   const handleSubmit = async () => {
-    await chatInstance.value?.handleSubmit();
-    scrollToBottom();
+    if (!chatInstance.value?.input?.trim() && !uploadedFiles.value.length) {
+      return;
+    }
+
+    try {
+      // Create the content array
+      const content = [];
+
+      // Add text if present
+      if (chatInstance.value?.input?.trim()) {
+        content.push({
+          type: "text",
+          text: chatInstance.value.input.trim(),
+        });
+      }
+
+      // Add images with proper OpenAI format
+      for (const file of uploadedFiles.value) {
+        content.push({
+          type: "image_url",
+          image_url: {
+            url: file.url,
+          },
+        });
+      }
+
+      // Set the JSON string as the input value
+      chatInstance.value.input = JSON.stringify(content);
+      console.log("Setting input to:", chatInstance.value.input);
+
+      // Send through the assistant hook
+      await chatInstance.value?.handleSubmit();
+
+      // Clear the uploaded files
+      uploadedFiles.value = [];
+      scrollToBottom();
+    } catch (error) {
+      console.error("Error submitting:", error);
+    }
   };
 
   const isReady = computed(() => Boolean(chatInstance.value));
@@ -162,7 +312,7 @@
         v-if="isOverDropZone"
         class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-blue-500/20 backdrop-blur-sm"
       >
-        <div class="rounded-xl bg-white p-6 shadow-lg">
+        <div class="rounded-sm bg-white p-6 shadow-lg">
           <div class="flex flex-col items-center gap-4">
             <ImagePlus class="size-12 text-blue-500" />
             <p class="text-lg font-medium text-gray-900">
@@ -197,7 +347,10 @@
           <div class="flex">
             <div
               class="whitespace-pre-line rounded-sm px-4 py-2"
-              :class="[message.role === 'user' ? 'bg-primary' : 'bg-primary/5']"
+              :class="[
+                message.role === 'user' ? 'bg-primary/50' : 'bg-primary/5',
+                message.content.includes('![') ? 'w-[664px]' : 'max-w-[664px]',
+              ]"
             >
               <span
                 class="session-message max-w-lg break-words"
@@ -211,6 +364,7 @@
             </div>
           </div>
         </div>
+
         <div
           v-if="!isPaidUser(user) && chatInstance.messages.length > 6"
           class="absolute bottom-0 left-0 space-y-4 rounded-sm border border-red-200 bg-red-50 p-6"
@@ -254,12 +408,68 @@
           </div>
         </div>
       </div>
+
       <div class="absolute bottom-0 left-0 w-full">
-        <div class="flex w-full items-center space-x-2">
+        <div class="relative flex w-full items-center">
+          <div
+            v-if="uploadedFiles.length > 0"
+            class="absolute bottom-full mb-3 flex flex-wrap items-start gap-4"
+          >
+            <div
+              v-for="(file, index) in uploadedFiles"
+              :key="file.url"
+              class="relative flex items-center gap-2 rounded bg-white shadow"
+            >
+              <div
+                class="relative size-20 shrink-0 overflow-hidden rounded-sm bg-gray-100"
+              >
+                <div
+                  v-if="!file.url"
+                  class="absolute inset-0 flex items-center justify-center"
+                >
+                  <ImageIcon class="size-5 text-gray-400" />
+                </div>
+                <img
+                  v-else
+                  :src="file.url"
+                  :alt="file.name"
+                  class="absolute inset-0 size-full object-cover"
+                />
+              </div>
+
+              <div class="absolute -right-2 -top-2 rounded-full bg-white p-1">
+                <XIcon
+                  class="size-3 cursor-pointer text-gray-500 hover:text-gray-600"
+                  @click="removeFile(index)"
+                />
+              </div>
+            </div>
+          </div>
+
           <SaasSessionInput
             v-model="chatInstance.input"
             @submit="handleSubmit"
+            :show-quick-actions="uploadedFiles.length === 0"
           />
+          <input
+            type="file"
+            multiple
+            accept="image/*"
+            @change="onFilesSelected"
+            class="hidden"
+            ref="fileInputRef"
+          />
+
+          <div
+            class="absolute bottom-5 right-3 cursor-pointer"
+            @click="fileInputRef?.click()"
+          >
+            <PaperclipIcon
+              class="size-5 cursor-pointer"
+              v-if="!uploadingFiles"
+            />
+            <LoaderCircleIcon class="size-5 animate-spin" v-else />
+          </div>
         </div>
       </div>
     </div>
