@@ -22,6 +22,10 @@ export default defineNuxtConfig({
     public: {
       siteUrl: baseUrl,
       s3AvatarsBucketName: process.env.NUXT_PUBLIC_S3_AVATARS_BUCKET_NAME,
+      s3: {
+        endpoint: process.env.S3_ENDPOINT,
+        region: process.env.S3_REGION,
+      },
       analytics: {
         googleAnalyticsId: process.env.NUXT_PUBLIC_GOOGLE_ANALYTICS_ID,
         mixpanelToken: process.env.NUXT_PUBLIC_MIXPANEL_TOKEN,
