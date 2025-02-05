@@ -1,9 +1,16 @@
-import { Argon2id } from "oslo/password";
+import { hash, verify } from "@node-rs/argon2";
+
+// if you want your app to be compatible with edge runtime, use bcrypt-edge
+// import { hashSync, verifySync } from "bcrypt-edge";
 
 export async function hashPassword(password: string) {
-  return await new Argon2id().hash(password);
+  return await hash(password, {
+    algorithm: 2,
+  });
 }
 
 export async function verifyPassword(hashedPassword: string, password: string) {
-  return new Argon2id().verify(hashedPassword, password);
+  return verify(hashedPassword, password, {
+    algorithm: 2,
+  });
 }

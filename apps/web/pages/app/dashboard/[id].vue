@@ -13,11 +13,23 @@
   const error = ref<string | null>(null);
   const creatingSession = ref(false);
 
+  // Create a ref to pass the initial message to SaasSession
+  const initialMessage = ref<string | null>(null);
+
   const fetchSession = async () => {
+    const sessionId = route.params.id as string;
+    const pendingMessage = useState<string>(`pending-message-${sessionId}`);
+
+    // Store the initial message in our ref
+    initialMessage.value = pendingMessage.value;
+
+    // Clear it after storing
+    pendingMessage.value = "";
+
     try {
       loading.value = true;
       const response = await apiCaller.chat.session.query({
-        id: route.params.id,
+        id: sessionId,
       });
       selectedSession.value = response;
     } catch (err) {
@@ -36,34 +48,17 @@
 </script>
 
 <template>
-  <div class="h-full p-8">
-    <div class="flex h-full flex-col items-start gap-8 md:flex-row">
-      <template v-if="selectedSession">
-        <div class="size-full md:max-w-[200px]">
-          <SaasSessionsSidebar
-            @session-creating="handleSessionCreating"
-            :creating-session="creatingSession"
-            :selected-session="selectedSession"
-          />
-        </div>
-        <SaasSession :selectedSession="selectedSession" />
-      </template>
-
-      <div
-        v-else
-        class="flex size-full flex-col content-center items-center justify-center"
-      >
-        <Logo size="size-32" :with-label="false" />
-        <div class="mb-4 max-w-96 text-center">
-          A subscription is required to use ZuckerBot. Please subscribe to start
-          using ZuckerBot.
-        </div>
-        <Button>
-          <NuxtLinkLocale to="/app/settings/team/billing" class="block py-1.5">
-            Subscribe
-          </NuxtLinkLocale>
-        </Button>
-      </div>
+  <template v-if="selectedSession">
+    <SaasSessionsSidebar
+      @session-creating="handleSessionCreating"
+      :creating-session="creatingSession"
+      :selected-session="selectedSession"
+    />
+    <div class="mx-auto max-w-3xl px-8">
+      <SaasSession
+        :selectedSession="selectedSession"
+        :initialMessage="initialMessage"
+      />
     </div>
-  </div>
+  </template>
 </template>

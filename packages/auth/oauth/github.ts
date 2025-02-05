@@ -5,8 +5,9 @@ import {
 } from "../lib/oauth";
 
 export const githubAuth = new GitHub(
-  process.env.GITHUB_CLIENT_ID!,
-  process.env.GITHUB_CLIENT_SECRET!,
+  process.env.GITHUB_CLIENT_ID as string,
+  process.env.GITHUB_CLIENT_SECRET as string,
+  null,
 );
 
 const GITHUB_PROIVDER_ID = "github";
@@ -27,12 +28,9 @@ type GithubUserEmails = {
 
 export const githubRouteHandler = createOauthRedirectHandler(
   GITHUB_PROIVDER_ID,
-  async () => {
+  () => {
     const state = generateState();
-
-    const url = await githubAuth.createAuthorizationURL(state, {
-      scopes: ["user:email"],
-    });
+    const url = githubAuth.createAuthorizationURL(state, ["user:email"]);
 
     return {
       state,
@@ -47,12 +45,12 @@ export const githubCallbackRouteHandler = createOauthCallbackHandler(
     const tokens = await githubAuth.validateAuthorizationCode(code);
     const githubUserResponse = await fetch("https://api.github.com/user", {
       headers: {
-        Authorization: `Bearer ${tokens.accessToken}`,
+        Authorization: `Bearer ${tokens.accessToken()}`,
       },
     });
     const emailsResponse = await fetch("https://api.github.com/user/emails", {
       headers: {
-        Authorization: `Bearer ${tokens.accessToken}`,
+        Authorization: `Bearer ${tokens.accessToken()}`,
       },
     });
 

@@ -21,6 +21,11 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       siteUrl: baseUrl,
+      s3AvatarsBucketName: process.env.NUXT_PUBLIC_S3_AVATARS_BUCKET_NAME,
+      s3: {
+        endpoint: process.env.S3_ENDPOINT,
+        region: process.env.S3_REGION,
+      },
       analytics: {
         googleAnalyticsId: process.env.NUXT_PUBLIC_GOOGLE_ANALYTICS_ID,
         mixpanelToken: process.env.NUXT_PUBLIC_MIXPANEL_TOKEN,
@@ -80,11 +85,6 @@ export default defineNuxtConfig({
     transpile: ["trpc-nuxt"],
   },
 
-  // packages/auth
-  nitro: {
-    moduleSideEffects: ["lucia/polyfill/node"],
-  },
-
   modules: [
     "@nuxtjs/i18n", // configured here and in i18n.config.ts
     "@nuxtjs/tailwindcss", // configured in tailwind.config.ts
@@ -122,7 +122,7 @@ export default defineNuxtConfig({
   googleFonts: {
     display: "swap",
     families: {
-      Poppins: [400, 500, 600, 700],
+      Inter: [400, 500, 600, 700],
     },
   },
 

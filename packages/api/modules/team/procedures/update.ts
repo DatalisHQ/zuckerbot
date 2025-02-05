@@ -12,23 +12,25 @@ export const update = protectedProcedure
     }),
   )
   .output(TeamSchema)
-  .mutation(async ({ input: { id, name, avatarUrl }, ctx: { abilities } }) => {
-    if (!abilities.isTeamOwner(id)) {
-      throw new TRPCError({
-        code: "UNAUTHORIZED",
-        message: "No permission to update this team.",
+  .mutation(
+    async ({ input: { id, name, avatarUrl }, ctx: { abilities, user } }) => {
+      if (!abilities.isTeamOwner(id)) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "No permission to update this team.",
+        });
+      }
+
+      const team = await db.team.update({
+        where: {
+          id,
+        },
+        data: {
+          name,
+          avatarUrl,
+        },
       });
-    }
 
-    const team = await db.team.update({
-      where: {
-        id,
-      },
-      data: {
-        name,
-        avatarUrl,
-      },
-    });
-
-    return team;
-  });
+      return team;
+    },
+  );

@@ -3,13 +3,13 @@
   "version": "0.0.0",
   "private": true,
   "dependencies": {
-    "consola": "^3.2.3",
+    "consola": "^3.3.0",
     "eslint-config-custom": "workspace:*",
     "tsconfig": "workspace:*",
     "utils": "workspace:*"
   },
   "devDependencies": {
-    "@types/nodemailer": "^6.4.11",
+    "@types/nodemailer": "^6.4.17",
     "eslint": "8.57.0"
   }
 }

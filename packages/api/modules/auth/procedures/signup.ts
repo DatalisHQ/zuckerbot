@@ -5,6 +5,7 @@ import { passwordSchema } from "auth/lib/passwords";
 import { UserRoleSchema, db } from "database";
 import { logger } from "logs";
 import { z } from "zod";
+import { sendEmail } from "../../../../../apps/web/server/utils/mail/send";
 import { publicProcedure } from "../../trpc";
 
 export const signup = publicProcedure
@@ -58,7 +59,6 @@ export const signup = publicProcedure
       const url = new URL(callbackUrl);
       url.searchParams.set("token", token);
 
-      // @ts-expect-error - sendEmail is auto-imported
       await sendEmail({
         templateId: "newUser",
         to: email,

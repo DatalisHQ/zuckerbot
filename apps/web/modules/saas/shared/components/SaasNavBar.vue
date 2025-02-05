@@ -1,10 +1,5 @@
 <script setup lang="ts">
-  import {
-    ChevronRightIcon,
-    GridIcon,
-    SettingsIcon,
-    UserCogIcon,
-  } from "lucide-vue-next";
+  import { UserCogIcon } from "lucide-vue-next";
 
   const route = useRoute();
   const { t } = useTranslations();
@@ -20,16 +15,6 @@
 
   const menuItems = computed<MenuItem[]>(() => {
     return [
-      {
-        label: t("dashboard.menu.dashboard"),
-        icon: GridIcon,
-        to: "/app/dashboard",
-      },
-      {
-        label: t("dashboard.menu.settings"),
-        icon: SettingsIcon,
-        to: "/app/settings",
-      },
       ...(isAdmin.value
         ? ([
             {
@@ -48,28 +33,21 @@
 </script>
 
 <template>
-  <nav class="w-full border-b">
-    <div class="px-8 py-4">
-      <div class="flex flex-wrap items-center justify-between gap-4">
-        <div class="flex items-center gap-3">
-          <NuxtLinkLocale to="/" class="block">
-            <Logo />
-          </NuxtLinkLocale>
+  <nav class="w-full bg-white shadow-sm">
+    <div class="container max-w-none py-4">
+      <div class="flex items-center justify-between gap-3">
+        <a href="https://zuckerbot.ai/app/dashboard" class="block">
+          <Logo />
+        </a>
 
-          <span class="hidden opacity-30 md:block">
-            <ChevronRightIcon class="size-4" />
-          </span>
-
-          <SaasTeamSelect />
-        </div>
-
-        <div class="ml-auto mr-0 flex items-center justify-end gap-4">
+        <div class="flex items-center justify-end gap-4">
+          <SaasTeamSelect class="mr-3" />
           <UserMenu />
         </div>
       </div>
 
       <ul
-        class="no-scrollbar -mx-8 -mb-4 mt-6 flex list-none items-center justify-start gap-6 overflow-x-auto px-8 text-sm lg:text-base"
+        class="no-scrollbar -mx-8 -mb-4 mt-6 flex list-none items-center justify-start gap-6 overflow-x-auto px-8 text-sm lg:hidden lg:text-base"
       >
         <li v-for="menuItem of menuItems" :key="menuItem.to">
           <NuxtLinkLocale

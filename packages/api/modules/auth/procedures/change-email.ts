@@ -1,4 +1,8 @@
-import { generateVerificationToken, lucia } from "auth";
+import {
+  createSessionCookie,
+  generateVerificationToken,
+  invalidateUserSessions,
+} from "auth";
 import { db } from "database";
 import { setCookie } from "h3";
 import { z } from "zod";
@@ -31,8 +35,9 @@ export const changeEmail = protectedProcedure
       },
     });
 
-    await lucia.invalidateUserSessions(user.id);
-    const sessionCookie = lucia.createBlankSessionCookie();
+    await invalidateUserSessions(user.id);
+
+    const sessionCookie = createSessionCookie(null);
     if (event) {
       setCookie(
         event,

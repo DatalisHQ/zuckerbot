@@ -2,18 +2,19 @@ import { OAuth2RequestError } from "arctic";
 import { db } from "database";
 import type { EventHandlerRequest, H3Event } from "h3";
 import { getRequestURL, parseCookies, sendRedirect, setCookie } from "h3";
-import { lucia } from "./lucia";
+import { createSessionCookie } from "./cookies";
+import { createSession, generateSessionToken } from "./sessions";
 
 export function createOauthRedirectHandler(
   providerId: string,
-  createAuthorizationTokens: () => Promise<{
+  createAuthorizationTokens: () => {
     state: string;
     codeVerifier?: string;
     url: URL;
-  }>,
+  },
 ) {
   return async function (event: H3Event<EventHandlerRequest>) {
-    const { url, state, codeVerifier } = await createAuthorizationTokens();
+    const { url, state, codeVerifier } = createAuthorizationTokens();
 
     setCookie(event, `${providerId}_oauth_state`, state, {
       httpOnly: true,
@@ -110,14 +111,9 @@ export function createOauthCallbackHandler(
           });
         }
 
-        const session = await lucia.createSession(existingUser.id, {});
-        const sessionCookie = lucia.createSessionCookie(session.id);
-        setCookie(
-          event,
-          sessionCookie.name,
-          sessionCookie.value,
-          sessionCookie.attributes,
-        );
+        const sessionToken = generateSessionToken();
+        await createSession(sessionToken, existingUser.id);
+
         return new Response(null, {
           status: 302,
           headers: {
@@ -142,14 +138,19 @@ export function createOauthCallbackHandler(
           userId: newUser.id,
         },
       });
-      const session = await lucia.createSession(newUser.id, {});
-      const sessionCookie = lucia.createSessionCookie(session.id);
+
+      const sessionToken = generateSessionToken();
+      await createSession(sessionToken, newUser.id);
+
+      const sessionCookie = createSessionCookie(sessionToken);
+
       setCookie(
         event,
         sessionCookie.name,
         sessionCookie.value,
         sessionCookie.attributes,
       );
+
       return new Response(null, {
         status: 302,
         headers: {

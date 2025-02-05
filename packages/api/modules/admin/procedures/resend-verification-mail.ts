@@ -3,6 +3,7 @@ import { generateOneTimePassword, generateVerificationToken } from "auth";
 import { db } from "database";
 import { getBaseUrl } from "utils";
 import { z } from "zod";
+import { sendEmail } from "../../../../../apps/web/server/utils/mail/send";
 import { adminProcedure } from "../../trpc";
 
 export const resendVerificationMail = adminProcedure
@@ -45,7 +46,6 @@ export const resendVerificationMail = adminProcedure
     url.searchParams.set("token", token);
 
     try {
-      // @ts-expect-error - sendEmail is auto-imported
       await sendEmail({
         templateId: "newUser",
         to: user.email,

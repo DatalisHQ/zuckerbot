@@ -54,21 +54,14 @@ const isAdminMiddleware = t.middleware(({ ctx, next }) => {
 });
 
 const loggerMiddleware = t.middleware(async (opts) => {
-  const { type, meta, next, path, rawInput } = opts;
+  const { type, next, path } = opts;
   const start = Date.now();
   const request = await next(opts);
   const duration = Date.now() - start;
 
-  const resultPayload = {
-    input: await rawInput,
-    meta,
-  };
-
   const logLabel = `${type.toUpperCase()} ${path} in ${duration}ms`;
 
-  request.ok
-    ? logger.info(logLabel, resultPayload)
-    : logger.error(logLabel, resultPayload);
+  request.ok ? logger.info(logLabel) : logger.error(logLabel);
 
   return request;
 });

@@ -2,6 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { generateOneTimePassword, generateVerificationToken } from "auth";
 import { db } from "database";
 import { z } from "zod";
+import { sendEmail } from "../../../../../apps/web/server/utils/mail/send";
 import { publicProcedure } from "../../trpc";
 
 export const forgotPassword = publicProcedure
@@ -40,7 +41,6 @@ export const forgotPassword = publicProcedure
       const url = new URL(callbackUrl);
       url.searchParams.set("token", token);
 
-      // @ts-expect-error - sendEmail is auto-imported
       await sendEmail({
         templateId: "forgotPassword",
         to: email,

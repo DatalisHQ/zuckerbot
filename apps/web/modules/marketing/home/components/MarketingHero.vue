@@ -150,7 +150,7 @@
     </div> -->
 
     <div
-      class="bg-card/50 dark:shadow-foreground/10 mt-16 rounded-2xl border p-2 shadow-lg"
+      class="bg-card/50 dark:shadow-foreground/10 mt-16 rounded-sm border p-2 shadow-lg"
     >
       <video
         width="100%"
@@ -159,7 +159,7 @@
         loop
         muted
         playsinline
-        class="block w-full rounded-xl"
+        class="block w-full rounded-sm"
       >
         <source src="/hero-video.mp4" type="video/mp4" />
       </video>

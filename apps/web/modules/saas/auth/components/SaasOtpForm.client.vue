@@ -56,9 +56,12 @@
   // Redirect if user is already logged in
   watchEffect(() => {
     if (user.value && loaded.value) {
-      // Only redirect a user that already has a team.
+      // If the user has at least one team membership, redirect as before
       if (user.value.teamMemberships?.length) {
         handleRedirect();
+      } else {
+        // If the user is logged in but has no team memberships, redirect to onboarding
+        window.location.href = localePath("/onboarding");
       }
     }
   });
@@ -96,7 +99,7 @@
 <template>
   <div>
     <h1 class="text-3xl font-bold">{{ $t("auth.verifyOtp.title") }}</h1>
-    <p class="mb-6 mt-2 text-muted-foreground">
+    <p class="text-muted-foreground mb-6 mt-2">
       {{ $t("auth.verifyOtp.message") }}
     </p>
 

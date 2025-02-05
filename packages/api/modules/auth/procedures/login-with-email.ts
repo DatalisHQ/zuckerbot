@@ -3,6 +3,7 @@ import { generateOneTimePassword, generateVerificationToken } from "auth";
 import { db } from "database";
 import { logger } from "logs";
 import { z } from "zod";
+import { sendEmail } from "../../../../../apps/web/server/utils/mail/send";
 import { publicProcedure } from "../../trpc";
 
 export const loginWithEmail = publicProcedure
@@ -64,7 +65,6 @@ export const loginWithEmail = publicProcedure
       const url = new URL(callbackUrl);
       url.searchParams.set("token", token);
 
-      // @ts-expect-error - sendEmail is auto-imported
       await sendEmail({
         templateId: "magicLink",
         to: email,

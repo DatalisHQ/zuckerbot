@@ -79,7 +79,7 @@
 </script>
 
 <template>
-  <div class="rounded-lg bg-card p-6 shadow-sm">
+  <div class="bg-card rounded-sm p-6 shadow-sm">
     <h2 class="mb-4 text-2xl font-semibold">{{ $t("admin.users.title") }}</h2>
     <Input
       type="search"
@@ -88,7 +88,7 @@
       class="mb-4"
     />
 
-    <div class="rounded-md border">
+    <div class="rounded-sm border">
       <Table class="w-full">
         <TableBody>
           <template v-if="users?.length > 0">
@@ -112,7 +112,7 @@
                 v-if="pending"
                 class="flex h-full items-center justify-center"
               >
-                <LoaderIcon class="mr-2 size-4 animate-spin text-primary" />
+                <LoaderIcon class="text-primary mr-2 size-4 animate-spin" />
                 {{ $t("admin.users.loading") }}
               </div>
 
@@ -135,7 +135,7 @@
     >
       <PaginationList
         v-slot="{ items }"
-        class="flex items-center gap-1 justify-center"
+        class="flex items-center justify-center gap-1"
       >
         <PaginationPrev />
 
@@ -147,7 +147,7 @@
             as-child
           >
             <Button
-              class="w-10 h-10 p-0"
+              class="size-10 p-0"
               :variant="item.value === page ? 'default' : 'outline'"
             >
               {{ item.value }}

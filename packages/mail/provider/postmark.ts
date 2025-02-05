@@ -1,7 +1,7 @@
 import { config } from "@config";
 import type { SendEmailHandler } from "../types";
 
-const { from } = config.mailing;
+const { from } = config.mails;
 
 export const send: SendEmailHandler = async ({ to, subject, html }) => {
   const response = await fetch("https://api.postmarkapp.com/email", {

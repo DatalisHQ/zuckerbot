@@ -1,7 +1,7 @@
 <script setup lang="ts">
+  import { useToast } from "@/modules/ui/components/toast";
   import { LoaderIcon } from "lucide-vue-next";
   import { v4 as uuid } from "uuid";
-  import { useToast } from "@/modules/ui/components/toast";
 
   const uploading = ref(false);
   const image = ref<File | null>(null);
@@ -11,6 +11,7 @@
   const { apiCaller } = useApiCaller();
   const { toast } = useToast();
   const { t } = useTranslations();
+  const config = useRuntimeConfig();
 
   const getSignedUploadUrlMutation =
     apiCaller.uploads.signedUploadUrl.useMutation();
@@ -35,10 +36,11 @@
 
     uploading.value = true;
     try {
+      const bucketName = config.public.s3AvatarsBucketName;
       const path = `/${currentTeam.value?.id}-${uuid()}.png`;
       const uploadUrl = await getSignedUploadUrlMutation.mutate({
         path,
-        bucket: process.env.NUXT_PUBLIC_S3_AVATARS_BUCKET_NAME as string,
+        bucket: bucketName,
       });
 
       if (!uploadUrl) {

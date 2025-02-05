@@ -2,6 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { db } from "database";
 import { getBaseUrl } from "utils";
 import { z } from "zod";
+import { sendEmail } from "../../../../../apps/web/server/utils/mail/send";
 import { protectedProcedure } from "../../trpc";
 
 export const inviteMember = protectedProcedure
@@ -37,7 +38,6 @@ export const inviteMember = protectedProcedure
         },
       });
 
-      // @ts-expect-error - sendEmail is auto-imported
       await sendEmail({
         templateId: "teamInvitation",
         to: email,

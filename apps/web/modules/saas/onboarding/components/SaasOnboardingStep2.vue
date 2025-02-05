@@ -56,7 +56,7 @@
           })
         }}
       </p>
-      <Button type="submit" :loading="isSubmitting">
+      <Button @click="emit('complete')">
         <CheckIcon class="mr-2 size-4" />
         {{ t("onboarding.complete") }}
       </Button>

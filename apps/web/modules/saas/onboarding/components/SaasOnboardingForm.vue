@@ -32,13 +32,13 @@
 <template>
   <div>
     <h1 class="text-3xl font-bold">{{ $t("onboarding.title") }}</h1>
-    <p class="mb-6 mt-2 text-muted-foreground">
+    <p class="text-muted-foreground mb-6 mt-2">
       {{ $t("onboarding.message") }}
     </p>
 
     <div class="mb-6 flex items-center gap-3">
       <Progress :model-value="(Number(step) / totalSteps) * 100" class="h-2" />
-      <span class="shrink-0 text-xs text-muted-foreground">
+      <span class="text-muted-foreground shrink-0 text-xs">
         {{
           $t("onboarding.step", {
             step,

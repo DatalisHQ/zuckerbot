@@ -63,7 +63,7 @@
           v-for="(item, i) of faqItems"
           :key="i"
           :value="`faq-item-${i}`"
-          class="bg-card rounded-xl border px-6 py-4"
+          class="bg-card rounded-sm border px-6 py-4"
         >
           <AccordionTrigger class="py-2 text-lg">
             {{ item.question }}

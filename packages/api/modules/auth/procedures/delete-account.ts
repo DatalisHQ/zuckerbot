@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { lucia } from "auth";
+import { createSessionCookie } from "auth";
 import { db } from "database";
 import { setCookie } from "h3";
 import { z } from "zod";
@@ -25,7 +25,7 @@ export const deleteAccount = protectedProcedure
         },
       });
 
-      const sessionCookie = lucia.createBlankSessionCookie();
+      const sessionCookie = createSessionCookie(null);
 
       if (event) {
         setCookie(

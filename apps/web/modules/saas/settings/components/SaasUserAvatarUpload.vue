@@ -13,6 +13,7 @@
   const dropZoneRef = ref<HTMLDivElement>();
   const { updateUser, user } = useUser();
   const { apiCaller } = useApiCaller();
+  const config = useRuntimeConfig();
 
   const getSignedUploadUrlMutation =
     apiCaller.uploads.signedUploadUrl.useMutation();
@@ -36,11 +37,13 @@
     }
 
     uploading.value = true;
+
     try {
+      const bucketName = config.public.s3AvatarsBucketName;
       const path = `/${user.value.id}-${uuid()}.png`;
       const uploadUrl = await getSignedUploadUrlMutation.mutate({
         path,
-        bucket: process.env.NUXT_PUBLIC_S3_AVATARS_BUCKET_NAME as string,
+        bucket: bucketName,
       });
 
       if (!uploadUrl) {

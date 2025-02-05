@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { sendEmail } from "../../../../../apps/web/server/utils/mail/send";
 import { publicProcedure } from "../../trpc/trpc";
 
 export const signup = publicProcedure
@@ -8,7 +9,6 @@ export const signup = publicProcedure
     }),
   )
   .mutation(async ({ input: { email } }) => {
-    // @ts-expect-error - sendEmail is auto-imported
     return await sendEmail({
       to: email,
       templateId: "newsletterSignup",

@@ -1,6 +1,12 @@
 import { TRPCError } from "@trpc/server";
-import { lucia, validateVerificationToken } from "auth";
+import {
+  createSession,
+  createSessionCookie,
+  generateSessionToken,
+  validateVerificationToken,
+} from "auth";
 import { db } from "database";
+import { setCookie } from "h3";
 import { z } from "zod";
 import { publicProcedure } from "../../trpc";
 
@@ -35,9 +41,10 @@ export const verifyToken = publicProcedure
           },
         });
 
-      const session = await lucia.createSession(userId, {});
+      const sessionToken = generateSessionToken();
+      await createSession(sessionToken, userId);
 
-      const sessionCookie = lucia.createSessionCookie(session.id);
+      const sessionCookie = createSessionCookie(sessionToken);
       if (event) {
         setCookie(
           event,
@@ -46,8 +53,6 @@ export const verifyToken = publicProcedure
           sessionCookie.attributes,
         );
       }
-
-      return session;
     } catch (e) {
       throw new TRPCError({
         code: "BAD_REQUEST",

@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { lucia } from "auth";
+import { createSession, createSessionCookie, generateSessionToken } from "auth";
 import { verifyPassword } from "auth/lib/hashing";
 import { UserSchema, db } from "database";
 import { setCookie } from "h3";
@@ -83,9 +83,12 @@ export const loginWithPassword = publicProcedure
         code: "NOT_FOUND",
       });
 
-    const session = await lucia.createSession(user.id, {});
+    const sessionToken = await generateSessionToken();
 
-    const sessionCookie = lucia.createSessionCookie(session.id);
+    await createSession(sessionToken, user.id);
+
+    const sessionCookie = createSessionCookie(sessionToken);
+
     if (event) {
       setCookie(
         event,

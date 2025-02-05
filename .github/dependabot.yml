@@ -13,3 +13,7 @@ updates:
         patterns:
           - "@prisma/*"
           - "prisma"
+      vee-validate:
+        patterns:
+          - "@vee-validate/*"
+          - "vee-validate"

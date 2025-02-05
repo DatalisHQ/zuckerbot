@@ -1,5 +1,10 @@
 import { TRPCError } from "@trpc/server";
-import { lucia } from "auth";
+import {
+  createSession,
+  createSessionCookie,
+  generateSessionToken,
+  invalidateSession,
+} from "auth";
 import { db } from "database";
 import { setCookie } from "h3";
 import { z } from "zod";
@@ -21,14 +26,12 @@ export const unimpersonate = protectedProcedure
         throw new TRPCError({ code: "NOT_FOUND" });
       }
 
-      await lucia.invalidateSession(session.id);
+      await invalidateSession(session.id);
 
-      const newSession = await lucia.createSession(
-        currentSession.impersonatorId,
-        {},
-      );
+      const newSessionToken = await generateSessionToken();
+      await createSession(newSessionToken, currentSession.impersonatorId);
+      const sessionCookie = createSessionCookie(newSessionToken);
 
-      const sessionCookie = lucia.createSessionCookie(newSession.id);
       if (event) {
         setCookie(
           event,

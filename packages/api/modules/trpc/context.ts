@@ -1,6 +1,6 @@
 import { config, type Locale } from "@config";
 import type { inferAsyncReturnType } from "@trpc/server";
-import { lucia } from "auth";
+import { validateSessionToken } from "auth";
 import { db } from "database";
 import { parseCookies, type H3Event } from "h3";
 import { getSignedUrl } from "storage";
@@ -10,10 +10,10 @@ export async function createContext(event?: H3Event | { isAdmin?: boolean }) {
   const sessionId =
     (event &&
       "node" in event &&
-      parseCookies(event)?.[lucia.sessionCookieName]) ||
+      parseCookies(event)?.[config.auth.sessionCookieName]) ||
     null;
   const { user, session } = sessionId
-    ? await lucia.validateSession(sessionId)
+    ? await validateSessionToken(sessionId)
     : { user: null, session: null };
 
   const teamMemberships = user

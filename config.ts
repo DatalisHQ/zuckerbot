@@ -26,8 +26,10 @@ export const config = {
   },
   auth: {
     redirectAfterLogout: "/",
+    sessionCookieName: "auth_session",
+    sessionCookieMaxAge: 60 * 60 * 24 * 30,
   },
-  mailing: {
+  mails: {
     from: "noreply@zuckerbot.ai",
   },
   teams: {
@@ -51,8 +53,12 @@ export type Config = {
     defaultCurrency: string;
     cookieName: string;
   };
-  auth: { redirectAfterLogout: string };
-  mailing: {
+  auth: {
+    redirectAfterLogout: string;
+    sessionCookieName: string;
+    sessionCookieMaxAge: number;
+  };
+  mails: {
     from: string;
   };
   teams: {

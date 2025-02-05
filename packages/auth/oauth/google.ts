@@ -6,8 +6,8 @@ import {
 } from "../lib/oauth";
 
 export const googleAuth = new Google(
-  process.env.GOOGLE_CLIENT_ID!,
-  process.env.GOOGLE_CLIENT_SECRET!,
+  process.env.GOOGLE_CLIENT_ID as string,
+  process.env.GOOGLE_CLIENT_SECRET as string,
   new URL("/api/oauth/google/callback", getBaseUrl()).toString(),
 );
 
@@ -23,13 +23,13 @@ type GoogleUser = {
 
 export const googleRouteHandler = createOauthRedirectHandler(
   GOOGLE_PROIVDER_ID,
-  async () => {
+  () => {
     const state = generateState();
     const codeVerifier = generateCodeVerifier();
-
-    const url = await googleAuth.createAuthorizationURL(state, codeVerifier, {
-      scopes: ["profile", "email"],
-    });
+    const url = googleAuth.createAuthorizationURL(state, codeVerifier, [
+      "profile",
+      "email",
+    ]);
 
     return {
       state,
@@ -42,12 +42,15 @@ export const googleRouteHandler = createOauthRedirectHandler(
 export const googleCallbackRouteHandler = createOauthCallbackHandler(
   GOOGLE_PROIVDER_ID,
   async (code, verifier) => {
-    const tokens = await googleAuth.validateAuthorizationCode(code, verifier!);
+    const tokens = await googleAuth.validateAuthorizationCode(
+      code,
+      verifier as string,
+    );
     const googleUserResponse = await fetch(
       "https://openidconnect.googleapis.com/v1/userinfo",
       {
         headers: {
-          Authorization: `Bearer ${tokens.accessToken}`,
+          Authorization: `Bearer ${tokens.accessToken()}`,
         },
       },
     );

@@ -13,9 +13,9 @@
 
       <div class="mt-12 grid grid-cols-1 gap-8">
         <div
-          class="bg-card/50 grid items-center gap-8 rounded-2xl border p-8 lg:grid-cols-2 lg:gap-16"
+          class="bg-card/50 grid items-center gap-8 rounded-sm border p-8 lg:grid-cols-2 lg:gap-16"
         >
-          <div class="overflow-hidden rounded-xl bg-[#B4C6D8] p-12">
+          <div class="overflow-hidden rounded-sm bg-[#B4C6D8] p-12">
             <NuxtImg
               src="/images/minimalist_illustration_analytics_final.png"
               class="block dark:hidden"
@@ -47,9 +47,9 @@
         </div>
 
         <div
-          class="bg-card/50 grid items-center gap-8 rounded-2xl border p-8 lg:grid-cols-2 lg:gap-16"
+          class="bg-card/50 grid items-center gap-8 rounded-sm border p-8 lg:grid-cols-2 lg:gap-16"
         >
-          <div class="overflow-hidden rounded-xl bg-[#B2CBD8] p-12 lg:order-2">
+          <div class="overflow-hidden rounded-sm bg-[#B2CBD8] p-12 lg:order-2">
             <NuxtImg
               src="/images/minimalist_illustration_comprehensive_analytics_final.png"
               class="block dark:hidden"
@@ -86,9 +86,9 @@
         </div>
 
         <div
-          class="bg-card/50 grid items-center gap-8 rounded-2xl border p-8 lg:grid-cols-2 lg:gap-16"
+          class="bg-card/50 grid items-center gap-8 rounded-sm border p-8 lg:grid-cols-2 lg:gap-16"
         >
-          <div class="overflow-hidden rounded-xl bg-[#B4C6D8] p-12">
+          <div class="overflow-hidden rounded-sm bg-[#B4C6D8] p-12">
             <NuxtImg
               src="/images/minimalist_illustration_analytics_final.png"
               class="block dark:hidden"
@@ -119,9 +119,9 @@
         </div>
 
         <div
-          class="bg-card/50 grid items-center gap-8 rounded-2xl border p-8 lg:grid-cols-2 lg:gap-16"
+          class="bg-card/50 grid items-center gap-8 rounded-sm border p-8 lg:grid-cols-2 lg:gap-16"
         >
-          <div class="overflow-hidden rounded-xl bg-[#B2CBD8] p-12 lg:order-2">
+          <div class="overflow-hidden rounded-sm bg-[#B2CBD8] p-12 lg:order-2">
             <NuxtImg
               src="/images/minimalist_illustration_comprehensive_analytics_final.png"
               class="block dark:hidden"
@@ -151,9 +151,9 @@
         </div>
 
         <div
-          class="bg-card/50 grid items-center gap-8 rounded-2xl border p-8 lg:grid-cols-2 lg:gap-16"
+          class="bg-card/50 grid items-center gap-8 rounded-sm border p-8 lg:grid-cols-2 lg:gap-16"
         >
-          <div class="overflow-hidden rounded-xl bg-[#B4C6D8] p-12">
+          <div class="overflow-hidden rounded-sm bg-[#B4C6D8] p-12">
             <NuxtImg
               src="/images/minimalist_illustration_analytics_final.png"
               class="block dark:hidden"
