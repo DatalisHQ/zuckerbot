@@ -28,16 +28,18 @@
 
   // Quick actions
   const quickActions = [
-    { id: 1, text: "I want to schedule posts" },
-    { id: 2, text: "I want to create an ad" },
-    { id: 3, text: "What are my best & least performing ad?" },
-    { id: 4, text: "I want to see my scheduled posts" },
+    { id: 1, text: "I want to create an ad", enabled: true },
+    { id: 2, text: "I want to schedule posts", enabled: false },
+    { id: 3, text: "What are my best & least performing ad?", enabled: false },
+    { id: 4, text: "I want to see my scheduled posts", enabled: false },
   ];
-  const visibleButtons = 2;
 
-  const handleQuickAction = (text: string) => {
+  const visibleButtons = 1;
+
+  const handleQuickAction = (action: (typeof quickActions)[0]) => {
+    if (!action.enabled) return;
     showMore.value = false;
-    emit("update:modelValue", text);
+    emit("update:modelValue", action.text);
     emit("submit");
   };
 
@@ -80,8 +82,8 @@
       <button
         v-for="action in quickActions.slice(0, visibleButtons)"
         :key="action.id"
-        @click="handleQuickAction(action.text)"
-        :disabled="disabled"
+        @click="handleQuickAction(action)"
+        :disabled="disabled || !action.enabled"
         class="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {{ action.text }}
@@ -105,8 +107,9 @@
           <button
             v-for="action in quickActions.slice(visibleButtons)"
             :key="action.id"
-            @click="handleQuickAction(action.text)"
-            class="block w-full px-4 py-2 text-left text-sm transition-colors hover:bg-gray-50"
+            @click="handleQuickAction(action)"
+            :disabled="!action.enabled"
+            class="block w-full px-4 py-2 text-left text-sm transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {{ action.text }}
           </button>
