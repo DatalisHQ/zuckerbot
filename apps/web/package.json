@@ -33,7 +33,7 @@
     "cropperjs": "^1.6.2",
     "database": "workspace:*",
     "date-fns": "^4.1.0",
-    "lucide-vue-next": "^0.468.0",
+    "lucide-vue-next": "^0.474.0",
     "mail": "workspace:*",
     "marked": "^14.1.2",
     "mixpanel-browser": "^2.55.1",
