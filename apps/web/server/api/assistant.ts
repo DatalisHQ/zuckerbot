@@ -8,6 +8,7 @@ import {
   listAccounts,
   listCampaigns,
   fetchFacebookInsights,
+  createCampaign,
 } from "utils";
 
 const openai = new OpenAI({
@@ -45,7 +46,6 @@ export default defineEventHandler(async (event) => {
   let content;
   try {
     content = JSON.parse(message);
-    console.log("Parsed content:", JSON.stringify(content, null, 2));
   } catch (e) {
     // If not JSON, treat as regular text message
     content = [
@@ -121,7 +121,6 @@ export default defineEventHandler(async (event) => {
               createdAt: new Date(message.created_at),
               messageId: message.id,
             });
-            console.log("User message saved:", message.id);
           } catch (error) {
             console.error("Error saving user message:", error);
           }
@@ -129,10 +128,7 @@ export default defineEventHandler(async (event) => {
       });
 
       (runStream as AssistantStream).on("messageDone", async (message) => {
-        console.log("Message done event:", message.id, message.role);
-
         if (doneMessageIds.has(message.id)) {
-          console.log("Skipping duplicate done message:", message.id);
           return;
         }
 
@@ -154,7 +150,6 @@ export default defineEventHandler(async (event) => {
               createdAt: new Date(message.created_at),
               messageId: message.id,
             });
-            console.log("Assistant message saved:", message.id);
           } catch (error) {
             console.error("Error saving assistant message:", error);
           }
@@ -167,7 +162,6 @@ export default defineEventHandler(async (event) => {
         runResult?.status === "requires_action" &&
         runResult.required_action?.type === "submit_tool_outputs"
       ) {
-        console.log("Processing tool outputs");
         const tool_outputs = await Promise.all(
           runResult.required_action.submit_tool_outputs.tool_calls.map(
             async (toolCall) => {
@@ -209,6 +203,25 @@ export default defineEventHandler(async (event) => {
                     user.facebookAccessToken!,
                     toolCall,
                   );
+
+                case "createFacebookAdCampaign":
+                  try {
+                    const campaignId = await createCampaign(
+                      user.facebookAccessToken!,
+                      sessionId,
+                      toolCall,
+                      apiCaller,
+                    );
+                    return {
+                      tool_call_id: toolCall.id,
+                      output: `Campaign created successfully with ID: ${campaignId}`,
+                    };
+                  } catch (error: any) {
+                    return {
+                      tool_call_id: toolCall.id,
+                      output: `Failed to create campaign: ${error.message}`,
+                    };
+                  }
 
                 default:
                   throw new Error(
