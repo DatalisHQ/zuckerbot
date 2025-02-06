@@ -150,3 +150,65 @@ export const fetchFacebookInsights = async (token: string, tool: any) => {
     };
   }
 };
+
+export const createCampaign = async (
+  token: string,
+  sessionId: string,
+  tool: any,
+  apiCaller: any,
+) => {
+  const args = JSON.parse(tool.function.arguments);
+  let adAccountId = args.ad_account_id;
+
+  if (adAccountId.startsWith("act_")) {
+    adAccountId = adAccountId.split("act_")[1];
+  }
+
+  const campaignUrl = `https://graph.facebook.com/v20.0/act_${adAccountId}/campaigns`;
+
+  try {
+    const response = await fetch(campaignUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: args.name,
+        objective: args.objective,
+        status: args.status,
+        start_time: args.start_time,
+        end_time: args.end_time,
+        special_ad_categories: [],
+        access_token: token,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        tool_call_id: tool.id,
+        output: `Failed to create campaign: ${
+          data.error?.message || "Unknown error"
+        }`,
+      };
+    }
+
+    apiCaller.chat.update({
+      id: sessionId,
+      data: {
+        campaignId: data.id,
+      },
+    });
+
+    return {
+      tool_call_id: tool.id,
+      output: `Campaign created successfully with ID: ${data.id}`,
+    };
+  } catch (error: any) {
+    return {
+      tool_call_id: tool.id,
+      output: `Error creating campaign: ${error.message}`,
+    };
+  }
+};
