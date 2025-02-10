@@ -54,7 +54,7 @@
     "@types/uuid": "^10.0.0",
     "cypress": "^13.16.1",
     "dotenv-cli": "^7.4.4",
-    "eslint": "8.57.0",
+    "eslint": "9.20.0",
     "eslint-config-custom": "*",
     "nuxt-simple-robots": "^3.1.9",
     "start-server-and-test": "^2.0.8",
