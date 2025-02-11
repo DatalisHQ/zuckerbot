@@ -1,0 +1,9 @@
+{
+  "name": "listAccounts",
+  "description": "Retrieve and display Facebook ad accounts. IMPORTANT:\n1. Show only account names to the user\n2. Store account IDs in your context\n3. When user selects an account by name, use the stored ID\n4. Users should never see or need to provide account IDs",
+  "strict": false,
+  "parameters": {
+    "type": "object",
+    "properties": {}
+  }
+}

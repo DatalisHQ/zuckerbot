@@ -1,0 +1,60 @@
+{
+  "name": "createFacebookAdCreative",
+  "description": "Creates a Facebook ad creative with image and caption. IMPORTANT Workflow: Ask user to provide an image. Once image is provided, generate a compelling caption based on the image and business context. Present the generated caption to the user for approval. Only proceed with creative creation after user confirms the caption. After creative is created, proceed with ad creation using this creative",
+  "strict": false,
+  "parameters": {
+    "type": "object",
+    "required": [
+      "ad_account_id",
+      "name",
+      "message",
+      "link",
+      "caption",
+      "picture",
+      "call_to_action_type"
+    ],
+    "properties": {
+      "ad_account_id": {
+        "type": "string",
+        "description": "The ID of the ad account. MUST be obtained first through listAccounts command before attempting creative creation."
+      },
+      "name": {
+        "type": "string",
+        "description": "The name of the ad creative"
+      },
+      "page_id": {
+        "type": "string",
+        "description": "The Facebook Page ID for the ad creative"
+      },
+      "message": {
+        "type": "string",
+        "description": "Message to be displayed with the link. Must be generated based on the image and confirmed by user."
+      },
+      "link": {
+        "type": "string",
+        "description": "URL that the ad will link to"
+      },
+      "caption": {
+        "type": "string",
+        "description": "Caption for the link. Must be generated based on the image and confirmed by user."
+      },
+      "picture": {
+        "type": "string",
+        "description": "URL of the image for the ad. Must be provided by user before generating caption."
+      },
+      "call_to_action_type": {
+        "type": "string",
+        "description": "Type of the call to action",
+        "enum": [
+          "SHOP_NOW",
+          "LEARN_MORE",
+          "SIGN_UP",
+          "BOOK_NOW",
+          "GET_OFFER",
+          "GET_DIRECTIONS"
+        ]
+      }
+    },
+    "additionalProperties": false
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "checkAccountConnection",
+  "description": "Check if the user has already connected their Facebook ad account. Returns a boolean indicating the connection status.",
+  "strict": false,
+  "parameters": {
+    "type": "object",
+    "properties": {}
+  }
+}

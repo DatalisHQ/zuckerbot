@@ -1,0 +1,68 @@
+{
+  "name": "createFacebookAdCampaign",
+  "description": "Creates a Facebook Ad Campaign. IMPORTANT: Before creating a campaign, you must: First check if user has selected an ad account though this conversation. If not, use listAccounts command to show available accounts and ask user to select one. Only proceed with campaign creation after an account is selected. Then collect campaign details (name, objective, dates, etc.) Never try to create a campaign without first ensuring an ad account is selected.",
+  "strict": true,
+  "parameters": {
+    "type": "object",
+    "required": [
+      "ad_account_id",
+      "name",
+      "objective",
+      "status",
+      "start_time",
+      "end_time"
+    ],
+    "properties": {
+      "ad_account_id": {
+        "type": "string",
+        "description": "The ID of the ad account. MUST be obtained first through listAccounts command before attempting campaign creation."
+      },
+      "name": {
+        "type": "string",
+        "description": "The name of the ad campaign"
+      },
+      "objective": {
+        "type": "string",
+        "description": "The objective of the ad campaign",
+        "enum": [
+          "APP_INSTALLS",
+          "BRAND_AWARENESS",
+          "CONVERSIONS",
+          "EVENT_RESPONSES",
+          "LEAD_GENERATION",
+          "LINK_CLICKS",
+          "LOCAL_AWARENESS",
+          "MESSAGES",
+          "OFFER_CLAIMS",
+          "OUTCOME_APP_PROMOTION",
+          "OUTCOME_AWARENESS",
+          "OUTCOME_ENGAGEMENT",
+          "OUTCOME_LEADS",
+          "OUTCOME_SALES",
+          "OUTCOME_TRAFFIC",
+          "PAGE_LIKES",
+          "POST_ENGAGEMENT",
+          "PRODUCT_CATALOG_SALES",
+          "REACH",
+          "STORE_VISITS",
+          "VIDEO_VIEWS"
+        ]
+      },
+      "status": {
+        "type": "string",
+        "description": "The status of the ad campaign (e.g., ACTIVE, PAUSED, ARCHIVED)",
+        "default": "PAUSED",
+        "enum": ["ACTIVE", "PAUSED", "ARCHIVED"]
+      },
+      "start_time": {
+        "type": "string",
+        "description": "The start time of the ad campaign in ISO 8601 format"
+      },
+      "end_time": {
+        "type": "string",
+        "description": "The end time of the ad campaign in ISO 8601 format"
+      }
+    },
+    "additionalProperties": false
+  }
+}
