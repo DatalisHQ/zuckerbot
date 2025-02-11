@@ -9,6 +9,9 @@ import {
   listCampaigns,
   fetchFacebookInsights,
   createCampaign,
+  createAdSet,
+  createAdCreative,
+  createAd,
 } from "utils";
 
 const openai = new OpenAI({
@@ -211,6 +214,31 @@ export default defineEventHandler(async (event) => {
                     toolCall,
                     apiCaller,
                   );
+
+                case "createFacebookAdSet":
+                  return await createAdSet(
+                    user.facebookAccessToken!,
+                    sessionId,
+                    toolCall,
+                    apiCaller,
+                  );
+
+                case "createFacebookAdCreative":
+                  return await createAdCreative(
+                    user.facebookAccessToken!,
+                    sessionId,
+                    toolCall,
+                    apiCaller,
+                  );
+
+                case "createFacebookAd":
+                  return await createAd(
+                    user.facebookAccessToken!,
+                    sessionId,
+                    toolCall,
+                    apiCaller,
+                  );
+
                 default:
                   throw new Error(
                     `Unknown tool call function: ${toolCall.function.name}`,

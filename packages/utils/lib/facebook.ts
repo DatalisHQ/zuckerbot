@@ -192,8 +192,6 @@ export const createCampaign = async (
     });
 
     const data = await response.json();
-    console.log(data);
-    console.log(response);
 
     if (!response.ok) {
       return {
@@ -221,4 +219,102 @@ export const createCampaign = async (
       output: `Error creating campaign: ${error.message}`,
     };
   }
+};
+
+export const createAdSet = async (
+  token: string,
+  sessionId: string,
+  tool: any,
+  apiCaller: any,
+) => {
+  const args = JSON.parse(tool.function.arguments);
+  let adAccountId = args.ad_account_id;
+  const campaignId = args.campaign_id;
+
+  if (!adAccountId) {
+    return {
+      tool_call_id: tool.id,
+      output:
+        "Please select an ad account first. Then try creating the campaign again.",
+    };
+  }
+
+  if (!campaignId) {
+    return {
+      tool_call_id: tool.id,
+      output:
+        "Please create a campaign first. Then try creating the ad set again.",
+    };
+  }
+
+  if (adAccountId.startsWith("act_")) {
+    adAccountId = adAccountId.split("act_")[1];
+  }
+
+  // To do
+};
+
+export const createAdCreative = async (
+  token: string,
+  sessionId: string,
+  tool: any,
+  apiCaller: any,
+) => {
+  const args = JSON.parse(tool.function.arguments);
+  let adAccountId = args.ad_account_id;
+
+  if (!adAccountId) {
+    return {
+      tool_call_id: tool.id,
+      output:
+        "Please select an ad account first. Then try creating the campaign again.",
+    };
+  }
+
+  if (adAccountId.startsWith("act_")) {
+    adAccountId = adAccountId.split("act_")[1];
+  }
+
+  // To do
+};
+
+export const createAd = async (
+  token: string,
+  sessionId: string,
+  tool: any,
+  apiCaller: any,
+) => {
+  const args = JSON.parse(tool.function.arguments);
+  let adAccountId = args.ad_account_id;
+  const adSetId = args.ad_set_id;
+  const creativeId = args.creative_id;
+
+  if (!adAccountId) {
+    return {
+      tool_call_id: tool.id,
+      output:
+        "Please select an ad account first. Then try creating the campaign again.",
+    };
+  }
+
+  if (!adSetId) {
+    return {
+      tool_call_id: tool.id,
+      output: "Please create an ad set first. Then try creating the ad again.",
+    };
+  }
+
+  if (!creativeId) {
+    return {
+      tool_call_id: tool.id,
+      output:
+        "Please create an ad creative first. Then try creating the ad again.",
+    };
+  }
+
+  if (adAccountId.startsWith("act_")) {
+    adAccountId = adAccountId.split("act_")[1];
+  }
+
+  // To do
 };
