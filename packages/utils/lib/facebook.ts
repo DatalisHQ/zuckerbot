@@ -160,6 +160,14 @@ export const createCampaign = async (
   const args = JSON.parse(tool.function.arguments);
   let adAccountId = args.ad_account_id;
 
+  if (!adAccountId) {
+    return {
+      tool_call_id: tool.id,
+      output:
+        "Please select an ad account first. Then try creating the campaign again.",
+    };
+  }
+
   if (adAccountId.startsWith("act_")) {
     adAccountId = adAccountId.split("act_")[1];
   }
@@ -184,6 +192,8 @@ export const createCampaign = async (
     });
 
     const data = await response.json();
+    console.log(data);
+    console.log(response);
 
     if (!response.ok) {
       return {

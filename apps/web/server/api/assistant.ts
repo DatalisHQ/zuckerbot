@@ -205,24 +205,12 @@ export default defineEventHandler(async (event) => {
                   );
 
                 case "createFacebookAdCampaign":
-                  try {
-                    const campaignId = await createCampaign(
-                      user.facebookAccessToken!,
-                      sessionId,
-                      toolCall,
-                      apiCaller,
-                    );
-                    return {
-                      tool_call_id: toolCall.id,
-                      output: `Campaign created successfully with ID: ${campaignId}`,
-                    };
-                  } catch (error: any) {
-                    return {
-                      tool_call_id: toolCall.id,
-                      output: `Failed to create campaign: ${error.message}`,
-                    };
-                  }
-
+                  return await createCampaign(
+                    user.facebookAccessToken!,
+                    sessionId,
+                    toolCall,
+                    apiCaller,
+                  );
                 default:
                   throw new Error(
                     `Unknown tool call function: ${toolCall.function.name}`,
