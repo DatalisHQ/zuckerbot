@@ -1,0 +1,34 @@
+{
+  "name": "createFacebookAd",
+  "description": "Creates a Facebook Ad. IMPORTANT Workflow: Make sure an ad set has been created in this conversation. Use the ad_account_id and adset_id from the previous steps. Use the creative_id from the ad creative creation step. Ad will automatically follow the schedule set in the ad set",
+  "strict": true,
+  "parameters": {
+    "type": "object",
+    "required": ["ad_account_id", "name", "adset_id", "creative_id", "status"],
+    "properties": {
+      "ad_account_id": {
+        "type": "string",
+        "description": "The ID of the ad account. MUST be obtained first through listAccounts command before attempting ad creation."
+      },
+      "name": {
+        "type": "string",
+        "description": "Name of the ad. Should be descriptive and include the target audience and creative type."
+      },
+      "adset_id": {
+        "type": "string",
+        "description": "Must be obtained from the ad set created earlier in this conversation."
+      },
+      "creative_id": {
+        "type": "string",
+        "description": "Must be obtained from the ad creative created earlier in this conversation."
+      },
+      "status": {
+        "type": "string",
+        "description": "Set to ACTIVE to respect the ad set's schedule",
+        "enum": ["ACTIVE"],
+        "default": "ACTIVE"
+      }
+    },
+    "additionalProperties": false
+  }
+}

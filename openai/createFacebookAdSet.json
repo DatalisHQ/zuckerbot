@@ -1,0 +1,70 @@
+{
+  "name": "createFacebookAdSet",
+  "description": "Creates a new ad set in a Facebook campaign. IMPORTANT: This requires a specific workflow: First use listAccounts to select an ad account. Then create a campaign using createFacebookAdCampaign. Only after both steps are completed, proceed with ad set creation. Do not attempt to create an ad set without completing these steps in order.",
+  "strict": true,
+  "parameters": {
+    "type": "object",
+    "required": [
+      "ad_account_id",
+      "campaign_id",
+      "name",
+      "daily_budget",
+      "start_time",
+      "end_time",
+      "age_min",
+      "age_max",
+      "genders",
+      "countries"
+    ],
+    "properties": {
+      "ad_account_id": {
+        "type": "string",
+        "description": "The ID of the ad account. MUST be obtained first through listAccounts command before attempting campaign creation."
+      },
+      "campaign_id": {
+        "type": "string",
+        "description": "Must be obtained first through the create campaign command before attempting ad set creation."
+      },
+      "name": {
+        "type": "string",
+        "description": "Name of the ad set. Should be descriptive and include target audience characteristics."
+      },
+      "daily_budget": {
+        "type": "integer",
+        "description": "Daily budget in the smallest unit of the currency (e.g., cents). For example, $10 = 1000."
+      },
+      "start_time": {
+        "type": "string",
+        "description": "The start time in ISO 8601 format. Should match or be after campaign start time."
+      },
+      "end_time": {
+        "type": "string",
+        "description": "The end time in ISO 8601 format. Should match or be before campaign end time."
+      },
+      "age_min": {
+        "type": "integer",
+        "description": "Minimum age for targeting. Must be between 13 and 65."
+      },
+      "age_max": {
+        "type": "integer",
+        "description": "Maximum age for targeting. Must be between 13 and 65. Use 65 for '65 and older'."
+      },
+      "genders": {
+        "type": "array",
+        "description": "Array of gender values to target. Must contain at least one value: [1] for men only, [2] for women only, [1,2] for all genders.",
+        "items": {
+          "type": "integer",
+          "enum": [1, 2]
+        }
+      },
+      "countries": {
+        "type": "array",
+        "description": "Array of two-letter country codes to target (e.g., ['ID'] for Indonesia). Each code must be exactly 2 characters.",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "additionalProperties": false
+  }
+}
