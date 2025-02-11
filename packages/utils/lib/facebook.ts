@@ -18,10 +18,15 @@ export const isFacebookAuth = (user: any) => {
 
 export const fetchAdAccounts = async (token: string) => {
   const response = await fetch(
-    `https://graph.facebook.com/v20.0/me/adaccounts?access_token=${token}`,
+    `https://graph.facebook.com/v20.0/me/adaccounts?fields=id,name,account_status,currency&access_token=${token}`,
   );
   const data = await response.json();
-  return data.data.map((account: any) => account.id);
+  return data.data.map((account: any) => ({
+    id: account.id,
+    name: account.name || "Unnamed Account",
+    status: account.account_status,
+    currency: account.currency,
+  }));
 };
 
 export const fetchCampaigns = async (adAccountId: string, token: string) => {
@@ -30,14 +35,19 @@ export const fetchCampaigns = async (adAccountId: string, token: string) => {
   }
 
   const response = await fetch(
-    `https://graph.facebook.com/v20.0/act_${adAccountId}/campaigns?access_token=${token}`,
+    `https://graph.facebook.com/v20.0/act_${adAccountId}/campaigns?fields=id,name,status,objective&access_token=${token}`,
   );
 
   const data = await response.json();
   if (!response.ok) {
     throw new Error(data.error.message || "Failed to fetch campaigns");
   }
-  return data.data.map((campaign: any) => campaign.id);
+  return data.data.map((campaign: any) => ({
+    id: campaign.id,
+    name: campaign.name || "Unnamed Campaign",
+    status: campaign.status,
+    objective: campaign.objective,
+  }));
 };
 
 export const listAccounts = async (
@@ -47,22 +57,32 @@ export const listAccounts = async (
   apiCaller: any,
 ) => {
   const adAccounts = await fetchAdAccounts(token);
+
   if (adAccounts.length > 1) {
+    const accountsList = adAccounts.map((acc: any) => acc.name).join(", ");
+
     return {
       tool_call_id: tool.id,
-      output: `Please select an ad account: ${adAccounts.join(", ")}`,
+      output: `Please select one of the following accounts:\n\n${accountsList}\n\nAvailable accounts data: ${JSON.stringify(
+        adAccounts,
+      )}\n\nWhich account would you like to use?`,
     };
   } else if (adAccounts.length === 1) {
+    const account = adAccounts[0];
     await apiCaller.chat.update({
       id: sessionId,
       data: {
-        adAccountId: adAccounts[0],
+        adAccountId: account.id,
       },
     });
 
     return {
       tool_call_id: tool.id,
-      output: `Only one ad account found: ${adAccounts[0]} selected`,
+      output: `Only one account found: "${
+        account.name
+      }". This account has been selected. Account data: ${JSON.stringify(
+        account,
+      )}`,
     };
   } else {
     return {
@@ -84,25 +104,30 @@ export const listCampaigns = async (
   const campaigns = await fetchCampaigns(adAccountId, token);
 
   if (campaigns.length > 1) {
+    const campaignsList = campaigns.map((camp: any) => camp.name).join(", ");
+
     return {
       tool_call_id: tool.id,
-      output: `Here are the available campaigns for Ad Account ${adAccountId}: ${campaigns.join(
-        ", ",
-      )}`,
+      output: `Available campaigns:\n${campaignsList}\n\nCampaigns data: ${JSON.stringify(
+        campaigns,
+      )}\n\nWhich campaign would you like to use?`,
     };
   } else if (campaigns.length === 1) {
-    const campaignId = campaigns[0];
-
+    const campaign = campaigns[0];
     await apiCaller.chat.update({
       id: sessionId,
       data: {
-        campaignId,
+        campaignId: campaign.id,
       },
     });
 
     return {
       tool_call_id: tool.id,
-      output: `Only one campaign found: ${campaignId} selected`,
+      output: `Only one campaign found: "${
+        campaign.name
+      }". This campaign has been selected. Campaign data: ${JSON.stringify(
+        campaign,
+      )}`,
     };
   } else {
     return {
@@ -251,7 +276,61 @@ export const createAdSet = async (
     adAccountId = adAccountId.split("act_")[1];
   }
 
-  // To do
+  const adSetUrl = `https://graph.facebook.com/v20.0/act_${adAccountId}/adsets`;
+
+  try {
+    const response = await fetch(adSetUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        campaign_id: args.campaign_id,
+        name: args.name,
+        daily_budget: args.daily_budget,
+        start_time: args.start_time,
+        end_time: args.end_time,
+        targeting: {
+          age_min: args.age_min,
+          age_max: args.age_max,
+          genders: args.genders,
+          geo_locations: {
+            countries: args.countries,
+          },
+        },
+        status: "ACTIVE",
+        access_token: token,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        tool_call_id: tool.id,
+        output: `Failed to create ad set: ${
+          data.error?.message || "Unknown error"
+        }`,
+      };
+    }
+
+    await apiCaller.chat.update({
+      id: sessionId,
+      data: {
+        adSetId: data.id,
+      },
+    });
+
+    return {
+      tool_call_id: tool.id,
+      output: `Ad set created successfully with ID: ${data.id}`,
+    };
+  } catch (error: any) {
+    return {
+      tool_call_id: tool.id,
+      output: `Error creating ad set: ${error.message}`,
+    };
+  }
 };
 
 export const createAdCreative = async (
@@ -275,7 +354,60 @@ export const createAdCreative = async (
     adAccountId = adAccountId.split("act_")[1];
   }
 
-  // To do
+  const creativeUrl = `https://graph.facebook.com/v20.0/act_${adAccountId}/adcreatives`;
+
+  try {
+    const response = await fetch(creativeUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: args.name,
+        object_story_spec: {
+          page_id: args.page_id,
+          link_data: {
+            message: args.message,
+            link: args.link,
+            caption: args.caption,
+            picture: args.picture,
+            call_to_action: {
+              type: args.call_to_action_type,
+            },
+          },
+        },
+        access_token: token,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        tool_call_id: tool.id,
+        output: `Failed to create ad creative: ${
+          data.error?.message || "Unknown error"
+        }`,
+      };
+    }
+
+    await apiCaller.chat.update({
+      id: sessionId,
+      data: {
+        creativeId: data.id,
+      },
+    });
+
+    return {
+      tool_call_id: tool.id,
+      output: `Ad creative created successfully with ID: ${data.id}`,
+    };
+  } catch (error: any) {
+    return {
+      tool_call_id: tool.id,
+      output: `Error creating ad creative: ${error.message}`,
+    };
+  }
 };
 
 export const createAd = async (
@@ -316,5 +448,51 @@ export const createAd = async (
     adAccountId = adAccountId.split("act_")[1];
   }
 
-  // To do
+  const adUrl = `https://graph.facebook.com/v20.0/act_${adAccountId}/ads`;
+
+  try {
+    const response = await fetch(adUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: args.name,
+        adset_id: args.adset_id,
+        creative: {
+          creative_id: args.creative_id,
+        },
+        status: "ACTIVE",
+        access_token: token,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        tool_call_id: tool.id,
+        output: `Failed to create ad: ${
+          data.error?.message || "Unknown error"
+        }`,
+      };
+    }
+
+    await apiCaller.chat.update({
+      id: sessionId,
+      data: {
+        adId: data.id,
+      },
+    });
+
+    return {
+      tool_call_id: tool.id,
+      output: `Ad created successfully with ID: ${data.id}`,
+    };
+  } catch (error: any) {
+    return {
+      tool_call_id: tool.id,
+      output: `Error creating ad: ${error.message}`,
+    };
+  }
 };
