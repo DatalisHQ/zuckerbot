@@ -19,7 +19,7 @@ const openai = new OpenAI({
 });
 
 export default defineEventHandler(async (event) => {
-  const { message, sessionId } = await readBody(event);
+  const { message, sessionId, data } = await readBody(event);
   const apiCaller = await createApiCaller(event);
 
   const user = await apiCaller.auth.user();
@@ -94,6 +94,9 @@ export default defineEventHandler(async (event) => {
     async ({ forwardStream }) => {
       const runStream = openai.beta.threads.runs.stream(threadId, {
         assistant_id: process.env.OPENAI_ASSISTANT_ID || "",
+        additional_instructions: data?.today
+          ? `Current date and time is ${data.today} (${data.currentTimezone}). Use this for any date calculations and never use dates in the past.`
+          : undefined,
       });
 
       // Add general stream error handling

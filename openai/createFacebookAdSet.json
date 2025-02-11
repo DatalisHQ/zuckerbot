@@ -1,6 +1,6 @@
 {
   "name": "createFacebookAdSet",
-  "description": "Creates a new ad set in a Facebook campaign. IMPORTANT: This requires a specific workflow: First use listAccounts to select an ad account. Then create a campaign using createFacebookAdCampaign. Only after both steps are completed, proceed with ad set creation. Do not attempt to create an ad set without completing these steps in order.",
+  "description": "Creates a new ad set in a Facebook campaign. IMPORTANT:\n1. First use listAccounts to select an ad account\n2. Then create a campaign using createFacebookAdCampaign\n3. Choose appropriate values based on campaign objective:\n   - For BRAND_AWARENESS/REACH: Use IMPRESSIONS billing + REACH optimization\n   - For TRAFFIC/CONVERSIONS: Use LINK_CLICKS billing + LINK_CLICKS optimization\n4. Use standard targeting unless specified:\n   - Age: 18-65 for general audience\n   - Gender: all genders [1,2] for maximum reach\n   - Location: use context from user's business\n5. Only ask user for non-standard values",
   "strict": true,
   "parameters": {
     "type": "object",
@@ -14,7 +14,9 @@
       "age_min",
       "age_max",
       "genders",
-      "countries"
+      "countries",
+      "billing_event",
+      "optimization_goal"
     ],
     "properties": {
       "ad_account_id": {
@@ -31,7 +33,7 @@
       },
       "daily_budget": {
         "type": "integer",
-        "description": "Daily budget in the smallest unit of the currency (e.g., cents). For example, $10 = 1000."
+        "description": "Daily budget in smallest currency unit (e.g., 1000 = $10.00). Ask user for budget amount, then convert to smallest unit based on account currency."
       },
       "start_time": {
         "type": "string",
@@ -43,15 +45,15 @@
       },
       "age_min": {
         "type": "integer",
-        "description": "Minimum age for targeting. Must be between 13 and 65."
+        "description": "Use 18 for general audience. Only ask if specific younger targeting (13+) is needed."
       },
       "age_max": {
         "type": "integer",
-        "description": "Maximum age for targeting. Must be between 13 and 65. Use 65 for '65 and older'."
+        "description": "Use 65 for general audience (represents 65+). Only ask if specific upper limit is needed."
       },
       "genders": {
         "type": "array",
-        "description": "Array of gender values to target. Must contain at least one value: [1] for men only, [2] for women only, [1,2] for all genders.",
+        "description": "Use [1,2] for all genders unless specific targeting needed. [1] for men, [2] for women.",
         "items": {
           "type": "integer",
           "enum": [1, 2]
@@ -63,6 +65,16 @@
         "items": {
           "type": "string"
         }
+      },
+      "billing_event": {
+        "type": "string",
+        "description": "Choose based on campaign objective: IMPRESSIONS for awareness/reach, LINK_CLICKS for traffic/conversion.",
+        "enum": ["IMPRESSIONS", "LINK_CLICKS"]
+      },
+      "optimization_goal": {
+        "type": "string",
+        "description": "Match with campaign objective: REACH for awareness, LINK_CLICKS for traffic/conversion.",
+        "enum": ["REACH", "LINK_CLICKS"]
       }
     },
     "additionalProperties": false

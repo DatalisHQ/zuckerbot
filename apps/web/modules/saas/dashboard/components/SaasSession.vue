@@ -214,10 +214,16 @@
       }),
     ]);
 
+    const today = new Date().toISOString();
+
     chatInstance.value = useAssistant({
       api: "/api/assistant",
       body: {
         sessionId: session.id,
+        data: {
+          today,
+          currentTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        },
       },
       ...(session.threadId !== null && {
         threadId: session.threadId,
