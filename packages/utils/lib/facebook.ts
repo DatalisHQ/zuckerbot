@@ -4,7 +4,7 @@ export const getFacebookAuthUrl = (user: any) => {
   const redirectUri = "https://zuckerbot.ai/auth/facebook/callback";
   const state = encodeURIComponent(JSON.stringify({ userId: user.id }));
 
-  const authUrl = `https://www.facebook.com/v20.0/dialog/oauth?client_id=${clientId}&redirect_uri=${redirectUri}&state=${state}&scope=ads_read&response_type=token&config_id=1611077456348594`;
+  const authUrl = `https://www.facebook.com/v22.0/dialog/oauth?client_id=${clientId}&redirect_uri=${redirectUri}&state=${state}&scope=ads_read&response_type=token&config_id=1611077456348594`;
   return authUrl;
 };
 
@@ -18,7 +18,7 @@ export const isFacebookAuth = (user: any) => {
 
 export const fetchAdAccounts = async (token: string) => {
   const response = await fetch(
-    `https://graph.facebook.com/v20.0/me/adaccounts?fields=id,name,account_status,currency&access_token=${token}`,
+    `https://graph.facebook.com/v22.0/me/adaccounts?fields=id,name,account_status,currency&access_token=${token}`,
   );
   const data = await response.json();
   return data.data.map((account: any) => ({
@@ -35,7 +35,7 @@ export const fetchCampaigns = async (adAccountId: string, token: string) => {
   }
 
   const response = await fetch(
-    `https://graph.facebook.com/v20.0/act_${adAccountId}/campaigns?fields=id,name,status,objective&access_token=${token}`,
+    `https://graph.facebook.com/v22.0/act_${adAccountId}/campaigns?fields=id,name,status,objective&access_token=${token}`,
   );
 
   const data = await response.json();
@@ -141,7 +141,7 @@ export const fetchFacebookInsights = async (token: string, tool: any) => {
   const args = JSON.parse(tool.function.arguments);
   const campaignId = args.campaign_id;
 
-  const insightsUrl = `https://graph.facebook.com/v20.0/${campaignId}/insights?fields=impressions,clicks,spend,cost_per_unique_click,cost_per_outbound_click,campaign_name,account_id,account_currency,conversion_rate_ranking,engagement_rate_ranking,cost_per_action_type,cost_per_inline_link_click,cost_per_inline_post_engagement,cost_per_unique_action_type,cost_per_unique_inline_link_click,cost_per_unique_outbound_click&date_preset=${args.date_preset}&access_token=${token}`;
+  const insightsUrl = `https://graph.facebook.com/v22.0/${campaignId}/insights?fields=impressions,clicks,spend,cost_per_unique_click,cost_per_outbound_click,campaign_name,account_id,account_currency,conversion_rate_ranking,engagement_rate_ranking,cost_per_action_type,cost_per_inline_link_click,cost_per_inline_post_engagement,cost_per_unique_action_type,cost_per_unique_inline_link_click,cost_per_unique_outbound_click&date_preset=${args.date_preset}&access_token=${token}`;
 
   try {
     const response = await fetch(insightsUrl, {
@@ -197,7 +197,7 @@ export const createCampaign = async (
     adAccountId = adAccountId.split("act_")[1];
   }
 
-  const campaignUrl = `https://graph.facebook.com/v20.0/act_${adAccountId}/campaigns`;
+  const campaignUrl = `https://graph.facebook.com/v22.0/act_${adAccountId}/campaigns`;
 
   try {
     const response = await fetch(campaignUrl, {
@@ -276,7 +276,28 @@ export const createAdSet = async (
     adAccountId = adAccountId.split("act_")[1];
   }
 
-  const adSetUrl = `https://graph.facebook.com/v20.0/act_${adAccountId}/adsets`;
+  const adSetUrl = `https://graph.facebook.com/v22.0/act_${adAccountId}/adsets`;
+
+  const body: any = {
+    campaign_id: args.campaign_id,
+    name: args.name,
+    optimization_goal: args.optimization_goal,
+    billing_event: args.billing_event,
+    bid_strategy: "LOWEST_COST_WITHOUT_CAP", // Always use this strategy
+    daily_budget: args.daily_budget,
+    targeting: {
+      age_min: args.age_min,
+      age_max: args.age_max,
+      genders: args.genders,
+      geo_locations: {
+        countries: args.countries,
+      },
+    },
+    status: "ACTIVE",
+    access_token: token,
+    start_time: args.start_time,
+    end_time: args.end_time,
+  };
 
   try {
     const response = await fetch(adSetUrl, {
@@ -284,23 +305,7 @@ export const createAdSet = async (
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        campaign_id: args.campaign_id,
-        name: args.name,
-        daily_budget: args.daily_budget,
-        start_time: args.start_time,
-        end_time: args.end_time,
-        targeting: {
-          age_min: args.age_min,
-          age_max: args.age_max,
-          genders: args.genders,
-          geo_locations: {
-            countries: args.countries,
-          },
-        },
-        status: "ACTIVE",
-        access_token: token,
-      }),
+      body: JSON.stringify(body),
     });
 
     const data = await response.json();
@@ -354,7 +359,7 @@ export const createAdCreative = async (
     adAccountId = adAccountId.split("act_")[1];
   }
 
-  const creativeUrl = `https://graph.facebook.com/v20.0/act_${adAccountId}/adcreatives`;
+  const creativeUrl = `https://graph.facebook.com/v22.0/act_${adAccountId}/adcreatives`;
 
   try {
     const response = await fetch(creativeUrl, {
@@ -448,7 +453,7 @@ export const createAd = async (
     adAccountId = adAccountId.split("act_")[1];
   }
 
-  const adUrl = `https://graph.facebook.com/v20.0/act_${adAccountId}/ads`;
+  const adUrl = `https://graph.facebook.com/v22.0/act_${adAccountId}/ads`;
 
   try {
     const response = await fetch(adUrl, {
