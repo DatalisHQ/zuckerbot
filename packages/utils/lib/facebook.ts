@@ -39,7 +39,7 @@ export const fetchCampaigns = async (adAccountId: string, token: string) => {
   );
 
   const data = await response.json();
-  if (!response.ok) {
+  if (data.error) {
     throw new Error(data.error.message || "Failed to fetch campaigns");
   }
   return data.data.map((campaign: any) => ({
@@ -149,7 +149,7 @@ export const fetchFacebookInsights = async (token: string, tool: any) => {
     });
     const data = await response.json();
 
-    if (!response.ok || !data.data || data.data.length === 0) {
+    if (data.error || !data.data || data.data.length === 0) {
       return {
         tool_call_id: tool.id,
         output: `No insights data available for this campaign. Please try another date range. Possible values: today, yesterday, this_month, last_month, this_quarter, maximum, data_maximum, last_3d, last_7d, last_14d, last_28d, last_30d, last_90d, last_week_mon_sun, last_week_sun_sat, last_quarter, last_year, this_week_mon_today, this_week_sun_today, this_year.`,
@@ -218,7 +218,7 @@ export const createCampaign = async (
 
     const data = await response.json();
 
-    if (!response.ok) {
+    if (data.error) {
       return {
         tool_call_id: tool.id,
         output: `Failed to create campaign: ${
@@ -310,12 +310,10 @@ export const createAdSet = async (
 
     const data = await response.json();
 
-    if (!response.ok) {
+    if (data.error) {
       return {
         tool_call_id: tool.id,
-        output: `Failed to create ad set: ${
-          data.error?.message || "Unknown error"
-        }`,
+        output: `Failed to ad set: ${data.error?.message || "Unknown error"}`,
       };
     }
 
@@ -387,7 +385,7 @@ export const createAdCreative = async (
 
     const data = await response.json();
 
-    if (!response.ok) {
+    if (data.error) {
       return {
         tool_call_id: tool.id,
         output: `Failed to create ad creative: ${
@@ -474,7 +472,7 @@ export const createAd = async (
 
     const data = await response.json();
 
-    if (!response.ok) {
+    if (data.error) {
       return {
         tool_call_id: tool.id,
         output: `Failed to create ad: ${
@@ -508,10 +506,12 @@ export const fetchPages = async (token: string) => {
   );
 
   const data = await response.json();
-  if (!response.ok) {
+
+  if (data.error) {
     throw new Error(data.error.message || "Failed to fetch pages");
   }
-  return data.data; // Returns array of {id, name} objects
+
+  return data.data;
 };
 
 export const listPages = async (
@@ -520,14 +520,21 @@ export const listPages = async (
   tool: any,
   apiCaller: any,
 ) => {
-  const pages = await fetchPages(token);
+  try {
+    const pages = await fetchPages(token);
 
-  return {
-    tool_call_id: tool.id,
-    output: `Available Facebook Pages:\n${pages
-      .map((p) => `• ${p.name}`)
-      .join("\n")}\n\nPages data: ${JSON.stringify(
-      pages,
-    )}\n\nPlease select a page to use for the ad creative.`,
-  };
+    return {
+      tool_call_id: tool.id,
+      output: `Available Facebook Pages:\n${pages
+        .map((p) => `• ${p.name}`)
+        .join("\n")}\n\nPages data: ${JSON.stringify(
+        pages,
+      )}\n\nPlease select a page to use for the ad creative.`,
+    };
+  } catch (error: any) {
+    return {
+      tool_call_id: tool.id,
+      output: `Error fetching pages: ${error}`,
+    };
+  }
 };

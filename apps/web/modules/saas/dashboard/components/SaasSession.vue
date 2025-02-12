@@ -39,6 +39,7 @@
   const fileInputRef = ref<HTMLInputElement | null>(null);
   const uploadedFiles = ref<{ name: string; url: string }[]>([]);
   const files = ref<File[]>([]);
+  const isSubmitting = ref(false);
 
   const getSignedUploadUrlMutation =
     apiCaller.uploads.signedUploadUrl.useMutation();
@@ -64,7 +65,6 @@
 
     // Construct public URL directly
     const publicUrl = `${config.public.s3.endpoint}/${config.public.s3AvatarsBucketName}/${path}`;
-    console.log("Uploaded file to:", publicUrl);
     return { name: file.name, url: publicUrl, path };
   };
 
@@ -260,8 +260,14 @@
       return;
     }
 
+    if (isSubmitting.value) {
+      return;
+    }
+
     try {
-      // Create the content array
+      isSubmitting.value = true;
+
+      // Create and send content
       const content = [];
 
       // Add text if present
@@ -292,12 +298,17 @@
       // Clear the uploaded files
       uploadedFiles.value = [];
       scrollToBottom();
-    } catch (error) {
-      console.error("Error submitting:", error);
+    } finally {
+      isSubmitting.value = false;
     }
   };
 
+  // Add assistant status handling
   const isReady = computed(() => Boolean(chatInstance.value));
+  const isInputDisabled = computed(() =>
+    Boolean(chatInstance.value?.isSending || isSubmitting.value),
+  );
+  const isError = computed(() => Boolean(chatInstance.value?.error));
 
   onMounted(() => {
     scrollToBottom();
@@ -367,6 +378,36 @@
                 ]"
                 v-html="formatMessage(message.content)"
               ></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add error UI after messages -->
+        <div v-if="isError" class="mb-4 flex items-start gap-2">
+          <div class="w-full rounded-sm bg-red-50 px-4 py-3">
+            <div class="flex items-center justify-between">
+              <p class="text-red-700">
+                An error occurred while processing your request.
+              </p>
+              <button
+                type="button"
+                class="rounded-sm bg-red-100 px-3 py-1 text-red-700 hover:bg-red-200"
+                @click="chatInstance?.reload()"
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Replace thinking message with pulsing dot -->
+        <div v-if="chatInstance?.isSending" class="mb-4 flex items-start gap-2">
+          <div class="p-2">
+            <span class="size-4" />
+          </div>
+          <div class="flex items-center">
+            <div class="px-4 py-3">
+              <div class="bg-primary size-3 animate-pulse rounded-full" />
             </div>
           </div>
         </div>
@@ -456,6 +497,7 @@
             v-model="chatInstance.input"
             @submit="handleSubmit"
             :show-quick-actions="uploadedFiles.length === 0"
+            :disabled="isInputDisabled"
           />
           <input
             type="file"
@@ -495,5 +537,19 @@
   }
   .opacity-100 {
     opacity: 1;
+  }
+
+  @keyframes pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.3;
+    }
+  }
+
+  .animate-pulse {
+    animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 </style>

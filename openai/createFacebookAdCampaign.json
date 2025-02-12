@@ -1,6 +1,6 @@
 {
   "name": "createFacebookAdCampaign",
-  "description": "Creates a Facebook Ad Campaign. IMPORTANT: Before creating a campaign, you must: First check if user has selected an ad account though this conversation. If not, use listAccounts command to show available accounts and ask user to select one. Only proceed with campaign creation after an account is selected. Then collect campaign details (name, objective, dates, etc.) Never try to create a campaign without first ensuring an ad account is selected.",
+  "description": "Creates a Facebook Ad Campaign. IMPORTANT Workflow:\n1. First use listAccounts to select an ad account\n2. Ask user for campaign duration (start and end dates)\n3. Convert user-friendly dates to ISO 8601 format\n4. NEVER create campaign without confirmed dates\n5. Ensure start date is today or future\n6. Default to 30 days duration if user is unsure",
   "strict": true,
   "parameters": {
     "type": "object",
@@ -26,7 +26,6 @@
         "description": "The objective of the ad campaign",
         "enum": [
           "APP_INSTALLS",
-          "BRAND_AWARENESS",
           "CONVERSIONS",
           "EVENT_RESPONSES",
           "LEAD_GENERATION",
@@ -56,11 +55,11 @@
       },
       "start_time": {
         "type": "string",
-        "description": "The start time of the ad campaign in ISO 8601 format"
+        "description": "REQUIRED: Start time in ISO 8601 format. MUST ASK user for start date. Convert user-friendly date to ISO format. MUST be today or future date."
       },
       "end_time": {
         "type": "string",
-        "description": "The end time of the ad campaign in ISO 8601 format"
+        "description": "REQUIRED: End time in ISO 8601 format. MUST ASK user for campaign duration or end date. Default to start_time + 30 days if unspecified. MUST be after start_time."
       }
     },
     "additionalProperties": false
