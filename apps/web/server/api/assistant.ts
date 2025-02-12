@@ -12,6 +12,7 @@ import {
   createAdSet,
   createAdCreative,
   createAd,
+  listPages,
 } from "utils";
 
 const openai = new OpenAI({
