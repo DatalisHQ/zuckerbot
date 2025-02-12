@@ -135,42 +135,38 @@
 
   const formatMessage = (content: string) => {
     const renderer = new marked.Renderer();
-
-    renderer.link = ({ href, title, text: linkText }: any) => {
-      const titleAttr = title ? ` title="${title}"` : "";
-      const parsedText = marked.parseInline(linkText, { renderer });
-      return `<a href="${href}" class="text-blue-500 hover:text-blue-700 underline" target="_blank" rel="noopener noreferrer"${titleAttr}>${parsedText}</a>`;
-    };
-
-    renderer.strong = ({ text: strongText }: any) => {
-      const parsedText = marked.parseInline(strongText, { renderer });
-      return `<strong class="font-bold">${parsedText}</strong>`;
-    };
-
     const parseOptions = {
       renderer,
-      gfm: true,
-      breaks: true,
+      gfm: true, // Enable GitHub Flavored Markdown
+      breaks: true, // Enable line breaks
+      headerIds: false, // Disable header IDs to prevent recursion
+      mangle: false, // Disable mangling to prevent recursion
     };
 
     try {
       const parsed = JSON.parse(content);
 
-      // If it's not an array, process as regular markdown
+      // If it's not an array, process as markdown
       if (!Array.isArray(parsed)) {
-        return marked.parse(content, parseOptions);
+        const htmlContent = marked.parse(content, parseOptions);
+        // Preserve numbered lists by not stripping outer <p> tags
+        return htmlContent;
       }
 
-      // Process each item separately and join with proper spacing
-      const formattedContent = parsed
+      // Process each item separately
+      return parsed
         .map((item, index, array) => {
           if (item.type === "text") {
-            const parsedText = marked.parse(item.text, parseOptions);
-            // Remove outer <p> tags if present and wrap with our own paragraph
-            const cleanText = parsedText.replace(/<\/?p>/g, "").trim();
-            const isLast = index === array.length - 1;
-            return `<p class="${isLast ? "m-0" : "mb-3"}">${cleanText}</p>`;
+            const htmlContent = marked.parse(item.text, parseOptions);
+            // Only clean paragraphs if text doesn't contain lists
+            if (!htmlContent.includes("<li>")) {
+              const cleanText = htmlContent.replace(/<\/?p>/g, "").trim();
+              const isLast = index === array.length - 1;
+              return `<p class="${isLast ? "m-0" : "mb-3"}">${cleanText}</p>`;
+            }
+            return htmlContent;
           }
+
           if (item.type === "image_url") {
             return `<div class="flex flex-wrap w-full">
               <img 
@@ -181,18 +177,14 @@
               />
             </div>`;
           }
+
           return "";
         })
         .filter(Boolean)
         .join("\n");
-
-      return formattedContent;
     } catch (e) {
-      // If parsing fails, treat as markdown
-      const parsedContent = marked.parse(content, parseOptions);
-      // Remove outer <p> tags if present and wrap with our own paragraph
-      const cleanContent = parsedContent.replace(/<\/?p>/g, "").trim();
-      return `<p class="m-0">${cleanContent}</p>`;
+      // If parsing fails, process as markdown
+      return marked.parse(content, parseOptions);
     }
   };
 
