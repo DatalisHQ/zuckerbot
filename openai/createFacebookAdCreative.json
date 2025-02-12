@@ -1,6 +1,6 @@
 {
   "name": "createFacebookAdCreative",
-  "description": "Creates a Facebook ad creative with image and caption. IMPORTANT Workflow: Ask user to provide an image. Once image is provided, generate a compelling caption based on the image and business context. Present the generated caption to the user for approval. Only proceed with creative creation after user confirms the caption. After creative is created, proceed with ad creation using this creative",
+  "description": "Creates a Facebook ad creative with image and caption. IMPORTANT Workflow: Ask user to provide an image. Once image is provided, generate a compelling caption based on the image and business context. Present the generated caption to the user for approval. Only proceed with creative creation after user confirms the caption. After creative is created, proceed with ad creation using this creative.Find image URL from previous conversation context (user-uploaded S3 URL). Ask user for destination URL (website, product page, WhatsApp link, etc). Only create creative after user confirms caption and destination URL is valid.",
   "strict": false,
   "parameters": {
     "type": "object",
@@ -32,7 +32,7 @@
       },
       "link": {
         "type": "string",
-        "description": "URL that the ad will link to"
+        "description": "Destination URL for the ad. MUST ask user for this. Examples: business website, product page, WhatsApp link (wa.me). Do not use example.com."
       },
       "caption": {
         "type": "string",
@@ -40,7 +40,7 @@
       },
       "picture": {
         "type": "string",
-        "description": "URL of the image for the ad. Must be provided by user before generating caption."
+        "description": "URL of the image for the ad. MUST use the S3 URL that user uploaded earlier in the conversation. This URL starts with the S3 bucket endpoint."
       },
       "call_to_action_type": {
         "type": "string",
