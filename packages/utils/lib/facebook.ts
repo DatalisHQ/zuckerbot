@@ -501,3 +501,33 @@ export const createAd = async (
     };
   }
 };
+
+export const fetchPages = async (token: string) => {
+  const response = await fetch(
+    `https://graph.facebook.com/v22.0/me/accounts?fields=id,name&access_token=${token}`,
+  );
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error.message || "Failed to fetch pages");
+  }
+  return data.data; // Returns array of {id, name} objects
+};
+
+export const listPages = async (
+  token: string,
+  sessionId: string,
+  tool: any,
+  apiCaller: any,
+) => {
+  const pages = await fetchPages(token);
+
+  return {
+    tool_call_id: tool.id,
+    output: `Available Facebook Pages:\n${pages
+      .map((p) => `• ${p.name}`)
+      .join("\n")}\n\nPages data: ${JSON.stringify(
+      pages,
+    )}\n\nPlease select a page to use for the ad creative.`,
+  };
+};

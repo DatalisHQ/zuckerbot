@@ -1,11 +1,12 @@
 {
   "name": "createFacebookAdCreative",
-  "description": "Creates a Facebook ad creative with image and caption. IMPORTANT Workflow: Ask user to provide an image. Once image is provided, generate a compelling caption based on the image and business context. Present the generated caption to the user for approval. Only proceed with creative creation after user confirms the caption. After creative is created, proceed with ad creation using this creative.Find image URL from previous conversation context (user-uploaded S3 URL). Ask user for destination URL (website, product page, WhatsApp link, etc). Only create creative after user confirms caption and destination URL is valid.",
-  "strict": false,
+  "description": "Creates a Facebook ad creative with image and caption. IMPORTANT Workflow:\n1. First, call listPages to get available Facebook pages\n2. Select a page to use for the ad creative\n3. Find the last analyzed image URL from your conversation history (format: https://s3.ap-southeast-2.amazonaws.com/datalis-avatars/uploads/*) - this MUST be the same image you previously used to generate captions\n4. Ask for destination URL (website, product page, WhatsApp link)\n5. Only proceed with creative creation after confirming image URL, page ID, and destination URL are all valid.",
+  "strict": true,
   "parameters": {
     "type": "object",
     "required": [
       "ad_account_id",
+      "page_id",
       "name",
       "message",
       "link",
@@ -24,7 +25,7 @@
       },
       "page_id": {
         "type": "string",
-        "description": "The Facebook Page ID for the ad creative"
+        "description": "The Facebook Page ID. MUST be obtained first through listPages command."
       },
       "message": {
         "type": "string",
@@ -40,7 +41,7 @@
       },
       "picture": {
         "type": "string",
-        "description": "URL of the image for the ad. MUST use the S3 URL that user uploaded earlier in the conversation. This URL starts with the S3 bucket endpoint."
+        "description": "MUST use the last image URL from conversation history that starts with 'https://s3.ap-southeast-2.amazonaws.com/datalis-avatars/uploads/' - this is the same image you previously analyzed to generate captions."
       },
       "call_to_action_type": {
         "type": "string",

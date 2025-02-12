@@ -1,0 +1,10 @@
+{
+  "name": "listPages",
+  "description": "Retrieve Facebook pages associated with the user account. MUST be called before creating ad creative to get the required page_id.",
+  "strict": true,
+  "parameters": {
+    "type": "object",
+    "required": [],
+    "properties": {}
+  }
+}

@@ -242,6 +242,14 @@ export default defineEventHandler(async (event) => {
                     apiCaller,
                   );
 
+                case "listPages":
+                  return await listPages(
+                    user.facebookAccessToken!,
+                    sessionId,
+                    toolCall,
+                    apiCaller,
+                  );
+
                 default:
                   throw new Error(
                     `Unknown tool call function: ${toolCall.function.name}`,
