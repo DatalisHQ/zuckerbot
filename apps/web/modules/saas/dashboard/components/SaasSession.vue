@@ -146,11 +146,16 @@
     try {
       const parsed = JSON.parse(content);
 
-      // If it's not an array, process as markdown
+      // If it's not an array, process as markdown but hide image URLs
       if (!Array.isArray(parsed)) {
         const htmlContent = marked.parse(content, parseOptions);
-        // Preserve numbered lists by not stripping outer <p> tags
-        return htmlContent;
+        return htmlContent
+          .replace(
+            /https:\/\/s3\.ap-southeast-2\.amazonaws\.com\/datalis-avatars\/uploads\/[^\s<]*/g,
+            "",
+          )
+          .replace(/<p>\s*<\/p>/g, "") // Remove empty paragraphs
+          .trim();
       }
 
       // Process each item separately
@@ -158,13 +163,23 @@
         .map((item, index, array) => {
           if (item.type === "text") {
             const htmlContent = marked.parse(item.text, parseOptions);
-            // Only clean paragraphs if text doesn't contain lists
-            if (!htmlContent.includes("<li>")) {
-              const cleanText = htmlContent.replace(/<\/?p>/g, "").trim();
+            // Hide S3 URLs in text content
+            const cleanContent = htmlContent
+              .replace(
+                /https:\/\/s3\.ap-southeast-2\.amazonaws\.com\/datalis-avatars\/uploads\/[^\s<]*/g,
+                "",
+              )
+              .replace(/<p>\s*<\/p>/g, "") // Remove empty paragraphs
+              .trim();
+
+            if (!cleanContent) return ""; // Skip empty content
+            if (!cleanContent.includes("<li>")) {
               const isLast = index === array.length - 1;
-              return `<p class="${isLast ? "m-0" : "mb-3"}">${cleanText}</p>`;
+              return `<p class="${
+                isLast ? "m-0" : "mb-3"
+              }">${cleanContent}</p>`;
             }
-            return htmlContent;
+            return cleanContent;
           }
 
           if (item.type === "image_url") {
@@ -183,8 +198,15 @@
         .filter(Boolean)
         .join("\n");
     } catch (e) {
-      // If parsing fails, process as markdown
-      return marked.parse(content, parseOptions);
+      // If parsing fails, process as markdown but hide image URLs
+      const htmlContent = marked.parse(content, parseOptions);
+      return htmlContent
+        .replace(
+          /https:\/\/s3\.ap-southeast-2\.amazonaws\.com\/datalis-avatars\/uploads\/[^\s<]*/g,
+          "",
+        )
+        .replace(/<p>\s*<\/p>/g, "") // Remove empty paragraphs
+        .trim();
     }
   };
 
@@ -270,8 +292,12 @@
         });
       }
 
-      // Add images with proper OpenAI format
+      // Add images with both URL and text representation
       for (const file of uploadedFiles.value) {
+        content.push({
+          type: "text",
+          text: file.url, // Include URL as text for context
+        });
         content.push({
           type: "image_url",
           image_url: {

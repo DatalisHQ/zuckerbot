@@ -1,6 +1,6 @@
 {
   "name": "createFacebookAdCreative",
-  "description": "Creates a Facebook ad creative with image and caption. IMPORTANT Workflow:\n1. First, call listPages to get available Facebook pages\n2. Select a page to use for the ad creative\n3. Find the last analyzed image URL from your conversation history (format: https://s3.ap-southeast-2.amazonaws.com/datalis-avatars/uploads/*) - this MUST be the same image you previously used to generate captions\n4. Ask for destination URL (website, product page, WhatsApp link)\n5. Only proceed with creative creation after confirming image URL, page ID, and destination URL are all valid.",
+  "description": "Creates a Facebook ad creative with image and caption. IMPORTANT Workflow:\n1. First, call listPages to get available Facebook pages\n2. Select a page to use for the ad creative\n3. Use the image URL that was JUST shared/uploaded by the user in the current conversation\n4. NEVER ask user about S3 URL formats or implementation details\n5. Only proceed after having both page selection and destination URL",
   "strict": true,
   "parameters": {
     "type": "object",
@@ -41,7 +41,7 @@
       },
       "picture": {
         "type": "string",
-        "description": "MUST use the last image URL from conversation history that starts with 'https://s3.ap-southeast-2.amazonaws.com/datalis-avatars/uploads/' - this is the same image you previously analyzed to generate captions."
+        "description": "Use the exact image URL that was most recently shared by the user in the conversation. Do not modify or validate the URL format."
       },
       "call_to_action_type": {
         "type": "string",
