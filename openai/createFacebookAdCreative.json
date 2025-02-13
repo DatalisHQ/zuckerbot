@@ -1,6 +1,6 @@
 {
   "name": "createFacebookAdCreative",
-  "description": "Creates a Facebook ad creative with image and caption. IMPORTANT Workflow:\n1. First, call listPages to get available Facebook pages\n2. Select a page to use for the ad creative\n3. Use the image URL that was JUST shared/uploaded by the user in the current conversation\n4. NEVER ask user about S3 URL formats or implementation details\n5. Only proceed after having both page selection and destination URL",
+  "description": "Creates a Facebook ad creative with image and message. IMPORTANT Workflow:\n1. First, call listPages to get available Facebook pages\n2. Select a page to use for the ad creative\n3. Use the image URL that was JUST shared/uploaded by the user in the current conversation\n4. NEVER ask user about S3 URL formats or implementation details\n5. Only proceed after having both page selection and destination URL",
   "strict": true,
   "parameters": {
     "type": "object",
@@ -10,7 +10,6 @@
       "name",
       "message",
       "link",
-      "caption",
       "picture",
       "call_to_action_type"
     ],
@@ -29,23 +28,19 @@
       },
       "message": {
         "type": "string",
-        "description": "Message to be displayed with the link. Must be generated based on the image and confirmed by user."
+        "description": "The main body text of the ad. Must be engaging, descriptive, and based on the image context."
       },
       "link": {
         "type": "string",
-        "description": "Destination URL for the ad. MUST ask user for this. Examples: business website, product page, WhatsApp link (wa.me). Do not use example.com."
-      },
-      "caption": {
-        "type": "string",
-        "description": "Caption for the link. Must be generated based on the image and confirmed by user."
+        "description": "Destination URL for the ad. MUST ask user for this. Examples: business website, product page, WhatsApp link (wa.me)."
       },
       "picture": {
         "type": "string",
-        "description": "Use the exact image URL that was most recently shared by the user in the conversation. Do not modify or validate the URL format."
+        "description": "Use the exact image URL that was most recently shared by the user in the conversation."
       },
       "call_to_action_type": {
         "type": "string",
-        "description": "Type of the call to action",
+        "description": "Type of the call to action button",
         "enum": [
           "SHOP_NOW",
           "LEARN_MORE",

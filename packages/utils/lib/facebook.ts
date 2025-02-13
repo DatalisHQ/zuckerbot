@@ -378,7 +378,6 @@ export const createAdCreative = async (
           link_data: {
             message: args.message,
             link: args.link,
-            caption: args.caption,
             picture: args.picture,
             call_to_action: {
               type: args.call_to_action_type,
