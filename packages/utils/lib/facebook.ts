@@ -323,13 +323,6 @@ export const createAdSet = async (
       };
     }
 
-    await apiCaller.chat.update({
-      id: sessionId,
-      data: {
-        adSetId: data.id,
-      },
-    });
-
     return {
       tool_call_id: tool.id,
       output: `Ad set created successfully with ID: ${data.id}`,
@@ -428,7 +421,7 @@ export const createAd = async (
 ) => {
   const args = JSON.parse(tool.function.arguments);
   let adAccountId = args.ad_account_id;
-  const adSetId = args.ad_set_id;
+  const adsetId = args.adset_id;
   const creativeId = args.creative_id;
 
   if (!adAccountId) {
@@ -439,7 +432,7 @@ export const createAd = async (
     };
   }
 
-  if (!adSetId) {
+  if (!adsetId) {
     return {
       tool_call_id: tool.id,
       output: "Please create an ad set first. Then try creating the ad again.",
@@ -468,9 +461,9 @@ export const createAd = async (
       },
       body: JSON.stringify({
         name: args.name,
-        adset_id: args.adset_id,
+        adset_id: adsetId,
         creative: {
-          creative_id: args.creative_id,
+          creative_id: creativeId,
         },
         status: "ACTIVE",
         access_token: token,
