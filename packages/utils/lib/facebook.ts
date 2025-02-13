@@ -40,7 +40,7 @@ export const fetchCampaigns = async (adAccountId: string, token: string) => {
 
   const data = await response.json();
   if (data.error) {
-    throw new Error(data.error.message || "Failed to fetch campaigns");
+    throw new Error(data.error || "Failed to fetch campaigns");
   }
   return data.data.map((campaign: any) => ({
     id: campaign.id,
@@ -221,9 +221,11 @@ export const createCampaign = async (
     if (data.error) {
       return {
         tool_call_id: tool.id,
-        output: `Failed to create campaign: ${
-          data.error?.message || "Unknown error"
-        }`,
+        output: `Failed to create campaign: ${JSON.stringify(
+          data.error,
+          null,
+          2,
+        )}`,
       };
     }
 
@@ -241,7 +243,7 @@ export const createCampaign = async (
   } catch (error: any) {
     return {
       tool_call_id: tool.id,
-      output: `Error creating campaign: ${error.message}`,
+      output: `Error creating campaign: ${JSON.stringify(error, null, 2)}`,
     };
   }
 };
@@ -313,7 +315,11 @@ export const createAdSet = async (
     if (data.error) {
       return {
         tool_call_id: tool.id,
-        output: `Failed to ad set: ${data.error?.message || "Unknown error"}`,
+        output: `Failed to create ad set: ${JSON.stringify(
+          data.error,
+          null,
+          2,
+        )}`,
       };
     }
 
@@ -331,7 +337,7 @@ export const createAdSet = async (
   } catch (error: any) {
     return {
       tool_call_id: tool.id,
-      output: `Error creating ad set: ${error.message}`,
+      output: `Error creating ad set: ${JSON.stringify(error, null, 2)}`,
     };
   }
 };
@@ -388,9 +394,11 @@ export const createAdCreative = async (
     if (data.error) {
       return {
         tool_call_id: tool.id,
-        output: `Failed to create ad creative: ${
-          data.error?.message || "Unknown error"
-        }`,
+        output: `Failed to create ad creative: ${JSON.stringify(
+          data.error,
+          null,
+          2,
+        )}`,
       };
     }
 
@@ -408,7 +416,7 @@ export const createAdCreative = async (
   } catch (error: any) {
     return {
       tool_call_id: tool.id,
-      output: `Error creating ad creative: ${error.message}`,
+      output: `Error creating ad creative: ${JSON.stringify(error, null, 2)}`,
     };
   }
 };
@@ -475,9 +483,7 @@ export const createAd = async (
     if (data.error) {
       return {
         tool_call_id: tool.id,
-        output: `Failed to create ad: ${
-          data.error?.message || "Unknown error"
-        }`,
+        output: `Failed to create ad: ${JSON.stringify(data.error, null, 2)}`,
       };
     }
 
@@ -495,7 +501,7 @@ export const createAd = async (
   } catch (error: any) {
     return {
       tool_call_id: tool.id,
-      output: `Error creating ad: ${error.message}`,
+      output: `Error creating ad: ${JSON.stringify(error, null, 2)}`,
     };
   }
 };
@@ -508,7 +514,7 @@ export const fetchPages = async (token: string) => {
   const data = await response.json();
 
   if (data.error) {
-    throw new Error(data.error.message || "Failed to fetch pages");
+    throw new Error(data.error || "Failed to fetch pages");
   }
 
   return data.data;
@@ -534,7 +540,7 @@ export const listPages = async (
   } catch (error: any) {
     return {
       tool_call_id: tool.id,
-      output: `Error fetching pages: ${error}`,
+      output: `Error fetching pages: ${JSON.stringify(error)}`,
     };
   }
 };
