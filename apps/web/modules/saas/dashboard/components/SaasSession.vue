@@ -39,6 +39,7 @@
   const fileInputRef = ref<HTMLInputElement | null>(null);
   const uploadedFiles = ref<{ name: string; url: string }[]>([]);
   const files = ref<File[]>([]);
+  const isSubmitting = ref(false);
 
   const getSignedUploadUrlMutation =
     apiCaller.uploads.signedUploadUrl.useMutation();
@@ -64,7 +65,6 @@
 
     // Construct public URL directly
     const publicUrl = `${config.public.s3.endpoint}/${config.public.s3AvatarsBucketName}/${path}`;
-    console.log("Uploaded file to:", publicUrl);
     return { name: file.name, url: publicUrl, path };
   };
 
@@ -135,42 +135,53 @@
 
   const formatMessage = (content: string) => {
     const renderer = new marked.Renderer();
-
-    renderer.link = ({ href, title, text: linkText }: any) => {
-      const titleAttr = title ? ` title="${title}"` : "";
-      const parsedText = marked.parseInline(linkText, { renderer });
-      return `<a href="${href}" class="text-blue-500 hover:text-blue-700 underline" target="_blank" rel="noopener noreferrer"${titleAttr}>${parsedText}</a>`;
-    };
-
-    renderer.strong = ({ text: strongText }: any) => {
-      const parsedText = marked.parseInline(strongText, { renderer });
-      return `<strong class="font-bold">${parsedText}</strong>`;
-    };
-
     const parseOptions = {
       renderer,
-      gfm: true,
-      breaks: true,
+      gfm: true, // Enable GitHub Flavored Markdown
+      breaks: true, // Enable line breaks
+      headerIds: false, // Disable header IDs to prevent recursion
+      mangle: false, // Disable mangling to prevent recursion
     };
 
     try {
       const parsed = JSON.parse(content);
 
-      // If it's not an array, process as regular markdown
+      // If it's not an array, process as markdown but hide image URLs
       if (!Array.isArray(parsed)) {
-        return marked.parse(content, parseOptions);
+        const htmlContent = marked.parse(content, parseOptions);
+        return htmlContent
+          .replace(
+            /https:\/\/s3\.ap-southeast-2\.amazonaws\.com\/datalis-avatars\/uploads\/[^\s<]*/g,
+            "",
+          )
+          .replace(/<p>\s*<\/p>/g, "") // Remove empty paragraphs
+          .trim();
       }
 
-      // Process each item separately and join with proper spacing
-      const formattedContent = parsed
+      // Process each item separately
+      return parsed
         .map((item, index, array) => {
           if (item.type === "text") {
-            const parsedText = marked.parse(item.text, parseOptions);
-            // Remove outer <p> tags if present and wrap with our own paragraph
-            const cleanText = parsedText.replace(/<\/?p>/g, "").trim();
-            const isLast = index === array.length - 1;
-            return `<p class="${isLast ? "m-0" : "mb-3"}">${cleanText}</p>`;
+            const htmlContent = marked.parse(item.text, parseOptions);
+            // Hide S3 URLs in text content
+            const cleanContent = htmlContent
+              .replace(
+                /https:\/\/s3\.ap-southeast-2\.amazonaws\.com\/datalis-avatars\/uploads\/[^\s<]*/g,
+                "",
+              )
+              .replace(/<p>\s*<\/p>/g, "") // Remove empty paragraphs
+              .trim();
+
+            if (!cleanContent) return ""; // Skip empty content
+            if (!cleanContent.includes("<li>")) {
+              const isLast = index === array.length - 1;
+              return `<p class="${
+                isLast ? "m-0" : "mb-3"
+              }">${cleanContent}</p>`;
+            }
+            return cleanContent;
           }
+
           if (item.type === "image_url") {
             return `<div class="flex flex-wrap w-full">
               <img 
@@ -181,18 +192,21 @@
               />
             </div>`;
           }
+
           return "";
         })
         .filter(Boolean)
         .join("\n");
-
-      return formattedContent;
     } catch (e) {
-      // If parsing fails, treat as markdown
-      const parsedContent = marked.parse(content, parseOptions);
-      // Remove outer <p> tags if present and wrap with our own paragraph
-      const cleanContent = parsedContent.replace(/<\/?p>/g, "").trim();
-      return `<p class="m-0">${cleanContent}</p>`;
+      // If parsing fails, process as markdown but hide image URLs
+      const htmlContent = marked.parse(content, parseOptions);
+      return htmlContent
+        .replace(
+          /https:\/\/s3\.ap-southeast-2\.amazonaws\.com\/datalis-avatars\/uploads\/[^\s<]*/g,
+          "",
+        )
+        .replace(/<p>\s*<\/p>/g, "") // Remove empty paragraphs
+        .trim();
     }
   };
 
@@ -214,10 +228,16 @@
       }),
     ]);
 
+    const today = new Date().toISOString();
+
     chatInstance.value = useAssistant({
       api: "/api/assistant",
       body: {
         sessionId: session.id,
+        data: {
+          today,
+          currentTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        },
       },
       ...(session.threadId !== null && {
         threadId: session.threadId,
@@ -254,8 +274,14 @@
       return;
     }
 
+    if (isSubmitting.value) {
+      return;
+    }
+
     try {
-      // Create the content array
+      isSubmitting.value = true;
+
+      // Create and send content
       const content = [];
 
       // Add text if present
@@ -266,8 +292,12 @@
         });
       }
 
-      // Add images with proper OpenAI format
+      // Add images with both URL and text representation
       for (const file of uploadedFiles.value) {
+        content.push({
+          type: "text",
+          text: file.url, // Include URL as text for context
+        });
         content.push({
           type: "image_url",
           image_url: {
@@ -286,12 +316,17 @@
       // Clear the uploaded files
       uploadedFiles.value = [];
       scrollToBottom();
-    } catch (error) {
-      console.error("Error submitting:", error);
+    } finally {
+      isSubmitting.value = false;
     }
   };
 
+  // Add assistant status handling
   const isReady = computed(() => Boolean(chatInstance.value));
+  const isInputDisabled = computed(() =>
+    Boolean(chatInstance.value?.isSending || isSubmitting.value),
+  );
+  const isError = computed(() => Boolean(chatInstance.value?.error));
 
   onMounted(() => {
     scrollToBottom();
@@ -361,6 +396,36 @@
                 ]"
                 v-html="formatMessage(message.content)"
               ></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add error UI after messages -->
+        <div v-if="isError" class="mb-4 flex items-start gap-2">
+          <div class="w-full rounded-sm bg-red-50 px-4 py-3">
+            <div class="flex items-center justify-between">
+              <p class="text-red-700">
+                An error occurred while processing your request.
+              </p>
+              <button
+                type="button"
+                class="rounded-sm bg-red-100 px-3 py-1 text-red-700 hover:bg-red-200"
+                @click="chatInstance?.reload()"
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Replace thinking message with pulsing dot -->
+        <div v-if="chatInstance?.isSending" class="mb-4 flex items-start gap-2">
+          <div class="p-2">
+            <span class="size-4" />
+          </div>
+          <div class="flex items-center">
+            <div class="px-4 py-3">
+              <div class="bg-primary size-3 animate-pulse rounded-full" />
             </div>
           </div>
         </div>
@@ -450,6 +515,7 @@
             v-model="chatInstance.input"
             @submit="handleSubmit"
             :show-quick-actions="uploadedFiles.length === 0"
+            :disabled="isInputDisabled"
           />
           <input
             type="file"
@@ -489,5 +555,19 @@
   }
   .opacity-100 {
     opacity: 1;
+  }
+
+  @keyframes pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.3;
+    }
+  }
+
+  .animate-pulse {
+    animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 </style>

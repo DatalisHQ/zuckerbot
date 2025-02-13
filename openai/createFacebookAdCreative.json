@@ -1,0 +1,56 @@
+{
+  "name": "createFacebookAdCreative",
+  "description": "Creates a Facebook ad creative with image and message. IMPORTANT Workflow:\n1. First, call listPages to get available Facebook pages\n2. Select a page to use for the ad creative\n3. Use the image URL that was JUST shared/uploaded by the user in the current conversation\n4. NEVER ask user about S3 URL formats or implementation details\n5. Only proceed after having both page selection and destination URL",
+  "strict": true,
+  "parameters": {
+    "type": "object",
+    "required": [
+      "ad_account_id",
+      "page_id",
+      "name",
+      "message",
+      "link",
+      "picture",
+      "call_to_action_type"
+    ],
+    "properties": {
+      "ad_account_id": {
+        "type": "string",
+        "description": "The ID of the ad account. MUST be obtained first through listAccounts command before attempting creative creation."
+      },
+      "name": {
+        "type": "string",
+        "description": "The name of the ad creative"
+      },
+      "page_id": {
+        "type": "string",
+        "description": "The Facebook Page ID. MUST be obtained first through listPages command."
+      },
+      "message": {
+        "type": "string",
+        "description": "The main body text of the ad. Must be engaging, descriptive, and based on the image context."
+      },
+      "link": {
+        "type": "string",
+        "description": "Destination URL for the ad. MUST ask user for this. Examples: business website, product page, WhatsApp link (wa.me)."
+      },
+      "picture": {
+        "type": "string",
+        "description": "Use the exact image URL that was most recently shared by the user in the conversation."
+      },
+      "call_to_action_type": {
+        "type": "string",
+        "description": "Type of the call to action button",
+        "enum": [
+          "SHOP_NOW",
+          "LEARN_MORE",
+          "SIGN_UP",
+          "BOOK_NOW",
+          "GET_OFFER",
+          "GET_DIRECTIONS"
+        ]
+      }
+    },
+    "additionalProperties": false
+  }
+}

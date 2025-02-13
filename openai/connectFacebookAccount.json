@@ -1,0 +1,9 @@
+{
+  "name": "connectFacebookAccount",
+  "description": "Initiate the connection process for a user's Facebook ad account via the Marketing API. This may involve OAuth authentication and storing access tokens securely.",
+  "strict": false,
+  "parameters": {
+    "type": "object",
+    "properties": {}
+  }
+}

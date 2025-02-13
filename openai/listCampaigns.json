@@ -1,0 +1,15 @@
+{
+  "name": "listCampaigns",
+  "description": "Retrieve and display Facebook campaigns. IMPORTANT:\n1. Show campaign names to the user\n2. Store campaign details in function output as JSON\n3. When user selects a campaign by name, use the stored data to get the ID\n4. Users should never need to provide campaign IDs directly",
+  "strict": false,
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "ad_account_id": {
+        "type": "string",
+        "description": "The ID of the ad account from which to list campaigns. MUST be obtained first through listAccounts command."
+      }
+    },
+    "required": ["ad_account_id"]
+  }
+}

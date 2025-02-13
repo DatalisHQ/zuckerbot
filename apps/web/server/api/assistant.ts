@@ -8,6 +8,11 @@ import {
   listAccounts,
   listCampaigns,
   fetchFacebookInsights,
+  createCampaign,
+  createAdSet,
+  createAdCreative,
+  createAd,
+  listPages,
 } from "utils";
 
 const openai = new OpenAI({
@@ -15,7 +20,7 @@ const openai = new OpenAI({
 });
 
 export default defineEventHandler(async (event) => {
-  const { message, sessionId } = await readBody(event);
+  const { message, sessionId, data } = await readBody(event);
   const apiCaller = await createApiCaller(event);
 
   const user = await apiCaller.auth.user();
@@ -45,7 +50,6 @@ export default defineEventHandler(async (event) => {
   let content;
   try {
     content = JSON.parse(message);
-    console.log("Parsed content:", JSON.stringify(content, null, 2));
   } catch (e) {
     // If not JSON, treat as regular text message
     content = [
@@ -91,6 +95,9 @@ export default defineEventHandler(async (event) => {
     async ({ forwardStream }) => {
       const runStream = openai.beta.threads.runs.stream(threadId, {
         assistant_id: process.env.OPENAI_ASSISTANT_ID || "",
+        additional_instructions: data?.today
+          ? `Current date and time is ${data.today} (${data.currentTimezone}). Use this for any date calculations and never use dates in the past.`
+          : undefined,
       });
 
       // Add general stream error handling
@@ -121,7 +128,6 @@ export default defineEventHandler(async (event) => {
               createdAt: new Date(message.created_at),
               messageId: message.id,
             });
-            console.log("User message saved:", message.id);
           } catch (error) {
             console.error("Error saving user message:", error);
           }
@@ -129,10 +135,7 @@ export default defineEventHandler(async (event) => {
       });
 
       (runStream as AssistantStream).on("messageDone", async (message) => {
-        console.log("Message done event:", message.id, message.role);
-
         if (doneMessageIds.has(message.id)) {
-          console.log("Skipping duplicate done message:", message.id);
           return;
         }
 
@@ -154,7 +157,6 @@ export default defineEventHandler(async (event) => {
               createdAt: new Date(message.created_at),
               messageId: message.id,
             });
-            console.log("Assistant message saved:", message.id);
           } catch (error) {
             console.error("Error saving assistant message:", error);
           }
@@ -167,7 +169,6 @@ export default defineEventHandler(async (event) => {
         runResult?.status === "requires_action" &&
         runResult.required_action?.type === "submit_tool_outputs"
       ) {
-        console.log("Processing tool outputs");
         const tool_outputs = await Promise.all(
           runResult.required_action.submit_tool_outputs.tool_calls.map(
             async (toolCall) => {
@@ -208,6 +209,46 @@ export default defineEventHandler(async (event) => {
                   return await fetchFacebookInsights(
                     user.facebookAccessToken!,
                     toolCall,
+                  );
+
+                case "createFacebookAdCampaign":
+                  return await createCampaign(
+                    user.facebookAccessToken!,
+                    sessionId,
+                    toolCall,
+                    apiCaller,
+                  );
+
+                case "createFacebookAdSet":
+                  return await createAdSet(
+                    user.facebookAccessToken!,
+                    sessionId,
+                    toolCall,
+                    apiCaller,
+                  );
+
+                case "createFacebookAdCreative":
+                  return await createAdCreative(
+                    user.facebookAccessToken!,
+                    sessionId,
+                    toolCall,
+                    apiCaller,
+                  );
+
+                case "createFacebookAd":
+                  return await createAd(
+                    user.facebookAccessToken!,
+                    sessionId,
+                    toolCall,
+                    apiCaller,
+                  );
+
+                case "listPages":
+                  return await listPages(
+                    user.facebookAccessToken!,
+                    sessionId,
+                    toolCall,
+                    apiCaller,
                   );
 
                 default:

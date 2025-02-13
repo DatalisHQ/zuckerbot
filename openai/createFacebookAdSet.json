@@ -1,0 +1,82 @@
+{
+  "name": "createFacebookAdSet",
+  "description": "Creates a new ad set in a Facebook campaign. IMPORTANT:\n1. First use listAccounts to select an ad account\n2. Then create a campaign using createFacebookAdCampaign\n3. Choose appropriate values based on campaign objective:\n   - For BRAND_AWARENESS/REACH: Use IMPRESSIONS billing + REACH optimization\n   - For TRAFFIC/CONVERSIONS: Use LINK_CLICKS billing + LINK_CLICKS optimization\n4. Use standard targeting unless specified:\n   - Age: 18-65 for general audience\n   - Gender: all genders [1,2] for maximum reach\n   - Location: use context from user's business\n5. Only ask user for non-standard values",
+  "strict": true,
+  "parameters": {
+    "type": "object",
+    "required": [
+      "ad_account_id",
+      "campaign_id",
+      "name",
+      "daily_budget",
+      "start_time",
+      "end_time",
+      "age_min",
+      "age_max",
+      "genders",
+      "countries",
+      "billing_event",
+      "optimization_goal"
+    ],
+    "properties": {
+      "ad_account_id": {
+        "type": "string",
+        "description": "The ID of the ad account. MUST be obtained first through listAccounts command before attempting campaign creation."
+      },
+      "campaign_id": {
+        "type": "string",
+        "description": "Must be obtained first through the create campaign command before attempting ad set creation."
+      },
+      "name": {
+        "type": "string",
+        "description": "Name of the ad set. Should be descriptive and include target audience characteristics."
+      },
+      "daily_budget": {
+        "type": "integer",
+        "description": "Daily budget in smallest currency unit (e.g., 1000 = $10.00). Ask user for budget amount, then convert to smallest unit based on account currency."
+      },
+      "start_time": {
+        "type": "string",
+        "description": "The start time in ISO 8601 format. Should match or be after campaign start time."
+      },
+      "end_time": {
+        "type": "string",
+        "description": "The end time in ISO 8601 format. Should match or be before campaign end time."
+      },
+      "age_min": {
+        "type": "integer",
+        "description": "Use 18 for general audience. Only ask if specific younger targeting (13+) is needed."
+      },
+      "age_max": {
+        "type": "integer",
+        "description": "Use 65 for general audience (represents 65+). Only ask if specific upper limit is needed."
+      },
+      "genders": {
+        "type": "array",
+        "description": "Use [1,2] for all genders unless specific targeting needed. [1] for men, [2] for women.",
+        "items": {
+          "type": "integer",
+          "enum": [1, 2]
+        }
+      },
+      "countries": {
+        "type": "array",
+        "description": "Array of two-letter country codes to target (e.g., ['ID'] for Indonesia). Each code must be exactly 2 characters.",
+        "items": {
+          "type": "string"
+        }
+      },
+      "billing_event": {
+        "type": "string",
+        "description": "Choose based on campaign objective: IMPRESSIONS for awareness/reach, LINK_CLICKS for traffic/conversion.",
+        "enum": ["IMPRESSIONS", "LINK_CLICKS"]
+      },
+      "optimization_goal": {
+        "type": "string",
+        "description": "Match with campaign objective: REACH for awareness, LINK_CLICKS for traffic/conversion.",
+        "enum": ["REACH", "LINK_CLICKS"]
+      }
+    },
+    "additionalProperties": false
+  }
+}

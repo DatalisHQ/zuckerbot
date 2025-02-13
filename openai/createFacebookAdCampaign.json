@@ -1,0 +1,67 @@
+{
+  "name": "createFacebookAdCampaign",
+  "description": "Creates a Facebook Ad Campaign. IMPORTANT Workflow:\n1. First use listAccounts to select an ad account\n2. Ask user for campaign duration (start and end dates)\n3. Convert user-friendly dates to ISO 8601 format\n4. NEVER create campaign without confirmed dates\n5. Ensure start date is today or future\n6. Default to 30 days duration if user is unsure",
+  "strict": true,
+  "parameters": {
+    "type": "object",
+    "required": [
+      "ad_account_id",
+      "name",
+      "objective",
+      "status",
+      "start_time",
+      "end_time"
+    ],
+    "properties": {
+      "ad_account_id": {
+        "type": "string",
+        "description": "The ID of the ad account. MUST be obtained first through listAccounts command before attempting campaign creation."
+      },
+      "name": {
+        "type": "string",
+        "description": "The name of the ad campaign"
+      },
+      "objective": {
+        "type": "string",
+        "description": "The objective of the ad campaign",
+        "enum": [
+          "APP_INSTALLS",
+          "CONVERSIONS",
+          "EVENT_RESPONSES",
+          "LEAD_GENERATION",
+          "LINK_CLICKS",
+          "LOCAL_AWARENESS",
+          "MESSAGES",
+          "OFFER_CLAIMS",
+          "OUTCOME_APP_PROMOTION",
+          "OUTCOME_AWARENESS",
+          "OUTCOME_ENGAGEMENT",
+          "OUTCOME_LEADS",
+          "OUTCOME_SALES",
+          "OUTCOME_TRAFFIC",
+          "PAGE_LIKES",
+          "POST_ENGAGEMENT",
+          "PRODUCT_CATALOG_SALES",
+          "REACH",
+          "STORE_VISITS",
+          "VIDEO_VIEWS"
+        ]
+      },
+      "status": {
+        "type": "string",
+        "description": "The status of the ad campaign (e.g., ACTIVE, PAUSED, ARCHIVED)",
+        "default": "PAUSED",
+        "enum": ["ACTIVE", "PAUSED", "ARCHIVED"]
+      },
+      "start_time": {
+        "type": "string",
+        "description": "REQUIRED: Start time in ISO 8601 format. MUST ASK user for start date. Convert user-friendly date to ISO format. MUST be today or future date."
+      },
+      "end_time": {
+        "type": "string",
+        "description": "REQUIRED: End time in ISO 8601 format. MUST ASK user for campaign duration or end date. Default to start_time + 30 days if unspecified. MUST be after start_time."
+      }
+    },
+    "additionalProperties": false
+  }
+}
