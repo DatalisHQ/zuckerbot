@@ -1,0 +1,10 @@
+{
+  "name": "listBusinesses",
+  "description": "List Facebook businesses that the user administers. MUST be called before creating an ad account if no ad accounts exist.",
+  "strict": true,
+  "parameters": {
+    "type": "object",
+    "required": [],
+    "properties": {}
+  }
+}
