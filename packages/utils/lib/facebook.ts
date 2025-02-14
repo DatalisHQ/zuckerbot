@@ -3,8 +3,9 @@ export const getFacebookAuthUrl = (user: any) => {
   const clientId = "1119807469249263";
   const redirectUri = "https://zuckerbot.ai/auth/facebook/callback";
   const state = encodeURIComponent(JSON.stringify({ userId: user.id }));
+  const scope = "pages_show_list,ads_management,ads_read,business_management";
 
-  const authUrl = `https://www.facebook.com/v22.0/dialog/oauth?client_id=${clientId}&redirect_uri=${redirectUri}&state=${state}&scope=ads_read&response_type=token&config_id=1611077456348594`;
+  const authUrl = `https://www.facebook.com/v22.0/dialog/oauth?client_id=${clientId}&redirect_uri=${redirectUri}&state=${state}&scope=${scope}&response_type=token&config_id=1611077456348594`;
   return authUrl;
 };
 
@@ -533,6 +534,95 @@ export const listPages = async (
     return {
       tool_call_id: tool.id,
       output: `Error fetching pages: ${JSON.stringify(error)}`,
+    };
+  }
+};
+
+export const fetchBusinesses = async (token: string) => {
+  const response = await fetch(
+    `https://graph.facebook.com/v22.0/me/businesses?fields=id,name&access_token=${token}`,
+  );
+  const data = await response.json();
+
+  if (data.error) {
+    throw new Error(JSON.stringify(data.error, null, 2));
+  }
+
+  return data.data || [];
+};
+
+export const listBusinesses = async (token: string, tool: any) => {
+  try {
+    const businesses = await fetchBusinesses(token);
+
+    if (businesses.length === 0) {
+      return {
+        tool_call_id: tool.id,
+        output:
+          "You need to be an administrator of a business or create your own business at https://business.facebook.com/ before creating an ad account.",
+      };
+    }
+
+    if (businesses.length === 1) {
+      return {
+        tool_call_id: tool.id,
+        output: `Found business: "${businesses[0].name}" (${businesses[0].id}). We can use this to create your ad account.`,
+      };
+    }
+
+    return {
+      tool_call_id: tool.id,
+      output: `Please select which business you'd like to use:\n${businesses
+        .map((b) => `• ${b.name} (ID: ${b.id})`)
+        .join("\n")}\n\nBusiness data: ${JSON.stringify(businesses)}`,
+    };
+  } catch (error) {
+    return {
+      tool_call_id: tool.id,
+      output: `Error fetching businesses: ${JSON.stringify(error, null, 2)}`,
+    };
+  }
+};
+
+export const createAdAccount = async (token: string, tool: any) => {
+  const args = JSON.parse(tool.function.arguments);
+
+  try {
+    const response = await fetch(
+      `https://graph.facebook.com/v22.0/${args.business_id}/adaccount`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          name: args.name,
+          currency: args.currency,
+          timezone_id: args.timezone_id,
+          partner: "NONE",
+          access_token: token,
+        }),
+      },
+    );
+
+    const data = await response.json();
+
+    if (data.error) {
+      return {
+        tool_call_id: tool.id,
+        output: `Failed to create ad account: ${JSON.stringify(
+          data.error,
+          null,
+          2,
+        )}`,
+      };
+    }
+
+    return {
+      tool_call_id: tool.id,
+      output: `Successfully created ad account with ID: ${data.id}`,
+    };
+  } catch (error) {
+    return {
+      tool_call_id: tool.id,
+      output: `Error creating ad account: ${JSON.stringify(error, null, 2)}`,
     };
   }
 };

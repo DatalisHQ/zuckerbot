@@ -1,0 +1,28 @@
+{
+  "name": "createAdAccount",
+  "description": "Creates a new Facebook Ad Account under a business. IMPORTANT:\n1. Must be called only after listBusinesses confirmed user has admin access\n2. If multiple businesses exist, user must select one first\n3. Must ask user for currency (e.g., USD, EUR) and timezone (e.g., 1 for America/Los_Angeles)\n4. Currency must match the user's business location\n5. No default values - all fields must be explicitly provided",
+  "strict": true,
+  "parameters": {
+    "type": "object",
+    "required": ["business_id", "name", "currency", "timezone_id"],
+    "properties": {
+      "business_id": {
+        "type": "string",
+        "description": "Business ID under which to create the ad account. Must be obtained from listBusinesses first."
+      },
+      "name": {
+        "type": "string",
+        "description": "Name for the new ad account. Should be descriptive and include business name."
+      },
+      "currency": {
+        "type": "string",
+        "description": "Three-letter currency code. MUST ask user for their business currency (e.g., USD, EUR, IDR)."
+      },
+      "timezone_id": {
+        "type": "integer",
+        "description": "Facebook timezone ID. MUST ask user for their business timezone (e.g., 1 for America/Los_Angeles, 7 for Asia/Jakarta)."
+      }
+    },
+    "additionalProperties": false
+  }
+}

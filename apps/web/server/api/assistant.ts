@@ -251,6 +251,18 @@ export default defineEventHandler(async (event) => {
                     apiCaller,
                   );
 
+                case "listBusinesses":
+                  return await listBusinesses(
+                    user.facebookAccessToken!,
+                    toolCall,
+                  );
+
+                case "createAdAccount":
+                  return await createAdAccount(
+                    user.facebookAccessToken!,
+                    toolCall,
+                  );
+
                 default:
                   throw new Error(
                     `Unknown tool call function: ${toolCall.function.name}`,
