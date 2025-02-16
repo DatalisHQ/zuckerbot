@@ -39,7 +39,7 @@
         referrer: getReferrer(),
       });
 
-      clearReferrer(); // Clear after successful use
+      clearReferrer();
       emit("complete");
     } catch (e) {
       serverError.value = t("onboarding.notifications.teamSetupFailed");
