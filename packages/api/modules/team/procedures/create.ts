@@ -6,6 +6,7 @@ export const create = protectedProcedure
   .input(
     z.object({
       name: z.string(),
+      referrer: z.string().nullable(),
     }),
   )
   .output(
@@ -19,10 +20,11 @@ export const create = protectedProcedure
       ),
     }),
   )
-  .mutation(async ({ input: { name }, ctx: { user } }) => {
+  .mutation(async ({ input: { name, referrer }, ctx: { user } }) => {
     const team = await db.team.create({
       data: {
         name,
+        referrer,
         memberships: {
           create: {
             userId: user.id,

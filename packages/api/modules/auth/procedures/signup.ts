@@ -34,15 +34,17 @@ export const signup = publicProcedure
         ),
       password: passwordSchema,
       callbackUrl: z.string(),
+      referrer: z.string().nullable(),
     }),
   )
-  .mutation(async ({ input: { email, password, callbackUrl } }) => {
+  .mutation(async ({ input: { email, password, referrer, callbackUrl } }) => {
     try {
       const hashedPassword = await hashPassword(password);
       const user = await db.user.create({
         data: {
           email,
           role: UserRoleSchema.Values.USER,
+          referrer,
           hashedPassword,
         },
       });
