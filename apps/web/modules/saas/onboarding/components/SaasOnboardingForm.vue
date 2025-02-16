@@ -14,18 +14,26 @@
     step.value = String(newStep);
   };
 
-  const onComplete = async () => {
-    try {
-      await apiCaller.auth.update.mutate({
-        onboardingComplete: true,
-      });
+  // Watch for step changes to handle onboarding completion
+  watch(
+    step,
+    async (newStep) => {
+      if (newStep === "3") {
+        try {
+          await apiCaller.auth.update.mutate({
+            onboardingComplete: true,
+          });
+          await reloadUser();
+        } catch {}
+      }
+    },
+    { immediate: true },
+  );
 
-      await reloadUser();
-
-      navigateTo(localePath(`/app/dashboard`), {
-        replace: true,
-      });
-    } catch {}
+  const onComplete = () => {
+    navigateTo(localePath(`/app/dashboard`), {
+      replace: true,
+    });
   };
 </script>
 
