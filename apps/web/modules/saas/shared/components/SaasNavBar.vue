@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import { UserCogIcon } from "lucide-vue-next";
+  import { isFacebookAuth, getFacebookAuthUrl } from "utils";
 
   const route = useRoute();
   const { t } = useTranslations();
@@ -30,18 +31,39 @@
   const isActiveMenuItem = (href: string | null) => {
     return href && route.path.includes(href);
   };
+
+  const isFacebookConnected = computed(() => isFacebookAuth(user.value));
+
+  const openFacebookAuth = () => {
+    const authUrl = getFacebookAuthUrl(user.value);
+    window.location.href = authUrl;
+  };
 </script>
 
 <template>
   <nav class="w-full bg-white shadow-sm">
     <div class="container max-w-none py-4">
-      <div class="flex items-center justify-between gap-3">
+      <div class="flex items-center justify-between gap-6">
         <a href="https://zuckerbot.ai/app/dashboard" class="block">
           <Logo />
         </a>
 
-        <div class="flex items-center justify-end gap-4">
-          <SaasTeamSelect class="mr-3" />
+        <div class="flex items-center justify-end gap-6">
+          <Button
+            variant="outline"
+            size="sm"
+            @click="openFacebookAuth"
+            class="flex items-center gap-2 whitespace-nowrap"
+          >
+            <span
+              class="size-2 rounded-full"
+              :class="isFacebookConnected ? 'bg-green-500' : 'bg-red-500'"
+            />
+            {{
+              isFacebookConnected ? "Reconnect Facebook" : "Connect Facebook"
+            }}
+          </Button>
+          <SaasTeamSelect />
           <UserMenu />
         </div>
       </div>
