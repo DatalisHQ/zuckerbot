@@ -33,6 +33,7 @@ model User {
   onboardingComplete Boolean                 @default(false)
   facebookAccessToken String?   // Store the Facebook access token
   facebookTokenExpiresAt DateTime? // Store the expiration date of the Facebook token
+  referrer           String?
   oauthAccounts      UserOauthAccount[]
   sessions           UserSession[]
   memberships        TeamMembership[]
@@ -90,6 +91,7 @@ model Team {
   id           String           @id @default(cuid())
   name         String
   avatarUrl    String?
+  referrer     String?
   memberships  TeamMembership[]
   subscription Subscription?
   invitations  TeamInvitation[]

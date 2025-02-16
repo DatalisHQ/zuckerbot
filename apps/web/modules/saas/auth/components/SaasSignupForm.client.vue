@@ -5,6 +5,8 @@
   import { z } from "zod";
   import { oAuthProviders } from "./SaasSocialSigninButton.client.vue";
 
+  const { setReferrer, getReferrer } = useReferrer();
+
   const runtimeConfig = useRuntimeConfig();
   const { apiCaller } = useApiCaller();
   const { t } = useTranslations();
@@ -28,6 +30,10 @@
   });
   const { searchQuery: emailParam } = useRouteSearchQuery({
     name: "email",
+    replace: true,
+  });
+  const { searchQuery: referrerParam } = useRouteSearchQuery({
+    name: "referrer",
     replace: true,
   });
 
@@ -63,11 +69,18 @@
     }
   });
 
+  watchEffect(() => {
+    if (referrerParam.value) {
+      setReferrer(referrerParam.value);
+    }
+  });
+
   const onSubmit = handleSubmit(async (values) => {
     try {
       await apiCaller.auth.signup.mutate({
         email: values.email,
         password: values.password,
+        referrer: getReferrer(),
         callbackUrl: joinURL(runtimeConfig.public.siteUrl, "/auth/verify"),
       });
 
@@ -95,7 +108,7 @@
 <template>
   <div>
     <h1 class="text-3xl font-bold">{{ $t("auth.signup.title") }}</h1>
-    <p class="mb-6 mt-2 text-muted-foreground">
+    <p class="text-muted-foreground mb-6 mt-2">
       {{ $t("auth.signup.message") }}
     </p>
 

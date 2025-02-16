@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "dependencies": {
-    "consola": "^3.3.0",
+    "consola": "^3.4.0",
     "eslint-config-custom": "workspace:*",
     "tsconfig": "workspace:*",
     "utils": "workspace:*"
