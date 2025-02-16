@@ -1,6 +1,5 @@
 <script setup lang="ts">
   import { AlertTriangleIcon } from "lucide-vue-next";
-  import { joinURL } from "ufo";
   import { z } from "zod";
   import { oAuthProviders } from "./SaasSocialSigninButton.client.vue";
 
@@ -14,7 +13,7 @@
     z.object({
       root: z.string().optional(),
       email: z.string().email(),
-      password: z.optional(z.string()),
+      password: z.string(), // Make password required
     }),
   );
 
@@ -56,6 +55,7 @@
     validationSchema: formSchema,
     initialValues: {
       email: "",
+      password: "", // Add password to initial values
     },
   });
 
@@ -68,12 +68,6 @@
     errors,
   } = form;
 
-  const signinMode = ref<"password" | "magic-link">("magic-link");
-  watch(signinMode, async () => {
-    resetForm();
-    await nextTick();
-  });
-
   watchEffect(() => {
     if (emailParam.value) {
       setFieldValue("email", emailParam.value);
@@ -82,33 +76,12 @@
 
   const onSubmit = handleSubmit(async (values) => {
     try {
-      if (signinMode.value === "password") {
-        await apiCaller.auth.loginWithPassword.mutate({
-          email: values.email,
-          password: values.password!,
-        });
+      await apiCaller.auth.loginWithPassword.mutate({
+        email: values.email,
+        password: values.password,
+      });
 
-        handleRedirect();
-      } else {
-        await apiCaller.auth.loginWithEmail.mutate({
-          email: values.email,
-          callbackUrl: joinURL(runtimeConfig.public.siteUrl, "/auth/verify"),
-        });
-
-        const redirectSearchParams = new URLSearchParams();
-        redirectSearchParams.set("type", "LOGIN");
-        redirectSearchParams.set("redirectTo", redirectTo.value);
-        if (invitationCode) {
-          redirectSearchParams.set("invitationCode", invitationCode.value);
-        }
-        if (values.email) {
-          redirectSearchParams.set("identifier", values.email);
-        }
-
-        navigateTo(localePath(`/auth/otp?${redirectSearchParams.toString()}`), {
-          replace: true,
-        });
-      }
+      handleRedirect();
     } catch (e) {
       setApiErrorsToForm(e, form, {
         defaultError: t("auth.login.hints.invalidCredentials"),
@@ -120,7 +93,7 @@
 <template>
   <div>
     <h1 class="text-4xl font-bold">{{ $t("auth.login.title") }}</h1>
-    <p class="mb-6 mt-4 text-muted-foreground">
+    <p class="text-muted-foreground mb-6 mt-4">
       {{ $t("auth.login.subtitle") }}
     </p>
 
@@ -137,8 +110,6 @@
     <hr class="my-8" />
 
     <form @submit.prevent="onSubmit" class="flex flex-col items-stretch gap-6">
-      <SaasSigninModeSwitch class="w-full" v-model="signinMode" />
-
       <Alert v-if="errors.root" variant="error">
         <AlertTriangleIcon class="size-6" />
         <AlertDescription>{{ errors.root }}</AlertDescription>
@@ -160,11 +131,7 @@
         </FormItem>
       </FormField>
 
-      <FormField
-        v-if="signinMode === 'password'"
-        v-slot="{ componentField }"
-        name="password"
-      >
+      <FormField v-slot="{ componentField }" name="password">
         <FormItem>
           <FormLabel for="password" required>
             {{ $t("auth.login.password") }}
@@ -190,11 +157,7 @@
         variant="secondary"
         :loading="isSubmitting"
       >
-        {{
-          signinMode === "password"
-            ? t("auth.login.submit")
-            : t("auth.login.sendMagicLink")
-        }}
+        {{ t("auth.login.submit") }}
       </Button>
 
       <div class="text-center text-sm">
