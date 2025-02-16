@@ -1,6 +1,7 @@
 <script setup lang="ts">
   const { apiCaller } = useApiCaller();
   const { reloadUser } = useUser();
+  const localePath = useLocalePath();
 
   const loginMessage = ref("Processing your login...");
 
@@ -48,7 +49,9 @@
 
       await reloadUser();
 
-      loginMessage.value = "You can now close this tab.";
+      navigateTo(localePath("/app/dashboard"), {
+        replace: true,
+      });
     } catch (error) {
       console.error("Auth error:", error);
       loginMessage.value = "Error connecting Facebook account";
