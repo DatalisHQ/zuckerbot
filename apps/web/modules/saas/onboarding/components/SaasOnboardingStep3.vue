@@ -10,7 +10,7 @@
 
   const openFacebookAuth = () => {
     const authUrl = getFacebookAuthUrl(user.value);
-    window.open(authUrl, "_blank");
+    window.location.href = authUrl;
   };
 </script>
 
@@ -31,13 +31,6 @@
 
       <Button @click="emit('complete')" variant="ghost" class="w-full">
         Skip for now
-      </Button>
-    </div>
-
-    <div class="mt-4 flex gap-2">
-      <Button variant="outline" @click="emit('back')" class="flex-1">
-        <ArrowLeftIcon class="mr-2 size-4" />
-        Back
       </Button>
     </div>
   </div>
