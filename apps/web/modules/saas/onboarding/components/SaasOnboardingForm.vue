@@ -3,7 +3,7 @@
   const localePath = useLocalePath();
   const { reloadUser } = useUser();
 
-  const totalSteps = 2;
+  const totalSteps = 3; // Updated to include Facebook step
   const { searchQuery: step } = useRouteSearchQuery({
     name: "step",
     replace: true,
@@ -52,7 +52,12 @@
     <SaasOnboardingStep2
       v-else-if="Number(step) === 2"
       @back="setStep(1)"
-      @complete="onComplete()"
+      @complete="setStep(3)"
+    />
+    <SaasOnboardingStep3
+      v-else-if="Number(step) === 3"
+      @back="setStep(2)"
+      @complete="onComplete"
     />
   </div>
 </template>

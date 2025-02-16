@@ -2,6 +2,8 @@
   import { ArrowLeftIcon, ArrowRightIcon } from "lucide-vue-next";
   import { z } from "zod";
 
+  const { getReferrer, clearReferrer } = useReferrer();
+
   const emit = defineEmits<{
     complete: [];
     back: [];
@@ -34,8 +36,10 @@
     try {
       await createTeamMutation.mutate({
         name: teamName,
+        referrer: getReferrer(),
       });
 
+      clearReferrer(); // Clear after successful use
       emit("complete");
     } catch (e) {
       serverError.value = t("onboarding.notifications.teamSetupFailed");
