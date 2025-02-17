@@ -435,8 +435,8 @@ importers:
         specifier: ^0.5.16
         version: 0.5.16(tailwindcss@3.4.17)
       '@types/mertasan__tailwindcss-variables':
-        specifier: ^2.6.2
-        version: 2.6.4
+        specifier: ^2.6.5
+        version: 2.6.5
       eslint:
         specifier: 8.57.0
         version: 8.57.0
@@ -2664,8 +2664,8 @@ packages:
   '@types/mdast@4.0.4':
     resolution: {integrity: sha512-kGaNbPh1k7AFzgpud/gMdvIm5xuECykRR+JnWKQno9TAXVa6WIVCGTPvYGekIDL4uwCZQSYbUxNBSb1aUo79oA==}
 
-  '@types/mertasan__tailwindcss-variables@2.6.4':
-    resolution: {integrity: sha512-gMiHep7/ProK1THXJtPhUGQpOcEV18aySFZKq5WyNR+AsFGcPNrAUka7O4MFglM3d5mBcL5s+oM71PUkeI0uvQ==}
+  '@types/mertasan__tailwindcss-variables@2.6.5':
+    resolution: {integrity: sha512-bFAGkjRh2a/2zVSRRR082FDsZeiRkzmnlUcs1Ip/xU80Q6/5WCMWkGOFt70t7SvhGqtDeu/z31LVzpLlXSTIdw==}
 
   '@types/ms@0.7.34':
     resolution: {integrity: sha512-nG96G3Wp6acyAgJqGasjODb+acrI7KltPiRxzHPXnP3NgI28bpQDRv53olbqGXbfcgF5aiiHmO3xpwEpS5Ld9g==}
@@ -3617,8 +3617,8 @@ packages:
   caniuse-lite@1.0.30001688:
     resolution: {integrity: sha512-Nmqpru91cuABu/DTCXbM2NSRHzM2uVHfPnhJ/1zEAJx/ILBRVmz3pzH4N7DZqbdG0gWClsCC05Oj0mJ/1AWMbA==}
 
-  caniuse-lite@1.0.30001699:
-    resolution: {integrity: sha512-b+uH5BakXZ9Do9iK+CkDmctUSEqZl+SP056vc5usa0PL+ev5OHw003rZXcnjNDv3L8P5j6rwT6C0BPKSikW08w==}
+  caniuse-lite@1.0.30001700:
+    resolution: {integrity: sha512-2S6XIXwaE7K7erT8dY+kLQcpa5ms63XlRkMkReXjle+kf6c5g38vyMl+Z5y8dSxOFDhcFe+nxnn261PLxBSQsQ==}
 
   caseless@0.12.0:
     resolution: {integrity: sha512-4tYFyifaFfGacoiObjJegolkwSU4xQNGbVgUiNYVUxbQ2x2lUsFvY4hVgVzGiIe6WLOPqycWXA40l+PWsxthUw==}
@@ -4263,8 +4263,8 @@ packages:
   ee-first@1.1.1:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
 
-  electron-to-chromium@1.5.100:
-    resolution: {integrity: sha512-u1z9VuzDXV86X2r3vAns0/5ojfXBue9o0+JDUDBKYqGLjxLkSqsSUoPU/6kW0gx76V44frHaf6Zo+QF74TQCMg==}
+  electron-to-chromium@1.5.101:
+    resolution: {integrity: sha512-L0ISiQrP/56Acgu4/i/kfPwWSgrzYZUnQrC0+QPFuhqlLP1Ir7qzPPDVS9BcKIyWTRU8+o6CC8dKw38tSWhYIA==}
 
   electron-to-chromium@1.5.73:
     resolution: {integrity: sha512-8wGNxG9tAG5KhGd3eeA0o6ixhiNdgr0DcHWm85XPCphwZgD1lIEoi6t3VERayWao7SF7AAZTw6oARGJeVjH8Kg==}
@@ -11695,7 +11695,7 @@ snapshots:
     dependencies:
       '@types/unist': 3.0.3
 
-  '@types/mertasan__tailwindcss-variables@2.6.4':
+  '@types/mertasan__tailwindcss-variables@2.6.5':
     dependencies:
       tailwindcss: 3.4.17
     transitivePeerDependencies:
@@ -12947,8 +12947,8 @@ snapshots:
 
   browserslist@4.24.4:
     dependencies:
-      caniuse-lite: 1.0.30001699
-      electron-to-chromium: 1.5.100
+      caniuse-lite: 1.0.30001700
+      electron-to-chromium: 1.5.101
       node-releases: 2.0.19
       update-browserslist-db: 1.1.2(browserslist@4.24.4)
 
@@ -13041,7 +13041,7 @@ snapshots:
 
   caniuse-lite@1.0.30001688: {}
 
-  caniuse-lite@1.0.30001699: {}
+  caniuse-lite@1.0.30001700: {}
 
   caseless@0.12.0: {}
 
@@ -13670,7 +13670,7 @@ snapshots:
 
   ee-first@1.1.1: {}
 
-  electron-to-chromium@1.5.100: {}
+  electron-to-chromium@1.5.101: {}
 
   electron-to-chromium@1.5.73: {}
 
