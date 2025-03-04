@@ -1,7 +1,7 @@
 // src/utils/facebook.ts
 export const getFacebookAuthUrl = (user: any) => {
   const clientId = "1119807469249263";
-  const redirectUri = "https://zuckerbot.ai/auth/facebook/callback";
+  const redirectUri = "https://app.zuckerbot.ai/auth/facebook/callback";
   const state = encodeURIComponent(JSON.stringify({ userId: user.id }));
   const scope = "pages_show_list,pages_read_engagement,ads_management,ads_read";
   // business_management
