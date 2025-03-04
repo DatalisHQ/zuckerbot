@@ -44,7 +44,7 @@
   <nav class="w-full bg-white shadow-sm">
     <div class="container max-w-none py-4">
       <div class="flex items-center justify-between gap-6">
-        <a href="https://zuckerbot.ai/app/dashboard" class="block">
+        <a href="https://app.zuckerbot.ai/app/dashboard" class="block">
           <Logo />
         </a>
 
