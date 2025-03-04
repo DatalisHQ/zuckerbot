@@ -81,6 +81,16 @@ export default defineNuxtConfig({
     },
   },
 
+  routeRules: {
+    "/": { redirect: "/app/dashboard" },
+    "/pricing": { redirect: "/app/dashboard" },
+    "/blog": { redirect: "/app/dashboard" },
+    "/changelog": { redirect: "/app/dashboard" },
+    "/docs": { redirect: "/app/dashboard" },
+    "/legal/privacy": { redirect: "/app/dashboard" },
+    "/legal/terms": { redirect: "/app/dashboard" },
+  },
+
   build: {
     transpile: ["trpc-nuxt"],
   },
