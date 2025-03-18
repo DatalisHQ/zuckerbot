@@ -33,7 +33,7 @@
     "cropperjs": "^1.6.2",
     "database": "workspace:*",
     "date-fns": "^4.1.0",
-    "lucide-vue-next": "^0.473.0",
+    "lucide-vue-next": "^0.483.0",
     "mail": "workspace:*",
     "nuxt": "3.15.1",
     "radix-vue": "^1.9.12",
