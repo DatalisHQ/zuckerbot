@@ -19,7 +19,7 @@
     "utils": "workspace:*"
   },
   "devDependencies": {
-    "eslint": "8.57.0",
+    "eslint": "9.23.0",
     "openai": "^4.85.1",
     "prisma": "^6.1.0",
     "superjson": "^2.2.2",
