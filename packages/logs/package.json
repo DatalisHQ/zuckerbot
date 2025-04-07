@@ -10,6 +10,6 @@
   },
   "devDependencies": {
     "@types/nodemailer": "^6.4.17",
-    "eslint": "8.57.0"
+    "eslint": "9.24.0"
   }
 }
