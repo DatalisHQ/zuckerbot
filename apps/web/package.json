@@ -47,7 +47,7 @@
     "uuid": "^11.0.5",
     "vue-advanced-cropper": "^2.8.9",
     "vue-boring-avatars": "^1.4.0",
-    "zod": "^3.24.0"
+    "zod": "^3.24.3"
   },
   "devDependencies": {
     "@nuxt/devtools": "^1.6.1",

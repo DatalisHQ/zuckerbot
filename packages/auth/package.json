@@ -19,7 +19,7 @@
     "oslo": "^1.2.1",
     "tsconfig": "workspace:*",
     "utils": "workspace:*",
-    "zod": "^3.24.0"
+    "zod": "^3.24.3"
   },
   "devDependencies": {
     "eslint": "8.57.0"
