@@ -1,0 +1,31 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "ai.zuckerbot/mcp",
+  "title": "ZuckerBot — Meta Ads MCP Server",
+  "description": "Meta Ads MCP server — run Facebook ad campaigns from your terminal or AI agent.",
+  "repository": {
+    "url": "https://github.com/DatalisHQ/zuckerbot",
+    "source": "github"
+  },
+  "version": "0.2.26",
+  "websiteUrl": "https://zuckerbot.ai",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "zuckerbot-mcp",
+      "version": "0.2.26",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "description": "Your ZuckerBot API key from zuckerbot.ai",
+          "isRequired": true,
+          "format": "string",
+          "isSecret": true,
+          "name": "ZUCKERBOT_API_KEY"
+        }
+      ]
+    }
+  ]
+}
