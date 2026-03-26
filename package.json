@@ -38,7 +38,7 @@
     "type": "git",
     "url": "git+https://github.com/DatalisHQ/zuckerbot.git"
   },
-  "mcpName": "ai.zuckerbot/mcp",
+  "mcpName": "io.github.Crumbedsausage/zuckerbot",
   "homepage": "https://zuckerbot.ai",
   "bugs": {
     "url": "https://github.com/DatalisHQ/zuckerbot/issues"
