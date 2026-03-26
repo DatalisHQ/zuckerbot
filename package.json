@@ -1,0 +1,58 @@
+{
+  "name": "zuckerbot-mcp",
+  "version": "0.2.27",
+  "description": "CLI + MCP server for ZuckerBot — run Facebook ad campaigns from your terminal or AI agent",
+  "type": "module",
+  "bin": {
+    "zuckerbot-mcp": "dist/index.js",
+    "zuckerbot": "dist/cli.js"
+  },
+  "main": "./dist/index.js",
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "check:smoke": "npm run build && node scripts/contract-smoke.mjs",
+    "start": "node dist/index.js",
+    "dev": "tsc --watch",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "zuckerbot",
+    "facebook-ads",
+    "meta-ads",
+    "ai-agents",
+    "advertising",
+    "claude",
+    "openai",
+    "llm"
+  ],
+  "author": "DatalisHQ",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DatalisHQ/zuckerbot.git"
+  },
+  "homepage": "https://zuckerbot.ai",
+  "bugs": {
+    "url": "https://github.com/DatalisHQ/zuckerbot/issues"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.12.1",
+    "chalk": "^5.6.2",
+    "commander": "^14.0.3",
+    "ora": "^9.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
