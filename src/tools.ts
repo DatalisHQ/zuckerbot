@@ -1368,4 +1368,103 @@ export function registerDemoTools(server: McpServer, client: ZuckerBotClient): v
       }
     },
   );
+
+  // ── Creative Generation (Ad Compositor) ─────────────────────────────
+
+  const compositorUrl = process.env.COMPOSITOR_URL || "https://zuckerbot-d2fa8661-production.up.railway.app";
+  const compositorKey = process.env.COMPOSITOR_API_KEY;
+
+  async function compositorFetch(path: string, body?: unknown) {
+    if (!compositorKey) {
+      throw new Error("COMPOSITOR_API_KEY not configured. Set COMPOSITOR_URL and COMPOSITOR_API_KEY in your environment to enable creative generation.");
+    }
+    const res = await fetch(`${compositorUrl}${path}`, {
+      method: body ? "POST" : "GET",
+      headers: {
+        "Authorization": `Bearer ${compositorKey}`,
+        "Content-Type": "application/json",
+      },
+      ...(body ? { body: JSON.stringify(body) } : {}),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.message || `Compositor returned ${res.status}`);
+    }
+    return data;
+  }
+
+  server.tool(
+    "generate_creative",
+    "Generate production-ready 1080×1080 static image ads from branded templates. Returns public URLs to finished PNG creatives. Supports AI-generated hero images via prompt, direct image URLs, or gradient-only fallback. Templates: stat_hook (stat + hero), pain_headline (bold question + bullets), testimonial (quote + portrait), feature_showcase (features + phone mockup).",
+    {
+      template: z.enum(["stat_hook", "pain_headline", "testimonial", "feature_showcase"])
+        .describe("Template type"),
+      variants: z.array(z.object({
+        headline: z.string().optional().describe("Main headline (required for stat_hook, pain_headline, feature_showcase)"),
+        subtext: z.string().optional().describe("Supporting text (required for stat_hook)"),
+        body: z.string().optional().describe("Body copy (required for stat_hook)"),
+        cta: z.string().describe("Call-to-action text"),
+        hero_prompt: z.string().optional().describe("AI image generation prompt for hero image"),
+        hero_image_url: z.string().optional().describe("Direct URL to hero image (takes priority over hero_prompt)"),
+        quote: z.string().optional().describe("Testimonial quote (required for testimonial template)"),
+        attribution: z.string().optional().describe("Quote attribution (required for testimonial)"),
+        price_text: z.string().optional().describe("Price text for feature_showcase"),
+      })).min(1).describe("Variants to generate. Each produces one ad image."),
+    },
+    async ({ template, variants }) => {
+      try {
+        const result = await compositorFetch("/api/generate", { template, variants });
+        return formatResult(result);
+      } catch (err) {
+        return formatError(err);
+      }
+    },
+  );
+
+  server.tool(
+    "generate_and_upload_creative",
+    "Generate static image ads AND upload them to a Meta campaign via ZuckerBot in one step.",
+    {
+      template: z.enum(["stat_hook", "pain_headline", "testimonial", "feature_showcase"])
+        .describe("Template type"),
+      variants: z.array(z.object({
+        headline: z.string().optional(),
+        subtext: z.string().optional(),
+        body: z.string().optional(),
+        cta: z.string(),
+        hero_prompt: z.string().optional(),
+        hero_image_url: z.string().optional(),
+        quote: z.string().optional(),
+        attribution: z.string().optional(),
+        price_text: z.string().optional(),
+        zb_campaign_id: z.string().describe("ZuckerBot campaign ID"),
+        zb_tier_name: z.string().describe("Tier/ad set name, e.g. 'AU Broad'"),
+        ad_headline: z.string().describe("Meta ad headline"),
+        ad_body: z.string().describe("Meta ad body text"),
+        link_url: z.string().optional().describe("Landing page URL (defaults to https://sophiie.ai)"),
+      })).min(1),
+    },
+    async ({ template, variants }) => {
+      try {
+        const result = await compositorFetch("/api/generate-and-upload", { template, variants });
+        return formatResult(result);
+      } catch (err) {
+        return formatError(err);
+      }
+    },
+  );
+
+  server.tool(
+    "list_creative_templates",
+    "List available ad creative templates with required fields, optional fields, prompt prefixes, and hardcoded bullets.",
+    {},
+    async () => {
+      try {
+        const result = await compositorFetch("/api/templates");
+        return formatResult(result);
+      } catch (err) {
+        return formatError(err);
+      }
+    },
+  );
 }
