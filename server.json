@@ -1,13 +1,13 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.Crumbedsausage/zuckerbot",
-  "title": "ZuckerBot — Meta Ads MCP Server",
-  "description": "Meta Ads MCP server — run Facebook ad campaigns from your terminal or AI agent.",
+  "title": "ZuckerBot \u2014 Meta Ads MCP Server",
+  "description": "Meta Ads MCP server \u2014 run Facebook ad campaigns from your terminal or AI agent.",
   "repository": {
     "url": "https://github.com/DatalisHQ/zuckerbot",
     "source": "github"
   },
-  "version": "0.2.28",
+  "version": "0.3.0",
   "websiteUrl": "https://zuckerbot.ai",
   "packages": [
     {
