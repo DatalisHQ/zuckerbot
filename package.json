@@ -1,6 +1,6 @@
 {
   "name": "zuckerbot-mcp",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "CLI + MCP server for ZuckerBot \u2014 run Facebook ad campaigns from your terminal or AI agent",
   "type": "module",
   "bin": {
