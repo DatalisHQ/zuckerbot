@@ -4,7 +4,7 @@
 
 **The Meta Ads toolkit for AI agents.**
 
-50 tools for campaign management, creative analysis, audience building, and conversion tracking. One `npx` command. Works with Claude, ChatGPT, OpenClaw, Cursor, and any MCP-compatible agent.
+Audit your ad account in one message. 50+ tools for account auditing, campaign management, creative analysis, audience building, and conversion tracking. One `npx` command. Works with Claude, ChatGPT, OpenClaw, Cursor, and any MCP-compatible agent.
 
 [![npm version](https://img.shields.io/npm/v/zuckerbot-mcp?style=flat-square&color=CB3837)](https://www.npmjs.com/package/zuckerbot-mcp)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green?style=flat-square)](./LICENSE)
@@ -36,6 +36,7 @@ Your agent already writes code, manages files, and searches the web. It should m
 ZuckerBot gives any AI agent full Meta Ads capabilities through MCP. No dashboard, no UI to learn, no platform to log into. Your agent installs it, connects your ad account, and gets to work.
 
 **What agents can do with ZuckerBot:**
+- **Audit your ad account in one message** — wasted spend, creative fatigue, opportunity score, prioritised action items (free tier included)
 - Pull campaign performance and spot what's working
 - Analyse ad creatives and recommend what to test next
 - Build and launch campaigns with targeting and budget
@@ -94,6 +95,19 @@ Add to your MCP config:
 
 Same config pattern. ZuckerBot works with any client that supports the Model Context Protocol.
 
+### Remote MCP (no install)
+
+Don't want to run anything locally? `https://zuckerbot.ai/api/mcp` is a hosted Streamable HTTP endpoint serving the same tools.
+
+- **claude.ai** — add it as a custom connector (Settings → Connectors → Add custom connector) and authenticate via OAuth, or pass an `Authorization: Bearer zb_live_...` header.
+- **Claude Code:**
+
+```bash
+claude mcp add --transport http zuckerbot https://zuckerbot.ai/api/mcp --header "Authorization: Bearer zb_live_..."
+```
+
+- **Any Streamable HTTP client** — point it at `https://zuckerbot.ai/api/mcp` with your API key as a bearer token.
+
 ### CLI (for humans)
 
 ```bash
@@ -104,7 +118,13 @@ zuckerbot meta status
 zuckerbot create https://your-business.com --budget 5000 --objective leads
 ```
 
-## Tools (50)
+## Tools (50+)
+
+### Audit & Licensing (2)
+| Tool | What it does |
+|------|-------------|
+| `audit_account` | Full read-only account audit: wasted spend, creative fatigue, opportunity score (0-100), projected CPL improvement, prioritised action items. Available on every tier — the recommended first call |
+| `redeem_license` | Redeem a lifetime licence code (Dealify/AppSumo) and upgrade all API keys on the account |
 
 ### Setup & Account (7)
 | Tool | What it does |
@@ -143,13 +163,15 @@ zuckerbot create https://your-business.com --budget 5000 --objective leads
 ### Creatives (8)
 | Tool | What it does |
 |------|-------------|
-| `generate_creatives` | Generate ad copy and images (or Kling video) |
-| `request_creative` | Create a creative handoff package for production |
 | `upload_creative` | Upload finished assets and provision paused Meta ads |
 | `get_creative_status` | Check creative generation progress |
 | `creative_analysis` | AI analysis of ad creative performance with recommendations |
 | `creative_qa` | Quality check creatives against Meta ad policies |
 | `generate_briefs` | Generate creative briefs based on performance data |
+| `generate_creatives`* | Generate ad copy and images (or AI video) |
+| `request_creative`* | Create a creative handoff package for production |
+
+\* Creative image/video **generation** tools (`generate_static_ad`, `generate_video_ad`, `get_video_ad_status`, `generate_creatives`, `request_creative`) are disabled by default — enable them with `ZUCKERBOT_ENABLE_CREATIVE_TOOLS=1` in your MCP config env (paid add-on coming). All creative **analysis** tools stay available.
 
 ### Conversion Tracking / CAPI (5)
 | Tool | What it does |
@@ -159,6 +181,25 @@ zuckerbot create https://your-business.com --budget 5000 --objective leads
 | `capi_test` | Send a test event through the CAPI pipeline |
 | `sync_conversion` | Send lead quality feedback to Meta's algorithm |
 | `list_pixels` | List and select Meta pixels for conversion tracking |
+
+### Reporting (2)
+| Tool | What it does |
+|------|-------------|
+| `get_campaign_insights` | Campaign / ad set / ad-level Meta performance for any campaign in the account (including non-ZuckerBot ones), with deduped lead metrics |
+| `get_account_insights` | Account-wide spend, impressions, CTR, CPM, CPC, and frequency aggregated daily or monthly |
+
+`get_campaign_insights` surfaces three distinct lead figures rather than one collapsed number, each verified against Ads Manager:
+
+| Field | Meaning |
+|-------|---------|
+| `meta_result` / `cost_per_meta_result` | Meta's authoritative deduped "Results" for **any** objective (Ads Manager "Results" column), with `meta_result_type` naming the underlying result (`conversion_lead` for lead campaigns, `offsite_conversion.fb_pixel_complete_registration` / `purchase` for sales). Supersedes the now-deprecated `results` / `cost_per_result` |
+| `meta_leads` / `cost_per_meta_lead` | Deduped on-Meta leads (`onsite_conversion.lead_grouped`) — matches Ads Manager "Meta Leads" |
+| `conversion_leads` / `cost_per_conversion_lead` | CRM-qualified conversion leads (from Meta's `results` indicator `conversion_leads:conversion_lead`) — matches "Conversion leads". Lead-specific (0 for non-lead objectives) |
+| `actions` / `cost_per_action_type` | Full labelled arrays of `{ action_type, value }` (counts) and `{ action_type, value }` (cost in dollars) for every Meta action type |
+| `results` / `cost_per_result` | **Deprecated.** Objective-resolved result that mis-ranks mixed campaigns. Kept for back-compat — prefer `meta_result` / `cost_per_meta_result` |
+| `leads` / `cpl` | **Deprecated.** Inflated surface count (`action_type: lead`) that double-counts the instant-form lead and its CAPI echo. Kept for back-compat — prefer `meta_leads` / `conversion_leads` |
+
+Costs are derived as `spend / count`; Meta's `cost_per_action_type` is non-additive and is never summed. The same fields roll up in `summary` as `total_meta_result` / `blended_cost_per_meta_result` (with `meta_result_type`), `total_meta_leads` / `blended_cost_per_meta_lead`, and `total_conversion_leads` / `blended_cost_per_conversion_lead` (with `total_leads` / `blended_cpl` deprecated alongside their per-row counterparts).
 
 ### Portfolios (5)
 | Tool | What it does |
@@ -186,6 +227,7 @@ zuckerbot create https://your-business.com --budget 5000 --objective leads
 ## Typical Agent Flow
 
 ```
+0. Audit       →  audit_account (how is this account doing today?)
 1. Research    →  research_reviews + research_competitors (parallel)
 2. Preview     →  preview_campaign (show user what ads look like)
 3. Create      →  create_campaign (draft with strategy + targeting)
@@ -197,13 +239,15 @@ zuckerbot create https://your-business.com --budget 5000 --objective leads
 ```
 
 Every tool returns a `_hint` field suggesting the logical next step, so your agent always knows what to do next.
+Shorthand: create -> approve -> request/upload creative -> activate.
+MCP names include `zuckerbot_enrich_business`, `zuckerbot_upload_business_context`, `zuckerbot_get_campaign`, `zuckerbot_activate_campaign`, and `zuckerbot_create_seed_audience`.
 
 ## ZuckerBot vs alternatives
 
 | | ZuckerBot | Pipeboard | AdAmigo.ai | Supermetrics |
 |---|---|---|---|---|
 | **What it is** | Meta Ads toolkit for agents | Basic Meta MCP | Full ad management agent | Data extraction |
-| **Tools** | 50 | ~20 | N/A (platform) | N/A (connectors) |
+| **Tools** | 50+ | ~20 | N/A (platform) | N/A (connectors) |
 | **Creative analysis** | ✅ AI-powered | ❌ | ✅ Platform-only | ❌ |
 | **CAPI support** | ✅ Full pipeline | ❌ | Partial | ❌ |
 | **Audience builder** | ✅ Seed + LAL | ❌ | ✅ Platform-only | ❌ |
@@ -214,13 +258,25 @@ Every tool returns a `_hint` field suggesting the logical next step, so your age
 
 | Tier | Monthly | API Calls | Tools |
 |------|---------|-----------|-------|
-| **Free** | $0 | 1,000/mo | Read-only (performance, analysis, research) |
+| **Free** | $0 | 1,000/mo | Read-only (performance, analysis, research, **account audit**) |
 | **Pro** | $49 + 0.1% of ad spend | 50,000/mo | All tools including campaign management |
 | **Scale** | $149 + 0.05% of ad spend | 500,000/mo | All tools + multi-account + priority rate limits |
 
 Free tier gets you started. Pro pays for itself with one optimised campaign.
 
 [Get your API key](https://zuckerbot.ai/get-started)
+
+## Lifetime deal
+
+Grabbed a ZuckerBot lifetime licence on Dealify? Codes look like `ZB-XXXXX-XXXXX-XXXXX` and stack on one account:
+
+| Codes | Tier | Ad accounts | API calls |
+|-------|------|-------------|-----------|
+| 1 | Lifetime Tier 1 | 1 | 2,500/mo |
+| 2 | Lifetime Tier 2 | 3 | 10,000/mo |
+| 3 | Lifetime Tier 3 | 10 | 30,000/mo |
+
+Redeem straight from your agent with the `zuckerbot_redeem_license` tool ("redeem my ZuckerBot code ZB-...") or in the browser at [zuckerbot.ai/start.html](https://zuckerbot.ai/start.html). Redeeming upgrades every API key on your account — and if you don't have a key yet, one is minted for you (shown once, so save it).
 
 ## Example conversation
 
@@ -238,7 +294,7 @@ Free tier gets you started. Pro pays for itself with one optimised campaign.
 
 ```bash
 git clone https://github.com/DatalisHQ/zuckerbot.git
-cd zuckerbot/mcp-server
+cd zuckerbot
 npm install
 npm run build
 npm start

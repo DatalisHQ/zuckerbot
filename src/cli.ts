@@ -444,15 +444,11 @@ program
     // Dynamically import to avoid loading MCP SDK for CLI commands
     const { McpServer } = await import("@modelcontextprotocol/sdk/server/mcp.js");
     const { StdioServerTransport } = await import("@modelcontextprotocol/sdk/server/stdio.js");
-    const { registerDemoTools, registerTools } = await import("./tools.js");
+    const { registerTools } = await import("./tools.js");
 
     const client = new ZuckerBotClient(getConfiguredApiKey(), VERSION);
     const server = new McpServer({ name: "zuckerbot", version: VERSION });
-    if (client.authenticated) {
-      registerTools(server, client);
-    } else {
-      registerDemoTools(server, client);
-    }
+    registerTools(server, client);
 
     const transport = new StdioServerTransport();
     await server.connect(transport);

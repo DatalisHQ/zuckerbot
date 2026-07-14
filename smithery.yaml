@@ -4,6 +4,6 @@ configSchema:
   properties:
     ZUCKERBOT_API_KEY:
       type: string
-      description: "Your ZuckerBot API key"
+      description: Your ZuckerBot API key
   required:
     - ZUCKERBOT_API_KEY
