@@ -1,7 +1,7 @@
 {
   "name": "zuckerbot-mcp",
-  "version": "0.3.1",
-  "description": "CLI + MCP server for ZuckerBot \u2014 run Facebook ad campaigns from your terminal or AI agent",
+  "version": "0.4.1",
+  "description": "CLI + MCP server for ZuckerBot — manage, audit and generate Meta ad campaigns from Claude or any AI agent",
   "type": "module",
   "bin": {
     "zuckerbot-mcp": "dist/index.js",
@@ -16,6 +16,7 @@
   "scripts": {
     "build": "tsc",
     "check:smoke": "npm run build && node scripts/contract-smoke.mjs",
+    "check:public": "tsx scripts/public-contract-check.ts",
     "start": "node dist/index.js",
     "dev": "tsc --watch",
     "prepublishOnly": "npm run build"
@@ -38,7 +39,6 @@
     "type": "git",
     "url": "git+https://github.com/DatalisHQ/zuckerbot.git"
   },
-  "mcpName": "io.github.Crumbedsausage/zuckerbot",
   "homepage": "https://zuckerbot.ai",
   "bugs": {
     "url": "https://github.com/DatalisHQ/zuckerbot/issues"
@@ -47,13 +47,16 @@
     "@modelcontextprotocol/sdk": "1.12.1",
     "chalk": "^5.6.2",
     "commander": "^14.0.3",
-    "ora": "^9.3.0"
+    "ora": "^9.3.0",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   },
   "engines": {
     "node": ">=18.0.0"
-  }
+  },
+  "mcpName": "io.github.Crumbedsausage/zuckerbot"
 }

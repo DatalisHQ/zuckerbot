@@ -6,8 +6,10 @@
 // Connect via stdio transport (standard for MCP servers).
 //
 // Environment variables:
-//   ZUCKERBOT_API_KEY  — Required. Your ZuckerBot API key.
-//   ZUCKERBOT_API_URL  — Optional. API base URL (default: https://zuckerbot.ai/api/v1)
+//   ZUCKERBOT_API_KEY               — Required. Your ZuckerBot API key.
+//   ZUCKERBOT_API_URL               — Optional. API base URL (default: https://zuckerbot.ai/api/v1)
+//   ZUCKERBOT_ENABLE_CREATIVE_TOOLS — Optional. Set to "1" or "true" to register the
+//                                     creative image/video generation tools (hidden by default).
 //
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -16,7 +18,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ZuckerBotClient } from "./client.js";
-import { registerDemoTools, registerTools } from "./tools.js";
+import { registerTools } from "./tools.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -47,11 +49,8 @@ async function main(): Promise<void> {
     version,
   });
 
-  if (client.authenticated) {
-    registerTools(server, client);
-  } else {
-    registerDemoTools(server, client);
-  }
+  // Register all tools — they handle both authenticated and demo modes internally
+  registerTools(server, client);
 
   // Connect via stdio
   const transport = new StdioServerTransport();

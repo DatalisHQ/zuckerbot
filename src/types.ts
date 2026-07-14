@@ -149,6 +149,38 @@ export interface CampaignContextSummary {
   months_of_data: number;
 }
 
+export interface AccountHistorySnapshot {
+  business_id: string;
+  lookback_days: number;
+  is_cold_start: boolean;
+  total_spend?: number;
+  total_leads?: number;
+  avg_cpl?: number;
+  campaign_count?: number;
+  by_objective?: Record<string, { spend: number; leads: number; cpl: number }>;
+  by_audience_type?: Record<string, { spend: number; leads: number; cpl: number }>;
+  by_creative_type?: Record<string, { spend: number; leads: number; ctr: number; cpl: number }>;
+  comparable_historical_cpl?: {
+    low: number;
+    high: number;
+    median: number;
+    source: 'account_history' | 'industry_benchmarks';
+    disclaimer: string;
+  };
+  industry_benchmarks?: {
+    industry: string;
+    avg_cpl_range: { low: number; high: number };
+    avg_ctr_range: { low: number; high: number };
+    source: string;
+  };
+  top_performing_creatives?: Array<{
+    ad_id: string;
+    ad_name: string;
+    cpl: number;
+    tags?: string[];
+  }>;
+}
+
 export interface CreateCampaignResponse {
   id: string;
   status: string;
@@ -259,6 +291,150 @@ export interface SelectLeadFormResponse {
   stored: boolean;
 }
 
+export interface CampaignInsightsMetrics {
+  impressions: number;
+  reach: number;
+  clicks: number;
+  /** @deprecated Inflated surface lead count (action_type `lead`); double-counts the
+   * instant-form lead and the MQL CAPI echo. Use `meta_leads` or `conversion_leads`. */
+  leads: number;
+  spend: number;
+  /** @deprecated cost per inflated `leads`; use cost_per_meta_lead / cost_per_conversion_lead. */
+  cpl: number | null;
+  /** Deduped on-Meta leads (action_type `onsite_conversion.lead_grouped`) = Ads Manager "Meta Leads". */
+  meta_leads?: number;
+  cost_per_meta_lead?: number | null;
+  /** CRM-qualified conversion leads (Meta `results` -> conversion_leads:conversion_lead) = "Conversion leads". */
+  conversion_leads?: number;
+  cost_per_conversion_lead?: number | null;
+  /** Meta's authoritative per-campaign Result = the Ads Manager "Results" column, for
+   * ANY objective (conversion_lead for lead campaigns; complete_registration / purchase
+   * for sales/PLG). Deduped, view-through included. The engine's truth metric. */
+  meta_result?: number;
+  /** The result action_type behind `meta_result` (e.g. "conversion_lead",
+   * "offsite_conversion.fb_pixel_complete_registration"). */
+  meta_result_type?: string | null;
+  cost_per_meta_result?: number | null;
+  /** Full labelled Meta actions array, intact: counts per action_type. */
+  actions?: Array<{ action_type: string; value: number }>;
+  /** Cost per action type (spend / value per action_type, in dollars), labelled. */
+  cost_per_action_type?: Array<{ action_type: string; value: number }>;
+  /** @deprecated Resolved from the actions array by highest-intent ordering; mis-ranks
+   * mixed campaigns and equals the inflated `lead` for lead campaigns. Use meta_result. */
+  results?: number;
+  /** @deprecated use cost_per_meta_result. */
+  cost_per_result?: number | null;
+  /** @deprecated use meta_result_type. */
+  result_type?: string | null;
+  /** @deprecated */
+  result_label?: string | null;
+  ctr: number;
+  cpc: number | null;
+  cpm: number | null;
+  frequency: number | null;
+}
+
+export interface CampaignInsightsBreakdownRow {
+  date_start: string | null;
+  date_stop: string | null;
+  metrics: CampaignInsightsMetrics;
+}
+
+export interface CampaignInsightsAd {
+  id: string;
+  name: string | null;
+  metrics: CampaignInsightsMetrics;
+  video_metrics?: {
+    avg_time_watched: number | null;
+    p25_watched: number;
+    p50_watched: number;
+    p75_watched: number;
+    p100_watched: number;
+  } | null;
+  daily_breakdown?: CampaignInsightsBreakdownRow[];
+}
+
+export interface CampaignInsightsAdset {
+  id: string;
+  name: string | null;
+  metrics: CampaignInsightsMetrics;
+  daily_breakdown?: CampaignInsightsBreakdownRow[];
+  ads?: CampaignInsightsAd[];
+}
+
+export interface CampaignInsightsCampaign {
+  id: string;
+  name: string | null;
+  status: string | null;
+  effective_status: string | null;
+  objective: string | null;
+  daily_budget: number | null;
+  lifetime_budget: number | null;
+  created_time: string | null;
+  is_zuckerbot: boolean;
+  zb_campaign_id: string | null;
+  metrics: CampaignInsightsMetrics;
+  daily_breakdown?: CampaignInsightsBreakdownRow[];
+  adsets?: CampaignInsightsAdset[];
+}
+
+export interface CampaignInsightsResult {
+  id: string;
+  name: string | null;
+  status: string | null;
+  effective_status: string | null;
+  daily_budget: number | null;
+  lifetime_budget: number | null;
+  is_zuckerbot: boolean;
+  zb_campaign_id: string | null;
+  campaign_id?: string;
+  campaign_name?: string | null;
+  adset_id?: string;
+  adset_name?: string | null;
+  insights: CampaignInsightsMetrics;
+  video_metrics?: {
+    avg_time_watched: number | null;
+    p25_watched: number;
+    p50_watched: number;
+    p75_watched: number;
+    p100_watched: number;
+  } | null;
+}
+
+export interface CampaignInsightsResponse {
+  business_id: string;
+  ad_account_id: string;
+  date_from: string;
+  date_to: string;
+  level: "campaign" | "adset" | "ad";
+  time_increment: "daily" | "monthly" | null;
+  results: CampaignInsightsResult[];
+  total_results: number;
+  summary: {
+    total_campaigns: number;
+    total_spend: number;
+    /** @deprecated blended over the inflated `leads`; prefer total_meta_leads / total_conversion_leads. */
+    total_leads: number;
+    /** @deprecated cost per inflated `leads`. */
+    blended_cpl: number | null;
+    total_meta_leads?: number;
+    blended_cost_per_meta_lead?: number | null;
+    total_conversion_leads?: number;
+    blended_cost_per_conversion_lead?: number | null;
+    total_meta_result?: number;
+    blended_cost_per_meta_result?: number | null;
+    meta_result_type?: string | null;
+    /** @deprecated use total_meta_result. */
+    total_results?: number;
+    blended_cost_per_result?: number | null;
+    result_type?: string | null;
+    result_label?: string | null;
+    blended_ctr: number;
+  };
+  campaigns: CampaignInsightsCampaign[];
+  fetched_at: string;
+}
+
 export interface ApproveCampaignStrategyRequest {
   campaign_id: string;
   tier_names?: string[];
@@ -313,20 +489,327 @@ export interface PauseCampaignRequest {
   action?: "pause" | "resume";
 }
 
+export interface PerformanceMetrics {
+  impressions: number;
+  clicks: number;
+  spend_cents: number;
+  leads_count: number;
+  cpl_cents: number | null;
+  // Objective-aware canonical result (equals leads for lead campaigns).
+  results_count?: number;
+  cost_per_result_cents?: number | null;
+  result_type?: string | null;
+  result_label?: string | null;
+  ctr_pct: number;
+}
+
+export interface PerformanceDailyBreakdown extends PerformanceMetrics {
+  date: string;
+  reach: number;
+  frequency: number | null;
+}
+
+export interface PerformanceAdBreakdown {
+  creative_id: string;
+  meta_ad_id: string;
+  tier_name: string | null;
+  headline: string | null;
+  asset_type: string | null;
+  status: string;
+  effective_status: string | null;
+  performance_status: string;
+  metrics: PerformanceMetrics & {
+    reach: number;
+    frequency: number | null;
+    cpc_cents: number | null;
+  };
+  raw_actions: Array<{
+    action_type: string;
+    value: number;
+  }>;
+  video_metrics?: {
+    avg_time_watched: number | null;
+    p25_watched: number;
+    p50_watched: number;
+    p75_watched: number;
+    p100_watched: number;
+  } | null;
+  daily_breakdown: PerformanceDailyBreakdown[];
+  fetch_error?: {
+    code: string;
+    message: string;
+    retry_after?: number | null;
+  };
+}
+
+export interface PerformanceTierBreakdown {
+  tier_campaign_id: string;
+  tier: string | null;
+  campaign_id: string | null;
+  campaign_name: string | null;
+  meta_campaign_id: string | null;
+  meta_adset_id: string | null;
+  daily_budget_cents: number;
+  status: string;
+  effective_status: string | null;
+  performance_status: string;
+  metrics: PerformanceMetrics & {
+    reach: number;
+    frequency: number | null;
+    cpc_cents: number | null;
+  };
+  capi_attribution: {
+    lead_conversions: number;
+    sql_conversions: number;
+    customer_conversions: number;
+  };
+  daily_breakdown: PerformanceDailyBreakdown[];
+  ads: PerformanceAdBreakdown[];
+}
+
+export interface RecommendedPerformanceAction {
+  type: "pause_campaign" | "reduce_budget" | "increase_budget" | "refresh_creative";
+  target: string;
+  reason: string;
+  urgency: "medium" | "high" | "critical";
+}
+
 export interface PerformanceResponse {
   campaign_id: string;
   status: string;
   performance_status: string;
-  metrics: {
-    impressions: number;
-    clicks: number;
-    spend_cents: number;
-    leads_count: number;
-    cpl_cents: number;
-    ctr_pct: number;
+  campaign_version?: "legacy" | "intelligence";
+  metrics: PerformanceMetrics;
+  summary?: PerformanceMetrics & {
+    reach: number;
+    frequency: number | null;
+    cpc_cents: number | null;
+    target_cpl_cents: number;
+    meta_leads_count: number;
+    capi_lead_conversions: number;
+    capi_sql_conversions: number;
+    capi_customer_conversions: number;
+  };
+  tiers?: PerformanceTierBreakdown[];
+  daily_breakdown?: PerformanceDailyBreakdown[];
+  capi_attribution?: {
+    lead_conversions: number;
+    sql_conversions: number;
+    customer_conversions: number;
+    by_tier: Array<{
+      tier_campaign_id: string;
+      tier: string | null;
+      campaign_id: string | null;
+      lead_conversions: number;
+      sql_conversions: number;
+      customer_conversions: number;
+    }>;
   };
   hours_since_launch: number;
   last_synced_at: string;
+  recommended_actions?: RecommendedPerformanceAction[];
+  warnings?: string[];
+}
+
+export interface PortfolioPerformanceRow {
+  tier_campaign_id?: string | null;
+  tier: string | null;
+  description: string | null;
+  budget_pct: number;
+  target_cpa_multiplier: number;
+  target_cpa_cents: number;
+  campaign_id: string | null;
+  campaign_name?: string | null;
+  meta_campaign_id: string | null;
+  meta_adset_id: string | null;
+  daily_budget_cents: number;
+  spend_cents: number;
+  lead_conversions: number;
+  sql_conversions: number;
+  customer_conversions: number;
+  selected_metric: string;
+  selected_conversions: number;
+  selected_cpa: number | null;
+  status: string;
+  performance_data?: Record<string, unknown> | null;
+  impressions?: number;
+  reach?: number;
+  clicks?: number;
+  ctr_pct?: number;
+  frequency?: number | null;
+  cpl_cents?: number | null;
+  performance_status?: string;
+  effective_status?: string | null;
+  capi_attribution?: {
+    lead_conversions: number;
+    sql_conversions: number;
+    customer_conversions: number;
+  };
+  daily_breakdown?: PerformanceDailyBreakdown[];
+  ads?: PerformanceAdBreakdown[];
+}
+
+export interface PortfolioPerformanceSnapshot {
+  business_id: string;
+  optimise_for: string;
+  base_target_cpa_cents: number;
+  portfolio_budget_cents: number;
+  metrics?: PerformanceMetrics;
+  performance_status?: string;
+  rows: PortfolioPerformanceRow[];
+  summary: {
+    tiers: number;
+    active_tiers: number;
+    spend_cents: number;
+    lead_conversions: number;
+    sql_conversions: number;
+    customer_conversions: number;
+    impressions?: number;
+    reach?: number;
+    clicks?: number;
+    ctr_pct?: number;
+    frequency?: number | null;
+    cpl_cents?: number | null;
+    capi_attribution?: PerformanceResponse["capi_attribution"];
+  };
+  daily_breakdown?: PerformanceDailyBreakdown[];
+  capi_attribution?: PerformanceResponse["capi_attribution"];
+  last_synced_at?: string;
+  warnings?: string[];
+}
+
+export interface PortfolioPerformanceResponse {
+  portfolio_id: string;
+  performance: PortfolioPerformanceSnapshot;
+  fetched_at: string;
+}
+
+export interface CreativeTagRequest {
+  business_id: string;
+  ads: Array<{
+    meta_ad_id: string;
+    meta_ad_name?: string;
+    meta_campaign_id?: string;
+    meta_adset_id?: string;
+    creative_type: "video" | "image" | "carousel" | "static";
+    thumbnail_url?: string;
+    video_url?: string;
+    ad_copy?: string;
+    headline?: string;
+    cta_text?: string;
+    frame_urls?: string[];
+  }>;
+}
+
+export interface CreativeAnalysisResponse {
+  business_id: string;
+  group_by: "hook_type" | "visual_style" | "product_focus" | "setting" | "cta_type" | "copy_tone" | "opening_element";
+  metric: "cpl" | "ctr" | "cpc" | "frequency";
+  date_range: { from: string | null; to: string | null };
+  results: Array<{
+    value: string;
+    avg_cpl: number | null;
+    avg_ctr: number | null;
+    avg_cpc: number | null;
+    avg_frequency: number | null;
+    total_spend: number;
+    total_leads: number;
+    total_clicks: number;
+    total_impressions: number;
+    ad_count: number;
+    trend: "improving" | "declining" | "stable" | "insufficient_data";
+    trend_delta_pct: number | null;
+  }>;
+  insight: {
+    summary: string;
+    recommendations: Array<{
+      action: "scale" | "test" | "kill" | "iterate";
+      target: string;
+      reason: string;
+      confidence: "high" | "medium" | "low";
+    }>;
+    fatigue_warning: string | null;
+    sample_size_warning: string | null;
+  };
+  top_ads?: Array<{
+    meta_ad_id: string;
+    meta_ad_name: string | null;
+    hook_type: string | null;
+    visual_style: string | null;
+    spend: number;
+    leads: number;
+    cpl: number | null;
+    ctr: number | null;
+    cpc: number | null;
+    frequency: number | null;
+  }>;
+  bottom_ads?: Array<{
+    meta_ad_id: string;
+    meta_ad_name: string | null;
+    hook_type: string | null;
+    visual_style: string | null;
+    spend: number;
+    leads: number;
+    cpl: number | null;
+    ctr: number | null;
+    cpc: number | null;
+    frequency: number | null;
+  }>;
+}
+
+export interface CreativeCrossAnalysisResponse {
+  business_id: string;
+  group_by: "hook_type" | "visual_style" | "product_focus" | "setting" | "cta_type" | "copy_tone" | "opening_element";
+  cross_by: "hook_type" | "visual_style" | "product_focus" | "setting" | "cta_type" | "copy_tone" | "opening_element";
+  metric: "cpl" | "ctr" | "cpc" | "frequency";
+  matrix: Array<{
+    group: string;
+    cross: string;
+    avg_cpl: number | null;
+    avg_ctr: number | null;
+    avg_cpc: number | null;
+    avg_frequency: number | null;
+    total_spend: number;
+    total_leads: number;
+    total_clicks: number;
+    total_impressions: number;
+    ad_count: number;
+  }>;
+  best_combination: {
+    group: string;
+    cross: string;
+    metric_value: number | null;
+  } | null;
+  worst_combination: {
+    group: string;
+    cross: string;
+    metric_value: number | null;
+  } | null;
+  insight: string;
+}
+
+export interface GenerateCreativeBriefsRequest {
+  business_id: string;
+  count?: number;
+  bias?: string;
+  exclude_angles?: string[];
+  target_market?: string;
+  font_preset?: string;
+  metric?: "cpl" | "ctr" | "cpc" | "frequency";
+}
+
+export interface CreativeQaRequest {
+  business_id: string;
+  creatives: Array<{
+    creative_type: "video" | "image" | "carousel" | "static";
+    thumbnail_url?: string;
+    video_url?: string;
+    asset_url?: string;
+    ad_copy?: string;
+    headline?: string;
+    cta_text?: string;
+    frame_urls?: string[];
+  }>;
 }
 
 // ── Audience types ───────────────────────────────────────────────────
