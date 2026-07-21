@@ -51,7 +51,8 @@ const requiredDocsSnippets = [
 ];
 
 const requiredReadmeSnippets = [
-  "create -> approve -> request/upload creative -> activate",
+  "legacy create -> review -> launch -> monitor",
+  "Intelligence activation, portfolio launch, and campaign resume are temporarily unavailable",
   "zuckerbot_enrich_business",
   "zuckerbot_upload_business_context",
   "zuckerbot_activate_campaign",
