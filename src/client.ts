@@ -69,10 +69,17 @@ export class ZuckerBotClient {
     }
 
     if (!response.ok) {
-      const err =
-        data && typeof data === "object" && "error" in data
-          ? (data as { error: { code?: string; message?: string; retry_after?: number } }).error
+      // The API uses two error shapes: nested `{ error: { code, message } }`
+      // (most routes) and flat `{ error: true, code, message }` (a few audit
+      // routes). Parse both so codes like `audit_report_business_required`
+      // survive the round-trip instead of collapsing to `http_400`.
+      const obj = data && typeof data === "object" ? (data as Record<string, unknown>) : null;
+      const nested =
+        obj && typeof obj.error === "object" && obj.error !== null
+          ? (obj.error as { code?: string; message?: string; retry_after?: number })
           : null;
+      const flat = obj && obj.error === true ? (obj as { code?: string; message?: string; retry_after?: number }) : null;
+      const err = nested || flat;
 
       const code = err?.code || `http_${response.status}`;
       const message = err?.message || `API request failed with status ${response.status}`;

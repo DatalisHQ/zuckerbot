@@ -53,7 +53,7 @@ Use test events before treating delivery as healthy.
 6. Present strategy and obtain approval
 7. Generate/request/upload creatives and run QA
 8. Present final budget and obtain launch approval
-9. Activate and monitor
+9. Launch the reviewed legacy draft and monitor
 10. Feed qualified conversion outcomes back through CAPI
 
 ## Operating rules
@@ -64,4 +64,7 @@ Use test events before treating delivery as healthy.
 - When Meta credentials or selected assets are incomplete, stop and guide setup.
 - Report partial failures precisely; do not claim a campaign or conversion event
   is live until the tool response confirms it.
+- Intelligence activation, portfolio launch and campaign resume are temporarily
+  unavailable during Dealify launch hardening. Use the reviewed legacy create
+  and launch path, and use pause whenever delivery must stop.
 - Never expose API keys, access tokens, webhook secrets or customer identifiers.

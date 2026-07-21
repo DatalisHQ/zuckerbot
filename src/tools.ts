@@ -150,14 +150,14 @@ function buildQuickstartPayload(client: ZuckerBotClient): Record<string, unknown
       {
         step: 4,
         tool: "zuckerbot_create_campaign",
-        description: "Full campaign strategy with audience tiers",
+        description: "Create a reviewed launch-ready campaign draft",
         requires_key: true,
         flow: "quick_launch",
       },
       {
         step: 5,
         tool: "zuckerbot_launch_campaign",
-        description: "Go live on Meta",
+        description: "Launch the reviewed legacy draft on Meta",
         requires_key: true,
         flow: "quick_launch",
       },
@@ -435,7 +435,7 @@ function registerCreativeGenerationTools(server: McpServer, client: ZuckerBotCli
         const body: Record<string, unknown> = {};
         if (creative_handoff) body.creative_handoff = creative_handoff;
         const result = await client.post(`/campaigns/${campaign_id}/request-creative`, body);
-        return formatResult(appendHint(result, "Creative request dispatched. Monitor progress with zuckerbot_get_creative_status. Once all_complete is true, call zuckerbot_activate_campaign to go live."));
+        return formatResult(appendHint(result, "Creative request dispatched for planning/review. Monitor progress with zuckerbot_get_creative_status. Multi-tier activation is temporarily disabled; use a legacy campaign draft for a live launch."));
       } catch (err) {
         return formatError(err);
       }
@@ -511,7 +511,7 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
   // ── 0a. Account Audit ───────────────────────────────────────────
   server.tool(
     "zuckerbot_audit_account",
-    "Run a full audit of the connected Meta ad account: wasted spend detection, creative fatigue, opportunity score (0-100), projected CPL improvement, and prioritised action items. Read-only and available on every tier — the recommended FIRST call for any new account or when a user asks 'how are my ads doing?'.",
+    "Run a full audit of the connected Meta ad account: wasted spend detection, creative fatigue, a complete-account opportunity score (0-100 when all inputs return), and prioritised action items. Saves a shareable web report when the API key resolves to one saved business. Read-only and available on every tier — the recommended FIRST call for any new account or when a user asks 'how are my ads doing?'.",
     {
       meta_ad_account_id: z.string().optional().describe("Meta ad account ID to audit (format: act_XXXXX). Defaults to the connected account."),
       company_name: z.string().optional().describe("Company name used in the audit narrative. Defaults to the connected business name."),
@@ -519,14 +519,40 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
     async ({ meta_ad_account_id, company_name }) => {
       try {
         client.requireAuth();
-        const body: Record<string, unknown> = {};
+        // Ask the API to persist when one business is resolvable, but keep the
+        // audit itself available when setup/selection is still incomplete.
+        // This stays one metered request and one Meta audit in both cases.
+        const body: Record<string, unknown> = {
+          save_report: true,
+          save_report_if_available: true,
+        };
         if (meta_ad_account_id) body.meta_ad_account_id = meta_ad_account_id;
         if (company_name) body.company_name = company_name;
         const result = await client.post("/audit", body);
+        const record = asRecord(result);
+        const audit = asRecord(record?.audit);
+        const raw = asRecord(audit?.rawInsights);
+        const dataCompleteness = asRecord(raw?.data_completeness);
+        // Raw Meta insight rows drown the agent's context; the summarised
+        // findings above them carry everything the report presents.
+        if (raw && "campaign_rows" in raw) delete (raw as Record<string, unknown>).campaign_rows;
+        const reportUrl = typeof record?.report_url === "string" ? `https://zuckerbot.ai${record.report_url}` : null;
+        const partialDataHint = raw?.data_truncated === true
+          ? " NOTE: Meta returned incomplete data. Check audit.rawInsights.data_completeness and do not present opportunityScore or exact spend/fatigue ratios as complete-account measures."
+          : "";
+        const scoreHint = typeof audit?.opportunityScore !== "number"
+          ? " NOTE: No opportunity score is available for this result. Do not present or infer a numeric account rating."
+          : "";
+        const currencyHint = dataCompleteness?.account_currency_available === false
+          ? " NOTE: Meta did not return the account currency. Describe money as account-currency units; do not label it AUD or invent another currency code."
+          : "";
+        const reportHint = reportUrl
+          ? ` A shareable web report was saved — give the user this link: ${reportUrl}`
+          : " No shareable report was saved because this API key does not resolve to one saved business.";
         return formatResult(
           appendHint(
             result,
-            "Audit complete. Present opportunityScore, wastedSpendEstCents, and audit.rawInsights.action_items to the user, then act on the findings: zuckerbot_get_performance to drill into a specific campaign, zuckerbot_pause_campaign to stop wasted spend, or zuckerbot_creative_analysis to diagnose fatigued creatives.",
+            `Audit complete.${reportHint}${partialDataHint}${scoreHint}${currencyHint} Present complete observed findings and audit.rawInsights.action_items to the user, then act on them: zuckerbot_get_performance to drill into a specific campaign, zuckerbot_pause_campaign to stop wasted spend, or zuckerbot_creative_analysis to diagnose fatigued creatives.`,
           ),
         );
       } catch (err) {
@@ -538,7 +564,7 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
   // ── 0b. Redeem Lifetime Licence ─────────────────────────────────
   server.tool(
     "zuckerbot_redeem_license",
-    "Redeem a ZuckerBot lifetime licence code (format ZB-XXXXX-XXXXX-XXXXX) purchased on Dealify or AppSumo. Codes stack on one account: 1 code = Lifetime Tier 1 (1 ad account, 2,500 calls/mo), 2 codes = Tier 2 (3 accounts, 10K calls/mo), 3 codes = Tier 3 (10 accounts, 30K calls/mo). Redeeming upgrades ALL of the account's API keys to the new tier immediately.",
+    "Redeem a ZuckerBot lifetime licence code (format ZB-XXXXX-XXXXX-XXXXX) purchased on Dealify or AppSumo. Each code activates the plan it was purchased for: Tier 1 (1 ad account, 2,500 calls/mo), Tier 2 (3 accounts, 10K calls/mo) or Tier 3 (10 accounts, 30K calls/mo). Codes also stack additively on one account up to Tier 3 — e.g. two Tier 1 codes = Tier 2. Redeeming upgrades ALL of the account's API keys to the new tier immediately.",
     {
       code: z.string().describe("Lifetime licence code in the format ZB-XXXXX-XXXXX-XXXXX"),
     },
@@ -550,7 +576,7 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
         const mintedKey = asRecord(record?.api_key);
         const hint = mintedKey
           ? "IMPORTANT: a new API key was minted during redemption. Show the full api_key.key value to the user IMMEDIATELY and tell them to store it securely — it will NEVER be shown again. Then follow the next_steps in the response."
-          : "Licence redeemed — all of this account's API keys are upgraded to the new tier. Compare codes_redeemed with max_stack: stacking another code unlocks the next tier. Run zuckerbot_audit_account to put the new limits to work.";
+          : "Licence redeemed — all of this account's API keys are upgraded to the new tier. If the tier is below Lifetime Tier 3, stacking another code raises it. Run zuckerbot_audit_account to put the new limits to work.";
         return formatResult(appendHint(result, hint));
       } catch (err) {
         return formatError(err);
@@ -712,7 +738,7 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
   // ── 7. Create Full Campaign ─────────────────────────────────────
   server.tool(
     "zuckerbot_create_full_campaign",
-    "Build a complete Meta campaign from an approved Campaign Architect session. IMPORTANT: dry_run defaults to TRUE. When dry_run=true, returns the exact campaign structure that WOULD be created without calling Meta — safe, free, no side effects. Present this to the customer first. Only set dry_run=false after explicit customer approval. When dry_run=false, creates live Meta objects (campaign + ad sets + ads) in PAUSED state. Generated videos get linked for rejection tracking automatically.",
+    "Build a complete PAUSED Meta campaign from an approved Campaign Architect session. IMPORTANT: dry_run defaults to TRUE. When dry_run=true, returns the exact campaign structure that WOULD be created without calling Meta — safe, free, no side effects. Present this to the customer first. Only set dry_run=false after explicit customer approval. When dry_run=false, creates Meta objects in PAUSED state for review; Architect auto-activation is temporarily disabled. Generated videos get linked for rejection tracking automatically.",
     {
       session_id: z.string().describe("Campaign Architect session ID with approved strategy and creatives"),
       dry_run: z.boolean().default(true)
@@ -720,8 +746,8 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
       meta_access_token: z.string().optional().describe("Meta access token override (live mode only)"),
       meta_ad_account_id: z.string().optional().describe("Meta ad account ID override (live mode only)"),
       meta_page_id: z.string().optional().describe("Facebook Page ID override (live mode only)"),
-      activate: z.boolean().default(false)
-        .describe("If true AND dry_run=false, activate immediately after creation. Default false — stays PAUSED for customer approval."),
+      activate: z.literal(false).default(false)
+        .describe("Must remain false. Architect auto-activation is temporarily disabled; live mode creates PAUSED Meta objects only."),
     },
     async ({ session_id, dry_run, meta_access_token, meta_ad_account_id, meta_page_id, activate }) => {
       try {
@@ -737,9 +763,7 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
 
         const hint = isDryRun
           ? "DRY RUN — no Meta objects were created. Present the would_create structure to the customer. If they approve, call again with dry_run=false to create live Meta objects."
-          : activate
-            ? "Campaign built and activated on Meta. Monitor performance with zuckerbot_get_performance. Generated videos are linked for rejection tracking."
-            : "Campaign built in PAUSED state on Meta. Present the meta_structure to the customer, then resume the campaign on Meta only after approval. Videos linked for rejection tracking.";
+          : "Campaign built in PAUSED state on Meta for review. Architect auto-activation and campaign resume are temporarily disabled; use a reviewed legacy draft with zuckerbot_launch_campaign for the supported live path. Videos linked for rejection tracking.";
 
         return formatResult(appendHint(result, hint));
       } catch (err) {
@@ -768,7 +792,7 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
           url,
           ad_count,
         });
-        return formatResult(appendHint(result, "Preview generated. Call zuckerbot_create_campaign with the same URL to build a full intelligence strategy with audience tiers and budget guidance."));
+        return formatResult(appendHint(result, "Preview generated. Call zuckerbot_create_campaign with the same URL; it defaults to the reviewed legacy draft path that can be launched safely."));
       } catch (err) {
         return formatError(err);
       }
@@ -778,7 +802,7 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
   // ── 7. Create Campaign ──────────────────────────────────────────
   server.tool(
     "zuckerbot_create_campaign",
-    "Create a new campaign draft for a business. In intelligence mode (preferred when a business_id is available) this returns context-aware audience tiers, creative angles, budget guidance, projected CPL, and phased next steps. Does NOT spend money or create anything on Meta — it's purely a planning step. Use zuckerbot_launch_campaign to go live after strategy approval.",
+    "Create a new campaign draft for a business. Defaults to legacy mode, the only launch-ready path during Dealify hardening. Intelligence mode remains available for planning only and cannot be activated. This tool does not spend money or create anything on Meta; review the draft, then use zuckerbot_launch_campaign.",
     {
       url: z.string().describe("Business website URL"),
       business_id: z.string().optional().describe("Existing ZuckerBot business ID to anchor intelligence mode"),
@@ -797,8 +821,8 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
         .describe("Daily budget in cents (e.g., 2000 = $20/day)"),
       mode: z
         .enum(["auto", "legacy", "intelligence"])
-        .optional()
-        .describe("Campaign planning mode. auto prefers intelligence when a business can be resolved"),
+        .default("legacy")
+        .describe("Campaign planning mode. Default legacy is the only launch-ready path. auto/intelligence are planning-only while multi-tier activation is disabled."),
       objective: z
         .enum(["leads", "traffic", "conversions", "awareness"])
         .optional()
@@ -823,7 +847,7 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
         if (business_type) body.business_type = business_type;
         if (location) body.location = location;
         if (budget_daily_cents !== undefined) body.budget_daily_cents = budget_daily_cents;
-        if (mode) body.mode = mode;
+        body.mode = mode ?? "legacy";
         if (objective) body.objective = objective;
         if (lead_destination) body.lead_destination = lead_destination;
         if (destination_url) body.destination_url = destination_url;
@@ -831,7 +855,9 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
         if (creative_handoff) body.creative_handoff = creative_handoff;
 
         const result = await client.post("/campaigns/create", body);
-        return formatResult(appendHint(result, "Campaign draft created. For intelligence campaigns: call zuckerbot_approve_campaign_strategy to confirm audience tiers and angles, then zuckerbot_request_creative or zuckerbot_upload_creative to attach creatives before launch."));
+        return formatResult(appendHint(result, mode === "legacy"
+          ? "Launch-ready legacy draft created. Review it, confirm Meta credentials and budget, then call zuckerbot_launch_campaign."
+          : "Planning-only intelligence draft created. Multi-tier activation is temporarily disabled; create a legacy-mode draft when the user is ready to launch."));
       } catch (err) {
         return formatError(err);
       }
@@ -911,7 +937,7 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
     async ({ campaign_id }) => {
       try {
         const result = await client.get(`/campaigns/${campaign_id}`);
-        return formatResult(appendHint(result, "Inspect creative_status and workflow state. Next steps depend on campaign_version: intelligence campaigns → approve strategy → upload creatives → activate. Legacy campaigns → launch directly."));
+        return formatResult(appendHint(result, "Inspect creative_status and workflow state. Legacy campaigns can launch directly after review. Intelligence campaigns are planning-only while multi-tier activation is disabled."));
       } catch (err) {
         return formatError(err);
       }
@@ -961,7 +987,7 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
         const queuedJobs = Array.isArray(payload?.queued_jobs) ? payload.queued_jobs : [];
 
         if (creativeStatus !== "uploading" || queuedJobs.length === 0) {
-          return formatResult(appendHint(result, "Creatives uploaded. Call zuckerbot_get_creative_status to check processing status, then zuckerbot_activate_campaign once all_complete is true."));
+          return formatResult(appendHint(result, "Creatives uploaded. Call zuckerbot_get_creative_status to check processing status. Intelligence activation is temporarily disabled; use a reviewed legacy draft for live launch."));
         }
 
         try {
@@ -976,7 +1002,7 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
                 interval_seconds: CREATIVE_STATUS_POLL_INTERVAL_MS / 1000,
               },
               final_status: polled.lastStatus,
-            }, "All creatives uploaded and processed. Call zuckerbot_activate_campaign to turn on the paused Meta ad sets and go live."));
+            }, "All creatives uploaded and processed for review. Intelligence activation is temporarily disabled; use a reviewed legacy draft for live launch."));
           }
 
           return formatResult(appendHint({
@@ -990,7 +1016,7 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
               suggested_tool: "zuckerbot_get_creative_status",
             },
             last_status: polled.lastStatus,
-          }, "Uploads still processing. Call zuckerbot_get_creative_status in 15–30 seconds to check progress. Once all_complete is true, call zuckerbot_activate_campaign."));
+          }, "Uploads still processing. Call zuckerbot_get_creative_status in 15–30 seconds to check progress. Completed intelligence creatives remain review-only while activation is disabled."));
         } catch (pollError) {
           return formatResult(appendHint({
             initial_response: payload,
@@ -1008,14 +1034,14 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
 
   server.tool(
     "zuckerbot_get_creative_status",
-    "Check the asynchronous upload queue for an intelligence campaign to see if Meta ad-creation jobs are complete. Poll this after zuckerbot_upload_creative when the initial response shows creative_status='uploading'. Returns all_complete=true when every queued job has finished and the campaign is ready to activate.",
+    "Check the asynchronous upload queue for an intelligence campaign to see if Meta ad-creation jobs are complete. Poll this after zuckerbot_upload_creative when the initial response shows creative_status='uploading'. Returns all_complete=true when every queued job has finished for review; intelligence activation is temporarily disabled.",
     {
       campaign_id: z.string().describe("Intelligence campaign ID"),
     },
     async ({ campaign_id }) => {
       try {
         const result = await client.get(`/campaigns/${campaign_id}/creative-status`);
-        return formatResult(appendHint(result, "If all_complete is true, call zuckerbot_activate_campaign to turn on the paused Meta ad sets. If still uploading, poll again in 15–30 seconds."));
+        return formatResult(appendHint(result, "If still uploading, poll again in 15–30 seconds. Completed intelligence creatives remain available for review, but multi-tier activation is temporarily disabled; use a legacy draft for live launch."));
       } catch (err) {
         return formatError(err);
       }
@@ -1024,7 +1050,7 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
 
   server.tool(
     "zuckerbot_activate_campaign",
-    "Activate the ready audience tiers for an intelligence campaign after strategy approval and creative upload. Turns on paused Meta ad sets for each approved tier. Only tiers with valid paused executions and uploaded creatives are activated. Use this as the final step before a campaign goes live on Meta.",
+    "Temporarily unavailable during Dealify launch hardening. Intelligence campaigns are planning-only; create a legacy-mode draft and use zuckerbot_launch_campaign for the supported live path.",
     {
       campaign_id: z.string().describe("Intelligence campaign ID"),
       tier_names: z.array(z.string()).optional().describe("Optional subset of approved tiers to activate"),
@@ -1033,17 +1059,18 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
       meta_page_id: z.string().optional().describe("Optional Facebook Page ID override"),
     },
     async ({ campaign_id, tier_names, meta_access_token, meta_ad_account_id, meta_page_id }) => {
-      try {
-        const body: Record<string, unknown> = {};
-        if (tier_names?.length) body.tier_names = tier_names;
-        if (meta_access_token) body.meta_access_token = meta_access_token;
-        if (meta_ad_account_id) body.meta_ad_account_id = meta_ad_account_id;
-        if (meta_page_id) body.meta_page_id = meta_page_id;
-        const result = await client.post(`/campaigns/${campaign_id}/activate`, body);
-        return formatResult(appendHint(result, "Campaign activated on Meta. Monitor with zuckerbot_get_performance. If budget needs adjusting, use zuckerbot_pause_campaign to stop spend, or zuckerbot_rebalance_portfolio if this campaign belongs to a portfolio."));
-      } catch (err) {
-        return formatError(err);
-      }
+      void tier_names;
+      void meta_access_token;
+      void meta_ad_account_id;
+      void meta_page_id;
+      return formatResult({
+        error: true,
+        code: "intelligence_activation_temporarily_disabled",
+        message: "Multi-tier activation is temporarily disabled. Create a campaign with mode='legacy', review it, then call zuckerbot_launch_campaign.",
+        campaign_id,
+        supported_create_mode: "legacy",
+        supported_launch_tool: "zuckerbot_launch_campaign",
+      });
     },
   );
 
@@ -1127,23 +1154,23 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
     },
   );
 
-  // ── 4. Pause / Resume Campaign ─────────────────────────────────
+  // ── 4. Pause Campaign ──────────────────────────────────────────
   server.tool(
     "zuckerbot_pause_campaign",
-    "Pause or resume a running Meta ad campaign. Pausing stops ad delivery and spend immediately — the campaign stays in Meta but goes dark. Resuming restarts delivery without relaunching. Use pause when creative needs refreshing, budget is exhausted, or the user asks to stop spending.",
+    "Pause a running Meta ad campaign. Pausing stops ad delivery and spend immediately while leaving the campaign in Meta. Use this when creative needs refreshing, budget is exhausted, entitlement is withdrawn, or the user asks to stop spending. Resume is temporarily disabled during Dealify launch hardening.",
     {
       campaign_id: z.string().describe("ZuckerBot campaign ID"),
       action: z
-        .enum(["pause", "resume"])
+        .literal("pause")
         .default("pause")
-        .describe("Whether to pause or resume the campaign"),
+        .describe("Pause the campaign"),
     },
     async ({ campaign_id, action }) => {
       try {
         const result = await client.post(`/campaigns/${campaign_id}/pause`, {
           action,
         });
-        return formatResult(appendHint(result, "Campaign paused/resumed. Call zuckerbot_get_performance to see the current delivery status, or zuckerbot_get_campaign to check the full workflow state."));
+        return formatResult(appendHint(result, "Campaign paused. Call zuckerbot_get_performance to confirm delivery has stopped, or zuckerbot_get_campaign to inspect the full workflow state."));
       } catch (err) {
         return formatError(err);
       }
@@ -1846,7 +1873,7 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
   // ── 22. Create Portfolio ───────────────────────────────────────
   server.tool(
     "zuckerbot_create_portfolio",
-    "Create a multi-tier audience portfolio for a business from a shared template (e.g., 'Local Services', 'eCommerce') or a custom tier array. Portfolios split the total budget across prospecting, retargeting, and reactivation tiers with per-tier CPA targets. After creating, call zuckerbot_launch_portfolio to launch all tiers on Meta.",
+    "Create a planning and monitoring-only multi-tier audience portfolio for a business from a shared template (e.g., 'Local Services', 'eCommerce') or a custom tier array. Portfolios split a proposed total budget across prospecting, retargeting, and reactivation tiers with per-tier CPA targets. Portfolio launch is temporarily disabled during Dealify hardening.",
     {
       business_id: z.string().optional().describe("Optional business ID override"),
       template_id: z.string().optional().describe("Optional portfolio template ID"),
@@ -1880,7 +1907,7 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
         if (tiers) body.tiers = tiers;
 
         const result = await client.post("/portfolios/create", body);
-        return formatResult(appendHint(result, "Portfolio created. Call zuckerbot_launch_portfolio with the returned portfolio_id to launch all tiers on Meta, or zuckerbot_get_portfolio to review the tier configuration."));
+        return formatResult(appendHint(result, "Planning portfolio created. Call zuckerbot_get_portfolio to review the tier configuration. Portfolio launch is temporarily disabled; use a reviewed legacy draft for live launch."));
       } catch (err) {
         return formatError(err);
       }
@@ -1890,14 +1917,14 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
   // ── 23. Get Portfolio ─────────────────────────────────────────
   server.tool(
     "zuckerbot_get_portfolio",
-    "Fetch the configuration and current performance snapshot for an audience portfolio by ID. Returns tier definitions, budget allocations, CPA targets, and live performance data. Use this to inspect a portfolio before launching or rebalancing.",
+    "Fetch the configuration and current performance snapshot for an audience portfolio by ID. Returns tier definitions, budget allocations, CPA targets, and any existing performance data. Use this to inspect a portfolio for planning, monitoring, or rebalancing an already-active portfolio.",
     {
       portfolio_id: z.string().describe("Audience portfolio ID"),
     },
     async ({ portfolio_id }) => {
       try {
         const result = await client.get(`/portfolios/${portfolio_id}`);
-        return formatResult(appendHint(result, "Review tier config and performance. To adjust settings, call zuckerbot_update_portfolio. To launch on Meta, call zuckerbot_launch_portfolio. To rebalance active tier budgets, call zuckerbot_rebalance_portfolio."));
+        return formatResult(appendHint(result, "Review tier config and performance. To adjust planning settings, call zuckerbot_update_portfolio. Existing active portfolios can be monitored or rebalanced, but new portfolio launch is temporarily disabled."));
       } catch (err) {
         return formatError(err);
       }
@@ -1981,7 +2008,7 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
   // ── 27. Launch Portfolio ──────────────────────────────────────
   server.tool(
     "zuckerbot_launch_portfolio",
-    "Launch all tiers in an audience portfolio on Meta. Creates separate Meta campaigns for each tier (prospecting, retargeting, reactivation) using the portfolio's budget allocations and CPA targets. Stored Meta credentials are auto-resolved. Tiers that lack required data (e.g., retargeting without a pixel, lookalike without enough seed events) are skipped with a reason.",
+    "Temporarily unavailable during Dealify launch hardening. Portfolio planning and monitoring remain available, but new multi-tier launches must not create Meta objects. Create a legacy-mode draft and use zuckerbot_launch_campaign for the supported live path.",
     {
       portfolio_id: z.string().describe("Audience portfolio ID to launch"),
       meta_access_token: z.string().optional().describe("Optional Meta/Facebook access token override"),
@@ -1989,16 +2016,17 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
       meta_page_id: z.string().optional().describe("Optional Facebook Page ID override"),
     },
     async ({ portfolio_id, meta_access_token, meta_ad_account_id, meta_page_id }) => {
-      try {
-        const body: Record<string, unknown> = {};
-        if (meta_access_token) body.meta_access_token = meta_access_token;
-        if (meta_ad_account_id) body.meta_ad_account_id = meta_ad_account_id;
-        if (meta_page_id) body.meta_page_id = meta_page_id;
-        const result = await client.post(`/portfolios/${portfolio_id}/launch`, body);
-        return formatResult(appendHint(result, "Portfolio launched. Call zuckerbot_portfolio_performance to monitor tier delivery. Use zuckerbot_rebalance_portfolio weekly to redistribute budgets based on CPA performance."));
-      } catch (err) {
-        return formatError(err);
-      }
+      void meta_access_token;
+      void meta_ad_account_id;
+      void meta_page_id;
+      return formatResult({
+        error: true,
+        code: "portfolio_launch_temporarily_disabled",
+        message: "Portfolio launch is temporarily disabled. Create a campaign with mode='legacy', review it, then call zuckerbot_launch_campaign.",
+        portfolio_id,
+        supported_create_mode: "legacy",
+        supported_launch_tool: "zuckerbot_launch_campaign",
+      });
     },
   );
 

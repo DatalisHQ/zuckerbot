@@ -11,7 +11,6 @@
 //   zuckerbot launch camp_abc123
 //   zuckerbot status camp_abc123
 //   zuckerbot pause camp_abc123
-//   zuckerbot resume camp_abc123
 //   zuckerbot creatives "My Biz" "Best coffee in town"
 //   zuckerbot research reviews https://example.com
 //   zuckerbot research competitors "cafes" "Brisbane, AU"
@@ -242,13 +241,18 @@ program
 
 program
   .command("resume <campaign_id>")
-  .description("Resume a paused campaign")
+  .description("Unavailable during Dealify launch hardening")
   .action(async (campaignId: string) => {
-    const client = getClient();
-    const result = await run("Resuming campaign", () =>
-      client.post(`/campaigns/${campaignId}/pause`, { action: "resume" }),
+    printFormatted(
+      {
+        error: true,
+        code: "campaign_resume_temporarily_disabled",
+        message: "Campaign resume is temporarily disabled. Create and review a legacy draft, then use the launch command for the supported live path.",
+        campaign_id: campaignId,
+      },
+      "Campaign Resume Unavailable",
     );
-    printFormatted(result, "Campaign Resumed");
+    process.exitCode = 1;
   });
 
 // ── creatives ───────────────────────────────────────────────────────

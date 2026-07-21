@@ -145,9 +145,9 @@ zuckerbot create https://your-business.com --budget 5000 --objective leads
 | `get_campaign` | Get campaign detail, workflow state, and linked creatives |
 | `approve_campaign_strategy` | Approve tiers and creative angles for an intelligence campaign |
 | `suggest_angles` | Get proposed creative angles and audience tiers for a draft |
-| `activate_campaign` | Activate ready tiers and begin ad delivery |
+| `activate_campaign` | Temporarily unavailable; intelligence campaigns remain planning-only |
 | `launch_campaign` | Launch one or all variants from a draft on Meta |
-| `pause_campaign` | Pause or resume a live campaign |
+| `pause_campaign` | Pause a live campaign; resume is temporarily disabled |
 | `get_performance` | Real-time campaign metrics: spend, leads, CPL, CTR, ROAS |
 
 ### Audiences (6)
@@ -205,7 +205,7 @@ Costs are derived as `spend / count`; Meta's `cost_per_action_type` is non-addit
 | Tool | What it does |
 |------|-------------|
 | `create_portfolio` | Create an audience portfolio from a template |
-| `launch_portfolio` | Launch all campaigns in a portfolio |
+| `launch_portfolio` | Temporarily unavailable; portfolios remain planning/monitoring-only |
 | `portfolio_performance` | Tier-by-tier portfolio performance breakdown |
 | `rebalance_portfolio` | Dry-run or apply budget rebalancing across tiers |
 
@@ -230,16 +230,16 @@ Costs are derived as `spend / count`; Meta's `cost_per_action_type` is non-addit
 0. Audit       →  audit_account (how is this account doing today?)
 1. Research    →  research_reviews + research_competitors (parallel)
 2. Preview     →  preview_campaign (show user what ads look like)
-3. Create      →  create_campaign (draft with strategy + targeting)
-4. Approve     →  approve_campaign_strategy
-5. Creative    →  request_creative or upload_creative
-6. Activate    →  activate_campaign
-7. Monitor     →  get_performance + creative_analysis
+3. Create      →  create_campaign with mode=legacy (launch-ready draft)
+4. Review      →  confirm targeting, creative, Meta connection, and budget
+5. Launch      →  launch_campaign after explicit approval
+6. Monitor     →  get_performance + creative_analysis
+7. Pause       →  pause_campaign whenever delivery must stop
 8. Optimise    →  sync_conversion + audience tools
 ```
 
 Every tool returns a `_hint` field suggesting the logical next step, so your agent always knows what to do next.
-Shorthand: create -> approve -> request/upload creative -> activate.
+Shorthand: legacy create -> review -> launch -> monitor. Intelligence activation, portfolio launch, and campaign resume are temporarily unavailable during Dealify launch hardening.
 MCP names include `zuckerbot_enrich_business`, `zuckerbot_upload_business_context`, `zuckerbot_get_campaign`, `zuckerbot_activate_campaign`, and `zuckerbot_create_seed_audience`.
 
 ## ZuckerBot vs alternatives
