@@ -1,6 +1,6 @@
 {
   "name": "zuckerbot-mcp",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "CLI + MCP server for ZuckerBot — manage, audit and generate Meta ad campaigns from Claude or any AI agent",
   "type": "module",
   "bin": {
@@ -44,7 +44,7 @@
     "url": "https://github.com/DatalisHQ/zuckerbot/issues"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "1.12.1",
+    "@modelcontextprotocol/sdk": "1.29.0",
     "chalk": "^5.6.2",
     "commander": "^14.0.3",
     "ora": "^9.3.0",

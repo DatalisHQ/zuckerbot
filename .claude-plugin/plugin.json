@@ -1,7 +1,7 @@
 {
   "name": "zuckerbot",
   "displayName": "ZuckerBot — Meta Ads Toolkit",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "60+ tools for Meta account audits, campaign management, creative analysis, audiences and conversion tracking.",
   "author": {
     "name": "DatalisHQ"

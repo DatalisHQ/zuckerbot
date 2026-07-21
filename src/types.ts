@@ -486,7 +486,7 @@ export interface LaunchCampaignResponse {
 
 export interface PauseCampaignRequest {
   campaign_id: string;
-  action?: "pause" | "resume";
+  action?: "pause";
 }
 
 export interface PerformanceMetrics {
