@@ -1478,7 +1478,7 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
 
   server.tool(
     "zuckerbot_get_campaign_insights",
-    "Query campaign, ad set, or ad-level performance for any campaign in the connected Meta ad account — including campaigns not created by ZuckerBot. Tags each row with is_zuckerbot so you can benchmark ZuckerBot campaigns against manually managed ones. Supports date range filtering, campaign name search, status filters, time-series breakdowns, and multi-column sorting. For deduped truth use meta_result / cost_per_meta_result (Meta's Ads Manager \"Results\" for any objective) or conversion_leads / meta_leads — not the inflated, deprecated leads / cpl. meta_result and conversion_leads are most reliable on campaign-level, non-time-incremented queries.",
+    "Query campaign, ad set, or ad-level performance for any campaign in the connected Meta ad account — including campaigns not created by ZuckerBot. Tags each row with is_zuckerbot so you can benchmark ZuckerBot campaigns against manually managed ones. Supports date range filtering, campaign name search, status filters, time-series breakdowns, and multi-column sorting. For deduped truth use meta_result / cost_per_meta_result (Meta's Ads Manager \"Results\" for any objective) or conversion_leads / meta_leads — not the inflated, deprecated leads / cpl (the response's metric_semantics object labels every lead field). meta_result and conversion_leads are most reliable on campaign-level, non-time-incremented queries. Adset/ad rows report their OWN status — status_scope says which entity a row's status belongs to, statuses are as of status_synced_at, and refresh=true re-syncs them; spend-by-date is authoritative for whether delivery actually happened.",
     {
       business_id: z.string().optional().describe("Optional business ID override linked to the connected Meta ad account"),
       date_from: z.string().optional().describe("Optional start date in YYYY-MM-DD format. Defaults to 7 days ago."),
@@ -1552,8 +1552,11 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
         })
         .optional()
         .describe("Optional user data to improve match rate"),
+      fbclid: z.string().optional().describe("Optional Facebook click ID; the server builds a well-formed fbc cookie from it"),
+      fbc: z.string().optional().describe("Optional pre-formatted fbc cookie, forwarded raw — never hashed"),
+      fbp: z.string().optional().describe("Optional _fbp browser cookie, forwarded raw — never hashed. Improves match quality"),
     },
-    async ({ campaign_id, lead_id, quality, meta_access_token, user_data }) => {
+    async ({ campaign_id, lead_id, quality, meta_access_token, user_data, fbclid, fbc, fbp }) => {
       try {
         const body: Record<string, unknown> = {
           lead_id,
@@ -1561,6 +1564,9 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
           meta_access_token,
         };
         if (user_data) body.user_data = user_data;
+        if (fbclid) body.fbclid = fbclid;
+        if (fbc) body.fbc = fbc;
+        if (fbp) body.fbp = fbp;
 
         const result = await client.post(`/campaigns/${campaign_id}/conversions`, body);
         return formatResult(appendHint(result, "Conversion signal sent. Use zuckerbot_capi_status to view aggregate CAPI delivery and attribution, or zuckerbot_get_performance to see updated CPL and lead metrics."));
@@ -1751,7 +1757,7 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
   // ── 18. CAPI Config — Read ─────────────────────────────────────
   server.tool(
     "zuckerbot_get_capi_config",
-    "Fetch the current Conversions API configuration for a business: whether CAPI delivery is enabled, CRM source, currency, stage-to-event mappings, action source, and webhook URL. Use this before configuring CAPI to see what is already set, or to audit the current event mapping.",
+    "Fetch the current Conversions API configuration for a business: whether CAPI delivery is enabled, CRM source, currency, stage-to-event mappings, action source, and webhook URL. Use this before configuring CAPI to see what is already set, or to audit the current event mapping. The webhook secret is write-only: reads return webhook_secret_set and webhook_secret_last4, never the full value — use zuckerbot_rotate_webhook_secret to mint a new one.",
     {
       business_id: z.string().optional().describe("Optional business ID override for the authenticated API key"),
     },
@@ -1781,17 +1787,17 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
         .enum(["website", "app", "email", "phone_call", "chat", "physical_store", "system_generated", "business_messaging", "other"])
         .optional()
         .describe("Meta Conversions API action_source. Defaults to website for CRM events"),
-      rotate_webhook_secret: z.boolean().optional().describe("Rotate the webhook secret on update"),
+      rotate_webhook_secret: z.boolean().optional().describe("Rotate the webhook secret on update. The new secret is returned exactly once in the response; prefer zuckerbot_rotate_webhook_secret for a dedicated rotation"),
       event_mapping: z
         .record(
           z.string(),
           z.object({
-            meta_event: z.string().describe("Meta standard event name"),
+            meta_event: z.string().describe("Meta event name: standard names (Lead, Purchase, StartTrial, …) are canonicalised case-insensitively; custom names (e.g. plg_signup_completed) are stored verbatim — start with a letter, letters/digits/underscore/hyphen/period/space only, max 50 chars"),
             value: z.number().optional().describe("Event value in major currency units"),
           }),
         )
         .optional()
-        .describe("CRM stage mapping object keyed by source stage"),
+        .describe("CRM stage mapping object keyed by source stage. Stage keys are normalised (lower-cased, non-alphanumerics stripped: signup_completed → signupcompleted); inbound webhook source_stage values are normalised identically before matching, and any renamed keys are reported back as normalised_keys in the response"),
     },
     async ({ business_id, is_enabled, currency, crm_source, optimise_for, action_source, rotate_webhook_secret, event_mapping }) => {
       try {
@@ -1807,6 +1813,24 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
 
         const result = await client.put("/capi/config", body);
         return formatResult(appendHint(result, "CAPI config updated. Call zuckerbot_capi_test to send a synthetic test event and verify the new configuration works end-to-end."));
+      } catch (err) {
+        return formatError(err);
+      }
+    },
+  );
+
+  // ── 19b. CAPI Webhook Secret — Rotate ──────────────────────────
+  server.tool(
+    "zuckerbot_rotate_webhook_secret",
+    "Rotate the Conversions API webhook secret for a business. The new secret is returned exactly once, in this response only — every other read shows just webhook_secret_set and webhook_secret_last4. The old secret stops authenticating immediately, so update the system that signs your inbound webhooks (for example your CRM workflow's stored secret) in the same sitting.",
+    {
+      business_id: z.string().optional().describe("Optional business ID override for the authenticated API key"),
+    },
+    async ({ business_id }) => {
+      try {
+        const resolvedBusinessId = await client.resolveBusinessId(business_id);
+        const result = await client.put("/capi/config", { business_id: resolvedBusinessId, rotate_webhook_secret: true });
+        return formatResult(appendHint(result, "Copy webhook_secret from this response now — it is not shown again. The old secret is already invalid, so update your webhook sender's stored secret immediately, then call zuckerbot_capi_test to verify delivery."));
       } catch (err) {
         return formatError(err);
       }
@@ -1850,8 +1874,11 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
         })
         .optional()
         .describe("Optional user data to hash into the test payload"),
+      fbclid: z.string().optional().describe("Optional Facebook click ID to verify fbc construction/passthrough"),
+      fbc: z.string().optional().describe("Optional pre-formatted fbc cookie to verify raw passthrough"),
+      fbp: z.string().optional().describe("Optional _fbp cookie to verify raw passthrough"),
     },
-    async ({ business_id, source_stage, crm_source, value, user_data }) => {
+    async ({ business_id, source_stage, crm_source, value, user_data, fbclid, fbc, fbp }) => {
       try {
         const resolvedBusinessId = await client.resolveBusinessId(business_id);
         const body: Record<string, unknown> = {
@@ -1861,6 +1888,9 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
         if (crm_source) body.crm_source = crm_source;
         if (value !== undefined) body.value = value;
         if (user_data) body.user_data = user_data;
+        if (fbclid) body.fbclid = fbclid;
+        if (fbc) body.fbc = fbc;
+        if (fbp) body.fbp = fbp;
 
         const result = await client.post("/capi/config/test", body);
         return formatResult(appendHint(result, "Test event sent. Check status in the response — if 'sent', CAPI is working. If 'skipped' or 'failed', review the config with zuckerbot_get_capi_config and fix the event mapping."));
@@ -2082,9 +2112,11 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
       last_name: z.string().optional().describe("Optional last name for identity matching"),
       value: z.number().optional().describe("Optional event value override in major currency units"),
       event_time: z.string().optional().describe("Optional ISO 8601 event timestamp. Defaults to now."),
-      fbclid: z.string().optional().describe("Optional Facebook click ID for fbc cookie attribution"),
+      fbclid: z.string().optional().describe("Optional Facebook click ID; the server builds a well-formed fbc cookie from it"),
+      fbc: z.string().optional().describe("Optional pre-formatted Facebook click cookie (fb.1.<ms>.<fbclid>), forwarded raw — never hashed"),
+      fbp: z.string().optional().describe("Optional Facebook browser ID cookie (_fbp), forwarded raw — never hashed. Improves match quality for every event"),
     },
-    async ({ business_id, source_stage, crm_source, lead_id, meta_lead_id, email, phone, first_name, last_name, value, event_time, fbclid }) => {
+    async ({ business_id, source_stage, crm_source, lead_id, meta_lead_id, email, phone, first_name, last_name, value, event_time, fbclid, fbc, fbp }) => {
       try {
         const resolvedBusinessId = await client.resolveBusinessId(business_id);
         const body: Record<string, unknown> = {
@@ -2101,9 +2133,77 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
         if (value !== undefined) body.value = value;
         if (event_time) body.event_time = event_time;
         if (fbclid) body.fbclid = fbclid;
+        if (fbc) body.fbc = fbc;
+        if (fbp) body.fbp = fbp;
 
         const result = await client.post("/capi/events", body);
         return formatResult(appendHint(result, "Event dispatched. Check the status field: 'sent' = successfully delivered to Meta, 'skipped' = CAPI disabled or stage unmapped, 'failed' = Meta rejected the event. Use zuckerbot_capi_status for aggregate delivery metrics."));
+      } catch (err) {
+        return formatError(err);
+      }
+    },
+  );
+
+  // ── 26. Spec Mode — Campaign From Spec ─────────────────────────
+  server.tool(
+    "zuckerbot_create_campaign_from_spec",
+    "Build a complete Meta campaign VERBATIM from a declarative JSON spec — no strategy generation, no copy authoring. Everything is created PAUSED, always; launching remains a separate deliberate call. Recommended flow: send with dry_run=true first to get the fully resolved Graph API payloads without creating anything, review them, then re-send without dry_run to build. Validation failures return per-field errors (path + message). Spec shape: campaign {name, objective OUTCOME_LEADS|OUTCOME_SALES, budget {type CBO_DAILY, amount, bid_strategy HIGHEST_VOLUME|LOWEST_COST_WITHOUT_CAP|COST_CAP}, special_ad_categories}, ad_sets [{name, conversion_location WEBSITE, pixel_id, optimisation_event {type CUSTOM_CONVERSION, id}|{type STANDARD, event}, performance_goal, attribution {click_days, view_days}, targeting {geo, age_min, advantage_audience, excluded_custom_audiences}, placements {mode MANUAL, exclude}}], ads [{name, asset {type IMAGE_SET, refs {1x1,4x5,9x16 — https URLs or uploaded image hashes}}|{type VIDEO, ref — pre-uploaded Meta video id}, primary_text, headline, description, cta, final_url, ad_set_name?}]. Use zuckerbot_list_custom_conversions to find custom conversion ids.",
+    {
+      business_id: z.string().optional().describe("Optional business ID override for the authenticated API key"),
+      spec: z.record(z.string(), z.any()).describe("The declarative campaign spec (see tool description for the shape)"),
+      dry_run: z.boolean().optional().describe("true = return the resolved Graph payloads without creating anything. Strongly recommended before a real build"),
+    },
+    async ({ business_id, spec, dry_run }) => {
+      try {
+        const resolvedBusinessId = await client.resolveBusinessId(business_id);
+        const body: Record<string, unknown> = { business_id: resolvedBusinessId, spec };
+        if (dry_run !== undefined) body.dry_run = dry_run;
+        const result = await client.post("/campaigns/from-spec", body);
+        return formatResult(appendHint(result, "If this was a dry run, review would_create then re-send without dry_run. If it built: the campaign is PAUSED and spends nothing — inspect it in Ads Manager, then launch deliberately when ready."));
+      } catch (err) {
+        return formatError(err);
+      }
+    },
+  );
+
+  // ── 27. Custom Conversions — List ──────────────────────────────
+  server.tool(
+    "zuckerbot_list_custom_conversions",
+    "List the custom conversions on the connected ad account: id, name, rule, source event and pixel. Use this to find the custom conversion id a campaign spec's optimisation_event should reference.",
+    {
+      business_id: z.string().optional().describe("Optional business ID override for the authenticated API key"),
+    },
+    async ({ business_id }) => {
+      try {
+        const resolvedBusinessId = await client.resolveBusinessId(business_id);
+        const params = new URLSearchParams({ business_id: resolvedBusinessId });
+        const result = await client.get(`/custom-conversions?${params.toString()}`);
+        return formatResult(appendHint(result, "Reference a conversion by id in a spec's optimisation_event: { type: 'CUSTOM_CONVERSION', id }. To create one, call zuckerbot_create_custom_conversion."));
+      } catch (err) {
+        return formatError(err);
+      }
+    },
+  );
+
+  // ── 28. Custom Conversions — Create ────────────────────────────
+  server.tool(
+    "zuckerbot_create_custom_conversion",
+    "Create a custom conversion on the connected ad account (requires sufficient Graph permissions on the Meta token — returns insufficient_permission if Meta refuses). Provide the pixel, a name, optionally a rule (e.g. URL contains ...) and the source event type.",
+    {
+      business_id: z.string().optional().describe("Optional business ID override for the authenticated API key"),
+      name: z.string().describe("Display name for the custom conversion"),
+      pixel_id: z.string().describe("Pixel (event source) the conversion is based on"),
+      custom_event_type: z.string().optional().describe("Source event type, defaults to OTHER"),
+      rule: z.record(z.string(), z.any()).optional().describe("Optional Meta rule object, e.g. {\"url\":{\"i_contains\":\"/thank-you\"}}"),
+    },
+    async ({ business_id, name, pixel_id, custom_event_type, rule }) => {
+      try {
+        const resolvedBusinessId = await client.resolveBusinessId(business_id);
+        const body: Record<string, unknown> = { business_id: resolvedBusinessId, name, pixel_id };
+        if (custom_event_type) body.custom_event_type = custom_event_type;
+        if (rule) body.rule = rule;
+        const result = await client.post("/custom-conversions", body);
+        return formatResult(appendHint(result, "Custom conversion created. Reference it in a campaign spec as optimisation_event { type: 'CUSTOM_CONVERSION', id }."));
       } catch (err) {
         return formatError(err);
       }
