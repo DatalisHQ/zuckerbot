@@ -343,6 +343,9 @@ export interface CampaignInsightsBreakdownRow {
 export interface CampaignInsightsAd {
   id: string;
   name: string | null;
+  /** The ad's OWN status (null when the status fetch failed or the id is synthetic). */
+  status?: string | null;
+  effective_status?: string | null;
   metrics: CampaignInsightsMetrics;
   video_metrics?: {
     avg_time_watched: number | null;
@@ -357,6 +360,9 @@ export interface CampaignInsightsAd {
 export interface CampaignInsightsAdset {
   id: string;
   name: string | null;
+  /** The ad set's OWN status (null when the status fetch failed or the id is synthetic). */
+  status?: string | null;
+  effective_status?: string | null;
   metrics: CampaignInsightsMetrics;
   daily_breakdown?: CampaignInsightsBreakdownRow[];
   ads?: CampaignInsightsAd[];
@@ -383,6 +389,10 @@ export interface CampaignInsightsResult {
   name: string | null;
   status: string | null;
   effective_status: string | null;
+  /** Which entity the status above belongs to. Adset/ad rows carry their
+   * OWN status when Meta returned it; 'campaign' marks the inherited
+   * fallback (status fetch failed or synthetic id). */
+  status_scope: "campaign" | "adset" | "ad";
   daily_budget: number | null;
   lifetime_budget: number | null;
   is_zuckerbot: boolean;
@@ -433,6 +443,15 @@ export interface CampaignInsightsResponse {
   };
   campaigns: CampaignInsightsCampaign[];
   fetched_at: string;
+  /** When status/effective_status were last synced from Meta; cached
+   * responses replay their original timestamp. */
+  status_synced_at?: string;
+  /** True when the adset/ad own-status fetch failed and rows fell back to
+   * campaign-scope statuses. */
+  entity_status_degraded?: boolean;
+  /** Field-by-field labelling of the lead metrics (raw vs deduped vs
+   * authoritative). */
+  metric_semantics?: Record<string, string>;
 }
 
 export interface ApproveCampaignStrategyRequest {

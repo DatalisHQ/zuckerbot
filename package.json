@@ -1,6 +1,6 @@
 {
   "name": "zuckerbot-mcp",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "CLI + MCP server for ZuckerBot — manage, audit and generate Meta ad campaigns from Claude or any AI agent",
   "type": "module",
   "bin": {
