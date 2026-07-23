@@ -70,6 +70,7 @@ const allowedTopLevel = new Set([
   "CLAUDE.md",
   "LICENSE",
   "README.md",
+  "glama.json",
   "package-lock.json",
   "package.json",
   "scripts",
