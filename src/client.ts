@@ -17,6 +17,13 @@ export class ZuckerBotApiError extends Error {
     public readonly errorCode: string,
     message: string,
     public readonly retryAfter?: number,
+    /**
+     * Structured fields the API attached to the error envelope beyond
+     * code/message/retry_after — e.g. invalid_spec's per-field `errors`
+     * array, or spec_build_failed's step/meta_response/cleaned_up. Carried
+     * verbatim so tools can surface them instead of a bare message.
+     */
+    public readonly details?: Record<string, unknown>,
   ) {
     super(message);
     this.name = "ZuckerBotApiError";
@@ -85,12 +92,27 @@ export class ZuckerBotClient {
       const message = err?.message || `API request failed with status ${response.status}`;
       const retryAfter = err?.retry_after;
 
+      // Preserve every OTHER field on the error envelope (per-field `errors`
+      // arrays, build-failure step/meta_response, etc.) so validation detail
+      // survives to the tool surface instead of collapsing to one message.
+      let details: Record<string, unknown> | undefined;
+      if (err) {
+        const rest: Record<string, unknown> = { ...(err as Record<string, unknown>) };
+        delete rest.code;
+        delete rest.message;
+        delete rest.retry_after;
+        if (err === flat) delete rest.error;
+        if (Object.keys(rest).length > 0) details = rest;
+      }
+
       switch (response.status) {
         case 401:
           throw new ZuckerBotApiError(
             401,
             code,
             `Authentication failed: ${message}. Check your ZUCKERBOT_API_KEY.`,
+            undefined,
+            details,
           );
         case 429:
           throw new ZuckerBotApiError(
@@ -98,15 +120,18 @@ export class ZuckerBotClient {
             code,
             `Rate limit exceeded: ${message}${retryAfter ? ` Retry after ${retryAfter}s.` : ""}`,
             retryAfter,
+            details,
           );
         case 502:
           throw new ZuckerBotApiError(
             502,
             code,
             `Upstream generation error: ${message}`,
+            undefined,
+            details,
           );
         default:
-          throw new ZuckerBotApiError(response.status, code, message, retryAfter);
+          throw new ZuckerBotApiError(response.status, code, message, retryAfter, details);
       }
     }
 
