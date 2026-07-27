@@ -25,12 +25,15 @@ function formatResult(data: unknown): { content: Array<{ type: "text"; text: str
 
 function formatError(err: unknown): { content: Array<{ type: "text"; text: string }>; isError: true } {
   if (err instanceof ZuckerBotApiError) {
+    // Details spread FIRST so structured fields (e.g. invalid_spec's
+    // per-field `errors` array) can never mask the canonical envelope keys.
     return {
       content: [
         {
           type: "text" as const,
           text: JSON.stringify(
             {
+              ...(err.details || {}),
               error: true,
               code: err.errorCode,
               status: err.statusCode,
@@ -1157,20 +1160,34 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
   // ── 4. Pause Campaign ──────────────────────────────────────────
   server.tool(
     "zuckerbot_pause_campaign",
-    "Pause a running Meta ad campaign. Pausing stops ad delivery and spend immediately while leaving the campaign in Meta. Use this when creative needs refreshing, budget is exhausted, entitlement is withdrawn, or the user asks to stop spending. Resume is temporarily disabled during Dealify launch hardening.",
+    "Pause delivery at any level: a whole campaign (default), one ad set, or one ad — set entity_level and pass the matching id. Pausing stops delivery and spend immediately while leaving the object in Meta, and the response reports the prior status. Use adset/ad level to stop an underperformer WITHOUT killing the winners in the same campaign. Resume is temporarily disabled during Dealify launch hardening.",
     {
-      campaign_id: z.string().describe("ZuckerBot campaign ID"),
+      campaign_id: z.string().optional().describe("ZuckerBot campaign ID (required when entity_level is campaign — the default)"),
+      entity_level: z
+        .enum(["campaign", "adset", "ad"])
+        .default("campaign")
+        .describe("What to pause: the whole campaign, one ad set, or one ad"),
+      entity_id: z.string().optional().describe("Numeric Meta ad set or ad ID (required when entity_level is adset or ad)"),
       action: z
         .literal("pause")
         .default("pause")
         .describe("Pause the campaign"),
     },
-    async ({ campaign_id, action }) => {
+    async ({ campaign_id, entity_level, entity_id, action }) => {
       try {
-        const result = await client.post(`/campaigns/${campaign_id}/pause`, {
+        if (entity_level === "campaign") {
+          if (!campaign_id) {
+            throw new ZuckerBotApiError(400, "validation_error", "campaign_id is required when entity_level is campaign.");
+          }
+        } else if (!entity_id || !/^\d+$/.test(entity_id)) {
+          throw new ZuckerBotApiError(400, "validation_error", "entity_id (the numeric Meta ad set or ad id) is required when entity_level is adset or ad.");
+        }
+        const pathId = entity_level === "campaign" ? (campaign_id as string) : (entity_id as string);
+        const result = await client.post(`/campaigns/${encodeURIComponent(pathId)}/pause`, {
           action,
+          entity_level,
         });
-        return formatResult(appendHint(result, "Campaign paused. Call zuckerbot_get_performance to confirm delivery has stopped, or zuckerbot_get_campaign to inspect the full workflow state."));
+        return formatResult(appendHint(result, "Paused — the response shows which entity and its prior status. Call zuckerbot_get_performance to confirm delivery has stopped, or zuckerbot_get_campaign to inspect the full workflow state."));
       } catch (err) {
         return formatError(err);
       }
@@ -1449,7 +1466,7 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
   // ── 6. Get Account Insights ───────────────────────────────────
   server.tool(
     "zuckerbot_get_account_insights",
-    "Fetch historical Meta ad account performance for a connected business over a date range. Returns spend, clicks, impressions, CTR, CPM, CPC, and frequency aggregated daily or monthly. Useful for top-level budget reporting and month-over-month trend analysis without opening Ads Manager.",
+    "Fetch historical Meta ad account performance for a connected business over a date range. Returns spend, clicks, impressions, CTR, CPM, CPC, and frequency aggregated daily or monthly. AUTO-PAGINATES the full requested range; the response includes row_count, covered {date_from, date_to} (the range actually returned) and truncated — truncated=true means the fetch stopped early: narrow the date range and re-request rather than trusting totals. Note zero-delivery days are legitimately absent from data, so also compare covered against the range you asked for. Useful for top-level budget reporting and month-over-month trend analysis without opening Ads Manager.",
     {
       business_id: z.string().optional().describe("Optional business ID override linked to the connected Meta ad account"),
       date_from: z.string().describe("Start date in YYYY-MM-DD format"),
@@ -1469,7 +1486,7 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
           time_increment,
         });
         const result = await client.get(`/ad-account/insights?${params.toString()}`);
-        return formatResult(appendHint(result, "For campaign-level breakdown, use zuckerbot_get_campaign_insights with the same date range. For creative-level patterns, use zuckerbot_creative_analysis."));
+        return formatResult(appendHint(result, "Check truncated before summing: true means the series stopped early — narrow the range and re-request. For campaign-level breakdown, use zuckerbot_get_campaign_insights with the same date range. For creative-level patterns, use zuckerbot_creative_analysis."));
       } catch (err) {
         return formatError(err);
       }
@@ -2147,7 +2164,7 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
   // ── 26. Spec Mode — Campaign From Spec ─────────────────────────
   server.tool(
     "zuckerbot_create_campaign_from_spec",
-    "Build a complete Meta campaign VERBATIM from a declarative JSON spec — no strategy generation, no copy authoring. Everything is created PAUSED, always; launching remains a separate deliberate call. Recommended flow: send with dry_run=true first to get the fully resolved Graph API payloads without creating anything, review them, then re-send without dry_run to build. Validation failures return per-field errors (path + message). Spec shape: campaign {name, objective OUTCOME_LEADS|OUTCOME_SALES, budget {type CBO_DAILY, amount, bid_strategy HIGHEST_VOLUME|LOWEST_COST_WITHOUT_CAP|COST_CAP}, special_ad_categories}, ad_sets [{name, conversion_location WEBSITE, pixel_id, optimisation_event {type CUSTOM_CONVERSION, id}|{type STANDARD, event}, performance_goal, attribution {click_days, view_days}, targeting {geo, age_min, advantage_audience, excluded_custom_audiences}, placements {mode MANUAL, exclude}}], ads [{name, asset {type IMAGE_SET, refs {1x1,4x5,9x16 — https URLs or uploaded image hashes}}|{type VIDEO, ref — pre-uploaded Meta video id}, primary_text, headline, description, cta, final_url, ad_set_name?}]. Use zuckerbot_list_custom_conversions to find custom conversion ids.",
+    "Build a complete Meta campaign VERBATIM from a declarative JSON spec — no strategy generation, no copy authoring. Everything is created PAUSED, always; launching remains a separate deliberate call. Recommended flow: send with dry_run=true first to get the fully resolved Graph API payloads without creating anything, review them, then re-send without dry_run to build. Validation failures return an errors array of per-field {path, message, kind: schema|semantic} entries — fix each path and retry. Spec shape: campaign {name, objective OUTCOME_LEADS|OUTCOME_SALES, budget {type CBO_DAILY, amount, bid_strategy HIGHEST_VOLUME|LOWEST_COST_WITHOUT_CAP|COST_CAP}, special_ad_categories}, ad_sets [{name, conversion_location WEBSITE|INSTANT_FORM, attribution {click_days 1|7, view_days 0|1}, targeting {geo — ARRAY of 2-letter country codes e.g. [\"AU\"], age_min, advantage_audience, excluded_custom_audiences}, placements {mode MANUAL|ADVANTAGE_PLUS, exclude}; WEBSITE additionally: pixel_id, optimisation_event {type CUSTOM_CONVERSION, id}|{type STANDARD, event e.g. Lead}, performance_goal MAXIMISE_CONVERSIONS (the Ads Manager label, not the Graph enum); INSTANT_FORM instead: lead_form_id — the Meta instant form on the connected Page (no pixel_id, no optimisation_event, and its ads take NO final_url — the form is the destination; single-image creative, no multi-ratio placement customisation)}], ads [{name, asset {type IMAGE_SET, refs {1x1,4x5,9x16 — https URLs or uploaded image hashes}}|{type VIDEO, ref — pre-uploaded Meta video id}|{type EXISTING_AD, ad_id — clones that ad's image/video asset from the SAME ad account; copy, CTA and destination come from THIS spec}, primary_text, headline, description, cta, final_url (WEBSITE ad sets only), ad_set_name?}]. EXISTING_AD specs need Meta credentials even for dry_run (the source asset is read from Meta). Use zuckerbot_list_custom_conversions to find custom conversion ids.",
     {
       business_id: z.string().optional().describe("Optional business ID override for the authenticated API key"),
       spec: z.record(z.string(), z.any()).describe("The declarative campaign spec (see tool description for the shape)"),
