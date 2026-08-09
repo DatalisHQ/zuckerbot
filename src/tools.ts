@@ -172,12 +172,12 @@ function buildQuickstartPayload(client: ZuckerBotClient): Record<string, unknown
         flow: "quick_launch",
       },
     ],
-    pricing: "Free: 1,000 calls/month, read-only including the account audit. Pro: $49/mo with 50K calls and all tools. Scale: $149/mo with 500K calls and all tools. Lifetime licences (Dealify): Tier 1 1 ad account/2.5K calls/mo, Tier 2 3 accounts/10K, Tier 3 10 accounts/30K — redeem with zuckerbot_redeem_license.",
+    pricing: "Free: 1,000 calls/month, read-only including the account audit. Pro: $49/mo with 50K calls and all tools. Scale: $149/mo with 500K calls and all tools. Lifetime licences: Tier 1 1 ad account/2.5K calls/mo, Tier 2 3 accounts/10K, Tier 3 10 accounts/30K — redeem with zuckerbot_redeem_license.",
     billing_tiers: {
       free: "1,000 calls/month, read-only (performance, research, analysis, audit)",
       pro: "$49/mo, 50K calls, all tools",
       scale: "$149/mo, 500K calls, agencies",
-      lifetime: "Lifetime licences (Dealify): Tier 1 1 ad account/2.5K calls/mo, Tier 2 3 accounts/10K, Tier 3 10 accounts/30K — redeem with zuckerbot_redeem_license",
+      lifetime: "Lifetime licences: Tier 1 1 ad account/2.5K calls/mo, Tier 2 3 accounts/10K, Tier 3 10 accounts/30K — redeem with zuckerbot_redeem_license",
     },
     docs: DOCS_URL,
   };
@@ -552,10 +552,17 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
         const reportHint = reportUrl
           ? ` A shareable web report was saved — give the user this link: ${reportUrl}`
           : " No shareable report was saved because this API key does not resolve to one saved business.";
+        // CA-07: the async creative-analysis state rides in rawInsights (not
+        // campaign_rows, so the delete above does not drop it). The stable
+        // poll/read interface is the existing public report endpoint.
+        const creativeAnalysis = asRecord(raw?.creative_analysis);
+        const creativeHint = typeof creativeAnalysis?.status === "string"
+          ? ` Creative attribute analysis is ${creativeAnalysis.status}; re-check the saved report (report_url → GET /api/audit/<id>) or query zuckerbot_get_creative_attributes after completion.`
+          : "";
         return formatResult(
           appendHint(
             result,
-            `Audit complete.${reportHint}${partialDataHint}${scoreHint}${currencyHint} Present complete observed findings and audit.rawInsights.action_items to the user, then act on them: zuckerbot_get_performance to drill into a specific campaign, zuckerbot_pause_campaign to stop wasted spend, or zuckerbot_creative_analysis to diagnose fatigued creatives.`,
+            `Audit complete.${reportHint}${partialDataHint}${scoreHint}${currencyHint}${creativeHint} Present complete observed findings and audit.rawInsights.action_items to the user, then act on them: zuckerbot_get_performance to drill into a specific campaign, zuckerbot_pause_campaign to stop wasted spend, or zuckerbot_creative_analysis to diagnose fatigued creatives.`,
           ),
         );
       } catch (err) {
@@ -778,7 +785,7 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
   // ── 8. Preview Campaign ─────────────────────────────────────────
   server.tool(
     "zuckerbot_preview_campaign",
-    "Generate a zero-cost campaign preview from any business URL. Scrapes the site, writes AI-generated headlines and body copy, and generates ad images — all without a Meta account or live budget. Use this as the first step to show a user what their ads could look like before committing to a full campaign.",
+    "Generate a zero-cost campaign preview from any business URL. Scrapes the site and writes AI-generated headlines and body copy, using the site's own imagery for the mockup — all without a Meta account or live budget. Use this as the first step to show a user what their ads could look like before committing to a full campaign.",
     {
       url: z.string().describe("Business website URL to generate ads for"),
       ad_count: z
@@ -805,7 +812,7 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
   // ── 7. Create Campaign ──────────────────────────────────────────
   server.tool(
     "zuckerbot_create_campaign",
-    "Create a new campaign draft for a business. Defaults to legacy mode, the only launch-ready path during Dealify hardening. Intelligence mode remains available for planning only and cannot be activated. This tool does not spend money or create anything on Meta; review the draft, then use zuckerbot_launch_campaign.",
+    "Create a new campaign draft for a business. Defaults to legacy mode, which is the only launch-ready path. Intelligence mode remains available for planning only and cannot be activated. This tool does not spend money or create anything on Meta; review the draft, then use zuckerbot_launch_campaign.",
     {
       url: z.string().describe("Business website URL"),
       business_id: z.string().optional().describe("Existing ZuckerBot business ID to anchor intelligence mode"),
@@ -1053,7 +1060,7 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
 
   server.tool(
     "zuckerbot_activate_campaign",
-    "Temporarily unavailable during Dealify launch hardening. Intelligence campaigns are planning-only; create a legacy-mode draft and use zuckerbot_launch_campaign for the supported live path.",
+    "Not currently available. Intelligence campaigns are planning-only; create a legacy-mode draft and use zuckerbot_launch_campaign for the supported live path.",
     {
       campaign_id: z.string().describe("Intelligence campaign ID"),
       tier_names: z.array(z.string()).optional().describe("Optional subset of approved tiers to activate"),
@@ -1101,6 +1108,9 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
           strategy_summary: strategy.strategy_summary ?? null,
           audience_tiers: audienceTiers,
           creative_angles: creativeAngles,
+          // This tool rebuilds its payload from picked keys — carry the
+          // version echo through so it is present on every tool response.
+          zb_version: detail.zb_version ?? null,
         }, "Review the angles and tiers. Call zuckerbot_approve_campaign_strategy with specific tier_names and angle_names to narrow the plan before production."));
       } catch (err) {
         return formatError(err);
@@ -1160,7 +1170,7 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
   // ── 4. Pause Campaign ──────────────────────────────────────────
   server.tool(
     "zuckerbot_pause_campaign",
-    "Pause delivery at any level: a whole campaign (default), one ad set, or one ad — set entity_level and pass the matching id. Pausing stops delivery and spend immediately while leaving the object in Meta, and the response reports the prior status. Use adset/ad level to stop an underperformer WITHOUT killing the winners in the same campaign. Resume is temporarily disabled during Dealify launch hardening.",
+    "Pause delivery at any level: a whole campaign (default), one ad set, or one ad — set entity_level and pass the matching id. Pausing stops delivery and spend immediately while leaving the object in Meta, and the response reports the prior status. Use adset/ad level to stop an underperformer WITHOUT killing the winners in the same campaign. Resume is not currently available through ZuckerBot — paused objects are resumed from Meta Ads Manager.",
     {
       campaign_id: z.string().optional().describe("ZuckerBot campaign ID (required when entity_level is campaign — the default)"),
       entity_level: z
@@ -1225,8 +1235,12 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
       include_ads: z.boolean().optional().describe("When true, include the top 5 and bottom 5 ads by the selected metric."),
       summary_mode: z.boolean().optional()
         .describe("When true, returns a condensed narrative summary optimised for feeding into recommend_campaign_structure. Default: false."),
+      cohort: z.enum(["objective"]).optional()
+        .describe("Set to 'objective' to group results by campaign objective family instead of pooling every campaign together. Cohorts with too little evidence are labelled insufficient, and ads without a stored objective are counted as unlabelled_ads."),
+      objective_family: z.enum(["leads", "sales", "traffic", "awareness", "engagement", "app", "unknown"]).optional()
+        .describe("With cohort='objective', restrict results to one objective family."),
     },
-    async ({ business_id, group_by, metric, date_from, date_to, min_spend, min_impressions, include_ads, summary_mode }) => {
+    async ({ business_id, group_by, metric, date_from, date_to, min_spend, min_impressions, include_ads, summary_mode, cohort, objective_family }) => {
       try {
         const resolvedBusinessId = await client.resolveBusinessId(business_id);
         const params = new URLSearchParams({ business_id: resolvedBusinessId, group_by });
@@ -1237,6 +1251,8 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
         if (min_impressions !== undefined) params.set("min_impressions", String(min_impressions));
         if (include_ads) params.set("include_ads", "true");
         if (summary_mode) params.set("summary_mode", "true");
+        if (cohort) params.set("cohort", cohort);
+        if (objective_family) params.set("objective_family", objective_family);
         const result = await client.get(`/creative/analysis?${params.toString()}`);
         return formatResult(appendHint(result, "Analysis complete. Call zuckerbot_creative_cross_analysis to find winning attribute combinations, rerun with include_ads=true to inspect the best and worst individual ads, or use zuckerbot_generate_briefs to produce new creative briefs weighted toward the strongest patterns. Feed these insights into zuckerbot_recommend_campaign_structure for data-driven campaign planning."));
       } catch (err) {
@@ -1256,8 +1272,12 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
       date_from: z.string().optional().describe("Optional start date in YYYY-MM-DD"),
       date_to: z.string().optional().describe("Optional end date in YYYY-MM-DD"),
       min_spend: z.number().optional().describe("Optional minimum spend threshold per ad"),
+      cohort: z.enum(["objective"]).optional()
+        .describe("Set to 'objective' to compute one matrix per campaign objective family instead of pooling every campaign together."),
+      objective_family: z.enum(["leads", "sales", "traffic", "awareness", "engagement", "app", "unknown"]).optional()
+        .describe("With cohort='objective', restrict results to one objective family."),
     },
-    async ({ business_id, group_by, cross_by, metric, date_from, date_to, min_spend }) => {
+    async ({ business_id, group_by, cross_by, metric, date_from, date_to, min_spend, cohort, objective_family }) => {
       try {
         const resolvedBusinessId = await client.resolveBusinessId(business_id);
         const params = new URLSearchParams({
@@ -1269,6 +1289,8 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
         if (date_from) params.set("date_from", date_from);
         if (date_to) params.set("date_to", date_to);
         if (min_spend !== undefined) params.set("min_spend", String(min_spend));
+        if (cohort) params.set("cohort", cohort);
+        if (objective_family) params.set("objective_family", objective_family);
         const result = await client.get(`/creative/analysis/cross?${params.toString()}`);
         const bestCombination =
           result && typeof result === "object"
@@ -1350,15 +1372,16 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
 
   server.tool(
     "zuckerbot_create_seed_audience",
-    "Build a Meta custom audience from hashed CAPI user data stored for a business, filtered by CRM lifecycle stage (e.g., 'lead', 'customer'). Use this as the first step to create retargeting or reactivation audiences from your own first-party CRM data.",
+    "Build a Meta custom audience from hashed CAPI user data stored for a business, filtered by CRM lifecycle stage (e.g., 'lead', 'customer'). Use this as the first step to create retargeting or reactivation audiences from your own first-party CRM data. Passing adopt_meta_audience_id recovers a seed audience that was created on Meta but failed to register (from a prior audience_registry_write_failed error): it skips Meta audience creation and user upload and only writes the registry record.",
     {
       business_id: z.string().optional().describe("Optional business ID override"),
       source_stage: z.string().describe("CRM lifecycle or source stage to seed from"),
       name: z.string().optional().describe("Optional audience name override"),
       lookback_days: z.number().int().optional().describe("How many days of CAPI events to include"),
       min_contacts: z.number().int().optional().describe("Minimum matched contacts required before creation"),
+      adopt_meta_audience_id: z.string().optional().describe("Recovery only: the meta_audience_id from a prior audience_registry_write_failed error. Verifies the audience exists on the bound ad account, then registers it without re-creating it or re-uploading users."),
     },
-    async ({ business_id, source_stage, name, lookback_days, min_contacts }) => {
+    async ({ business_id, source_stage, name, lookback_days, min_contacts, adopt_meta_audience_id }) => {
       try {
         const resolvedBusinessId = await client.resolveBusinessId(business_id);
         const body: Record<string, unknown> = { source_stage };
@@ -1366,6 +1389,7 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
         if (name) body.name = name;
         if (lookback_days !== undefined) body.lookback_days = lookback_days;
         if (min_contacts !== undefined) body.min_contacts = min_contacts;
+        if (adopt_meta_audience_id) body.adopt_meta_audience_id = adopt_meta_audience_id;
         const result = await client.post("/audiences/create-seed", body);
         return formatResult(appendHint(result, "Seed audience created. Call zuckerbot_create_lookalike_audience with the returned seed_audience_id to expand it into a 1–5% lookalike prospecting audience."));
       } catch (err) {
@@ -1738,18 +1762,42 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
   // ── 15. Lead Forms (list + select) ────────────────────────────
   server.tool(
     "zuckerbot_lead_forms",
-    "List Meta lead forms (Instant Forms) available on the selected Facebook Page and show which is currently selected. Optionally select a form by providing select_id to persist it for future lead generation campaign launches. Use this before launching a leads-objective campaign so ZuckerBot reuses the business's CRM-connected form rather than creating a new one.",
+    "List Meta lead forms (Instant Forms) available on the selected Facebook Page and show which is currently selected. Listing is a pure read scoped to the selected Page (page_scope: selected_page) and never changes the selection. If the list is truncated, re-call with the returned next_cursor as after. Optionally select a form by providing select_id to persist it for future lead generation campaign launches. Use this before launching a leads-objective campaign so ZuckerBot reuses the business's CRM-connected form rather than creating a new one.",
     {
       select_id: z.string().optional().describe("If provided, selects this Meta lead form ID for future lead generation launches. If omitted, lists all available forms."),
+      after: z.string().optional().describe("Opaque pagination cursor from a previous truncated list response (next_cursor). Ignored when select_id is provided."),
     },
-    async ({ select_id }) => {
+    async ({ select_id, after }) => {
       try {
         if (select_id) {
           const result = await client.post("/lead-forms/select", { form_id: select_id });
           return formatResult(appendHint(result, "Lead form selected. It will be used for all future leads-objective campaign launches for this business. Call zuckerbot_launch_campaign to go live."));
         }
-        const result = await client.get("/lead-forms");
-        return formatResult(appendHint(result, "Review available lead forms. Call zuckerbot_lead_forms with select_id to choose the form connected to your CRM."));
+        const params = new URLSearchParams();
+        if (after) params.set("after", after);
+        const query = params.toString();
+        const result = await client.get(query ? `/lead-forms?${query}` : "/lead-forms");
+        return formatResult(appendHint(result, "Review available lead forms. If truncated is true, re-call with after set to next_cursor. Call zuckerbot_get_lead_form for full questions/privacy detail, or zuckerbot_lead_forms with select_id to choose the form connected to your CRM."));
+      } catch (err) {
+        return formatError(err);
+      }
+    },
+  );
+
+  // ── 15b. Lead Submissions Export (D7) ──────────────────────────
+  server.tool(
+    "zuckerbot_export_leads",
+    "Export lead submissions from a Meta instant form (lead form) for a date range: each lead's id, created_time and submitted field values. Returns BARE numeric lead ids — Meta's own CSV export prefixes ids with 'l:', which is a CSV artifact, not part of the id; strip it when cross-referencing CSV exports against this tool. Dates are YYYY-MM-DD, UTC, inclusive. Requires the connected Meta token to hold the leads_retrieval permission — if it is missing the error says exactly that; reconnect Meta to grant it. Large ranges are capped (2000 leads / 20 pages / 60s) and flagged truncated: true — narrow the date range and re-call for the remainder. Find form ids with zuckerbot_lead_forms.",
+    {
+      form_id: z.string().describe("The Meta instant form (lead form) id — list them with zuckerbot_lead_forms"),
+      date_from: z.string().describe("Start date, YYYY-MM-DD (UTC, inclusive)"),
+      date_to: z.string().describe("End date, YYYY-MM-DD (UTC, inclusive)"),
+    },
+    async ({ form_id, date_from, date_to }) => {
+      try {
+        const params = new URLSearchParams({ form_id, date_from, date_to });
+        const result = await client.get(`/leads/export?${params.toString()}`);
+        return formatResult(appendHint(result, "If truncated is true, narrow the date range and re-call for the remainder. When cross-referencing a Meta CSV export, strip its 'l:' id prefix first — these ids are the bare numeric form."));
       } catch (err) {
         return formatError(err);
       }
@@ -1857,7 +1905,7 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
   // ── 20. CAPI Status ────────────────────────────────────────────
   server.tool(
     "zuckerbot_capi_status",
-    "Get 7-day and 30-day CAPI delivery statistics for the business: total events sent, events by type (Lead/Contact/Purchase), match quality breakdown, and attribution counts. Use this to confirm CAPI is functioning and that events are being matched by Meta.",
+    "Get 7-day and 30-day CAPI delivery statistics for the business: total events sent, events by type (Lead/Contact/Purchase), match quality and identifier-coverage breakdowns, meta_events_received (Meta's own acknowledged count), and attribution counts. IMPORTANT: `attributed` counts events tied to a campaign — via ZuckerBot lead records or Meta lead resolution (user_data.lead_id resolved to its source campaign; requires the leads_retrieval permission, and a bounded backlog batch resolves on each call) — it does NOT measure Meta-side event matching; delivery health is meta_events_received, match keys are by_identifier. Read the attribution.basis and attribution.note fields before concluding anything from attributed: 0.",
     {
       business_id: z.string().optional().describe("Optional business ID override"),
     },
@@ -1866,7 +1914,7 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
         const resolvedBusinessId = await client.resolveBusinessId(business_id);
         const params = new URLSearchParams({ business_id: resolvedBusinessId });
         const result = await client.get(`/capi/status${params.toString() ? `?${params.toString()}` : ""}`);
-        return formatResult(appendHint(result, "If events_sent is 0 or match quality is 'none', review the config with zuckerbot_get_capi_config and test delivery with zuckerbot_capi_test. If attribution looks good, use zuckerbot_create_seed_audience to build custom audiences from the attributed leads."));
+        return formatResult(appendHint(result, "Delivery health = meta_events_received; match keys = by_identifier. Before concluding anything from attributed, read attribution.basis and attribution.note — attributed counts campaign links (ZB records or Meta lead resolution), not Meta-side matching. If events_sent is 0 or match quality is 'none', review the config with zuckerbot_get_capi_config and test delivery with zuckerbot_capi_test."));
       } catch (err) {
         return formatError(err);
       }
@@ -1920,7 +1968,7 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
   // ── 22. Create Portfolio ───────────────────────────────────────
   server.tool(
     "zuckerbot_create_portfolio",
-    "Create a planning and monitoring-only multi-tier audience portfolio for a business from a shared template (e.g., 'Local Services', 'eCommerce') or a custom tier array. Portfolios split a proposed total budget across prospecting, retargeting, and reactivation tiers with per-tier CPA targets. Portfolio launch is temporarily disabled during Dealify hardening.",
+    "Create a planning and monitoring-only multi-tier audience portfolio for a business from a shared template (e.g., 'Local Services', 'eCommerce') or a custom tier array. Portfolios split a proposed total budget across prospecting, retargeting, and reactivation tiers with per-tier CPA targets. Portfolio launch is not currently available — portfolios are planning and monitoring only.",
     {
       business_id: z.string().optional().describe("Optional business ID override"),
       template_id: z.string().optional().describe("Optional portfolio template ID"),
@@ -2055,7 +2103,7 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
   // ── 27. Launch Portfolio ──────────────────────────────────────
   server.tool(
     "zuckerbot_launch_portfolio",
-    "Temporarily unavailable during Dealify launch hardening. Portfolio planning and monitoring remain available, but new multi-tier launches must not create Meta objects. Create a legacy-mode draft and use zuckerbot_launch_campaign for the supported live path.",
+    "Not currently available. Portfolio planning and monitoring remain available, but new multi-tier launches do not create Meta objects. Create a legacy-mode draft and use zuckerbot_launch_campaign for the supported live path.",
     {
       portfolio_id: z.string().describe("Audience portfolio ID to launch"),
       meta_access_token: z.string().optional().describe("Optional Meta/Facebook access token override"),
@@ -2164,7 +2212,7 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
   // ── 26. Spec Mode — Campaign From Spec ─────────────────────────
   server.tool(
     "zuckerbot_create_campaign_from_spec",
-    "Build a complete Meta campaign VERBATIM from a declarative JSON spec — no strategy generation, no copy authoring. Everything is created PAUSED, always; launching remains a separate deliberate call. Recommended flow: send with dry_run=true first to get the fully resolved Graph API payloads without creating anything, review them, then re-send without dry_run to build. Validation failures return an errors array of per-field {path, message, kind: schema|semantic} entries — fix each path and retry. Spec shape: campaign {name, objective OUTCOME_LEADS|OUTCOME_SALES, budget {type CBO_DAILY, amount, bid_strategy HIGHEST_VOLUME|LOWEST_COST_WITHOUT_CAP|COST_CAP}, special_ad_categories}, ad_sets [{name, conversion_location WEBSITE|INSTANT_FORM, attribution {click_days 1|7, view_days 0|1}, targeting {geo — ARRAY of 2-letter country codes e.g. [\"AU\"], age_min, advantage_audience, excluded_custom_audiences}, placements {mode MANUAL|ADVANTAGE_PLUS, exclude}; WEBSITE additionally: pixel_id, optimisation_event {type CUSTOM_CONVERSION, id}|{type STANDARD, event e.g. Lead}, performance_goal MAXIMISE_CONVERSIONS (the Ads Manager label, not the Graph enum); INSTANT_FORM instead: lead_form_id — the Meta instant form on the connected Page (no pixel_id, no optimisation_event, and its ads take NO final_url — the form is the destination; single-image creative, no multi-ratio placement customisation)}], ads [{name, asset {type IMAGE_SET, refs {1x1,4x5,9x16 — https URLs or uploaded image hashes}}|{type VIDEO, ref — pre-uploaded Meta video id}|{type EXISTING_AD, ad_id — clones that ad's image/video asset from the SAME ad account; copy, CTA and destination come from THIS spec}, primary_text, headline, description, cta, final_url (WEBSITE ad sets only), ad_set_name?}]. EXISTING_AD specs need Meta credentials even for dry_run (the source asset is read from Meta). Use zuckerbot_list_custom_conversions to find custom conversion ids.",
+    "Build a complete Meta campaign VERBATIM from a declarative JSON spec — no strategy generation, no copy authoring. Everything is created PAUSED, always; launching remains a separate deliberate call. Recommended flow: send with dry_run=true first to get the fully resolved Graph API payloads without creating anything, review them, then re-send without dry_run to build. Validation failures return an errors array of per-field {path, message, kind: schema|semantic} entries — fix each path and retry. Spec shape: campaign {name, objective OUTCOME_LEADS|OUTCOME_SALES, budget {type CBO_DAILY, amount, bid_strategy HIGHEST_VOLUME|LOWEST_COST_WITHOUT_CAP|COST_CAP}, special_ad_categories}, ad_sets [{name, conversion_location WEBSITE|INSTANT_FORM, attribution {click_days 1|7, view_days 0|1}, targeting {geo — ARRAY of 2-letter country codes e.g. [\"AU\"], age_min, advantage_audience, excluded_custom_audiences}, placements {mode MANUAL|ADVANTAGE_PLUS, exclude}; WEBSITE additionally: pixel_id, optimisation_event {type CUSTOM_CONVERSION, id}|{type STANDARD, event e.g. Lead}, performance_goal MAXIMISE_CONVERSIONS (the Ads Manager label, not the Graph enum); INSTANT_FORM instead: lead_form_id — the Meta instant form on the connected Page (no pixel_id, no optimisation_event, and its ads take NO final_url — the form is the destination; the creative's required display link is set automatically to the business's stored website, else its Facebook Page URL; single-image creative, no multi-ratio placement customisation)}], ads [{name, asset {type IMAGE_SET, refs {1x1,4x5,9x16 — https URLs or uploaded image hashes}}|{type VIDEO, ref — pre-uploaded Meta video id}|{type EXISTING_AD, ad_id — clones that ad's image/video asset from the SAME ad account; copy, CTA and destination come from THIS spec}|{type EXISTING_POST, ad_id — reuses the SAME page post as that ad (object_story_id), keeping the post's social proof and engagement; or object_story_id \"<pageid>_<postid>\" directly; the post must belong to the connected Page and the source ad to the connected ad account; the post carries ALL copy/CTA/destination, so OMIT primary_text, headline, description, cta and final_url on EXISTING_POST ads — declaring any is rejected as existing_post_copy_conflict}, primary_text, headline, description, cta, final_url (WEBSITE ad sets only; all five omitted for EXISTING_POST), ad_set_name?}]. EXISTING_AD and EXISTING_POST (ad_id form) specs need Meta credentials even for dry_run (the source ad is read from Meta). Use zuckerbot_list_custom_conversions to find custom conversion ids.",
     {
       business_id: z.string().optional().describe("Optional business ID override for the authenticated API key"),
       spec: z.record(z.string(), z.any()).describe("The declarative campaign spec (see tool description for the shape)"),
@@ -2186,16 +2234,18 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
   // ── 27. Custom Conversions — List ──────────────────────────────
   server.tool(
     "zuckerbot_list_custom_conversions",
-    "List the custom conversions on the connected ad account: id, name, rule, source event and pixel. Use this to find the custom conversion id a campaign spec's optimisation_event should reference.",
+    "List the custom conversions on the connected ad account: id, name, rule, source event, pixel and availability (is_unavailable). A pure read of the already-bound ad account — it never binds or consumes an ad-account slot. If the list is truncated, re-call with the returned next_cursor as after. Use this to find the custom conversion id a campaign spec's optimisation_event should reference.",
     {
       business_id: z.string().optional().describe("Optional business ID override for the authenticated API key"),
+      after: z.string().optional().describe("Opaque pagination cursor from a previous truncated list response (next_cursor)"),
     },
-    async ({ business_id }) => {
+    async ({ business_id, after }) => {
       try {
         const resolvedBusinessId = await client.resolveBusinessId(business_id);
         const params = new URLSearchParams({ business_id: resolvedBusinessId });
+        if (after) params.set("after", after);
         const result = await client.get(`/custom-conversions?${params.toString()}`);
-        return formatResult(appendHint(result, "Reference a conversion by id in a spec's optimisation_event: { type: 'CUSTOM_CONVERSION', id }. To create one, call zuckerbot_create_custom_conversion."));
+        return formatResult(appendHint(result, "Reference a conversion by id in a spec's optimisation_event: { type: 'CUSTOM_CONVERSION', id }. If truncated is true, re-call with after set to next_cursor. For rule/source detail and opt-in stats, call zuckerbot_get_custom_conversion. To create one, call zuckerbot_create_custom_conversion."));
       } catch (err) {
         return formatError(err);
       }
@@ -2221,6 +2271,133 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
         if (rule) body.rule = rule;
         const result = await client.post("/custom-conversions", body);
         return formatResult(appendHint(result, "Custom conversion created. Reference it in a campaign spec as optimisation_event { type: 'CUSTOM_CONVERSION', id }."));
+      } catch (err) {
+        return formatError(err);
+      }
+    },
+  );
+
+  // ── 29. Lead Forms — Full Detail (LF-02) ───────────────────────
+  server.tool(
+    "zuckerbot_get_lead_form",
+    "Read one Meta lead form (Instant Form) in full: questions, privacy policy URL and legal content (disclaimer), locale, context card, thank-you page, follow-up action URL, status, created time and lead counts. A pure read — it never changes or persists the selected form. The form must belong to the selected Facebook Page. Find form ids with zuckerbot_lead_forms.",
+    {
+      form_id: z.string().describe("Numeric Meta lead form (Instant Form) id — list them with zuckerbot_lead_forms"),
+    },
+    async ({ form_id }) => {
+      try {
+        const result = await client.get(`/lead-forms/${encodeURIComponent(form_id)}`);
+        return formatResult(appendHint(result, "Inspect the questions, privacy/legal content and thank-you configuration before reusing this form. To make it the launch form, call zuckerbot_lead_forms with select_id — reading never selects."));
+      } catch (err) {
+        return formatError(err);
+      }
+    },
+  );
+
+  // ── 30. Custom Conversions — Full Detail (CC-03) ───────────────
+  server.tool(
+    "zuckerbot_get_custom_conversion",
+    "Read one custom conversion in full: rule, source event (event_source_id/event_source_type), category (custom_event_type), default conversion value, availability (is_unavailable) and creation time, plus mutable_fields — the only fields Meta permits updating (name, description, default_conversion_value; rule/category/source are immutable). Optionally include stats via include_stats with an explicit bounded window (default: last 30 days, capped at 90). A pure read of the already-bound ad account — it never binds or consumes an ad-account slot.",
+    {
+      conversion_id: z.string().describe("Numeric Meta custom conversion id — list them with zuckerbot_list_custom_conversions"),
+      business_id: z.string().optional().describe("Optional business ID override for the authenticated API key"),
+      include_stats: z.boolean().optional().describe("Set true to include conversion stats for a bounded window (default: last 30 days)"),
+      stats_since: z.string().optional().describe("Stats window start, YYYY-MM-DD (UTC, inclusive). Defaults to 30 days before stats_until."),
+      stats_until: z.string().optional().describe("Stats window end, YYYY-MM-DD (UTC, inclusive). Defaults to today."),
+      stats_aggregation: z.string().optional().describe("Stats aggregation: count (default), device_type, host, pixel_fire, unmatched_count, unmatched_usd_amount, url or usd_amount"),
+    },
+    async ({ conversion_id, business_id, include_stats, stats_since, stats_until, stats_aggregation }) => {
+      try {
+        const resolvedBusinessId = await client.resolveBusinessId(business_id);
+        const params = new URLSearchParams({ business_id: resolvedBusinessId });
+        if (include_stats) {
+          params.set("include_stats", "true");
+          if (stats_since) params.set("stats_since", stats_since);
+          if (stats_until) params.set("stats_until", stats_until);
+          if (stats_aggregation) params.set("stats_aggregation", stats_aggregation);
+        }
+        const result = await client.get(`/custom-conversions/${encodeURIComponent(conversion_id)}?${params.toString()}`);
+        return formatResult(appendHint(result, "Only mutable_fields (name, description, default_conversion_value) can change on Meta — rule, category and event source are immutable after creation. Reference this conversion in a spec's optimisation_event: { type: 'CUSTOM_CONVERSION', id }."));
+      } catch (err) {
+        return formatError(err);
+      }
+    },
+  );
+
+  // ── 29. Ads — Duplicate one ad (same account, PAUSED, dry-run first) ──
+  server.tool(
+    "zuckerbot_duplicate_ad",
+    "Duplicate ONE supported ad into an existing ad set in the SAME ad account. Dry-run by default: it returns the exact object plan (1 new creative + 1 new ad) without creating anything; pass execute: true plus an idempotency_key to perform it. The duplicated ad is ALWAYS created PAUSED — activating it is a separate deliberate action. Supported source shapes: static single-image creatives with an accessible image hash, and single pre-uploaded video creatives. Carousel, dynamic/catalogue, existing-post and multi-asset creatives are rejected with the unsupported feature named. A new creative is always built — creative IDs are never reused.",
+    {
+      business_id: z.string().optional().describe("Optional business ID override for the authenticated API key"),
+      source_ad_id: z.string().describe("Numeric Meta ad id to duplicate (must be in the connected ad account)"),
+      target_adset_id: z.string().describe("Numeric Meta ad set id to create the duplicate in (must be an EXISTING ad set in the same ad account)"),
+      name: z.string().optional().describe("Override: name for the new ad (default: '<source name> (copy)')"),
+      primary_text: z.string().optional().describe("Override: primary text / body copy"),
+      headline: z.string().optional().describe("Override: headline"),
+      description: z.string().optional().describe("Override: description"),
+      cta: z.string().optional().describe("Override: uppercase Meta CTA type, e.g. LEARN_MORE or SIGN_UP"),
+      final_url: z.string().optional().describe("Override: destination URL (http/https)"),
+      execute: z.boolean().optional().describe("Default false (dry-run). Set true to actually create the PAUSED duplicate — requires idempotency_key"),
+      idempotency_key: z.string().optional().describe("Required when execute is true. Generate once per logical operation (UUIDv4 recommended); reuse the identical value only when retrying the identical request"),
+    },
+    async ({ business_id, source_ad_id, target_adset_id, name, primary_text, headline, description, cta, final_url, execute, idempotency_key }) => {
+      try {
+        const resolvedBusinessId = await client.resolveBusinessId(business_id);
+        const overrides: Record<string, unknown> = {};
+        if (name !== undefined) overrides.name = name;
+        if (primary_text !== undefined) overrides.primary_text = primary_text;
+        if (headline !== undefined) overrides.headline = headline;
+        if (description !== undefined) overrides.description = description;
+        if (cta !== undefined) overrides.cta = cta;
+        if (final_url !== undefined) overrides.final_url = final_url;
+        const body: Record<string, unknown> = {
+          business_id: resolvedBusinessId,
+          source_ad_id,
+          target_adset_id,
+        };
+        if (Object.keys(overrides).length > 0) body.overrides = overrides;
+        if (execute !== undefined) body.execute = execute;
+        if (idempotency_key !== undefined) body.idempotency_key = idempotency_key;
+        const result = await client.post("/ads/duplicate", body);
+        return formatResult(appendHint(result, execute === true
+          ? "The duplicate was created PAUSED and spends nothing. Review it in Ads Manager, then activate it deliberately when ready."
+          : "This was a dry-run — nothing was created. Review would_create, then re-call with execute: true and an idempotency_key to perform the duplication."));
+      } catch (err) {
+        return formatError(err);
+      }
+    },
+  );
+
+  // ── 31. Creative attributes — versioned read projection (CA-09) ──
+  server.tool(
+    "zuckerbot_get_creative_attributes",
+    "Read the stored creative attribute tags for up to 50 Meta ads in the canonical creative_attributes.v1 shape: the 17 extracted attributes (hook type, visual style, CTA type, copy tone, booleans and more), the extraction lifecycle (tag_status, error class, attempt metadata, legacy_row flag), taxonomy/prompt/model versions, asset/input fingerprints and the campaign objective family. A pure read of already-stored rows — it never triggers extraction and never spends anything. Use after zuckerbot_audit_account reports creative analysis complete, or before zuckerbot_creative_analysis to inspect individual ads.",
+    {
+      business_id: z.string().optional().describe("Optional business ID override for the authenticated API key"),
+      ad_ids: z.array(z.string()).min(1).max(50).describe("Meta ad ids to read (max 50 per request)"),
+      include_raw: z.boolean().optional().describe("Include the raw legacy fields (model_used, confidence_score, tag_error, tagged_by) per item"),
+    },
+    async ({ business_id, ad_ids, include_raw }) => {
+      try {
+        const resolvedBusinessId = await client.resolveBusinessId(business_id);
+        const params = new URLSearchParams({
+          business_id: resolvedBusinessId,
+          ad_ids: ad_ids.join(","),
+        });
+        if (include_raw) params.set("include_raw", "true");
+        const result = await client.get(`/creative/attributes?${params.toString()}`);
+        const items = (result && typeof result === "object"
+          ? (result as { items?: Array<{ lifecycle?: { tag_status?: string } }> }).items
+          : undefined) ?? [];
+        const incomplete = items.filter((item) => item?.lifecycle?.tag_status !== "tagged");
+        const statuses = Array.from(
+          new Set(incomplete.map((item) => item?.lifecycle?.tag_status ?? "missing")),
+        ).join(", ");
+        const hint = incomplete.length > 0
+          ? `${incomplete.length} of ${items.length} ads have no completed attribute extraction (statuses: ${statuses}). Rows marked legacy_row were tagged by an earlier extractor version and are served as-is.`
+          : "All requested ads have completed attribute extraction. Feed these into zuckerbot_creative_analysis (cohort='objective') for objective-aware pattern reads.";
+        return formatResult(appendHint(result, hint));
       } catch (err) {
         return formatError(err);
       }

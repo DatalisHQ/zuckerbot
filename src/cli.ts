@@ -241,13 +241,13 @@ program
 
 program
   .command("resume <campaign_id>")
-  .description("Unavailable during Dealify launch hardening")
+  .description("Not currently available — paused campaigns are resumed from Meta Ads Manager")
   .action(async (campaignId: string) => {
     printFormatted(
       {
         error: true,
         code: "campaign_resume_temporarily_disabled",
-        message: "Campaign resume is temporarily disabled. Create and review a legacy draft, then use the launch command for the supported live path.",
+        message: "Campaign resume is not currently available through ZuckerBot. Resume the paused campaign, ad set or ad from Meta Ads Manager.",
         campaign_id: campaignId,
       },
       "Campaign Resume Unavailable",

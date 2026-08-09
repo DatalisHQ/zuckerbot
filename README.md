@@ -241,6 +241,7 @@ Costs are derived as `spend / count`; Meta's `cost_per_action_type` is non-addit
 Every tool returns a `_hint` field suggesting the logical next step, so your agent always knows what to do next.
 Shorthand: legacy create -> review -> launch -> monitor. Intelligence activation, portfolio launch, and campaign resume are temporarily unavailable during Dealify launch hardening.
 MCP names include `zuckerbot_enrich_business`, `zuckerbot_upload_business_context`, `zuckerbot_get_campaign`, `zuckerbot_activate_campaign`, and `zuckerbot_create_seed_audience`.
+`zuckerbot_duplicate_ad` duplicates one supported ad into an existing ad set in the same ad account — dry-run by default, always created PAUSED, and executes only with an explicit `idempotency_key` so a retry can never create the ad twice.
 
 ## ZuckerBot vs alternatives
 

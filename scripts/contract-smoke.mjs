@@ -25,6 +25,10 @@ const requiredToolNames = [
   "zuckerbot_refresh_audience",
   "zuckerbot_get_audience_status",
   "zuckerbot_delete_audience",
+  "zuckerbot_get_lead_form",
+  "zuckerbot_get_custom_conversion",
+  "zuckerbot_duplicate_ad",
+  "zuckerbot_get_creative_attributes",
 ];
 
 // Creative image/video generation tools — hidden unless
@@ -48,6 +52,7 @@ const requiredDocsSnippets = [
   "/v1/audiences/create-seed",
   "/v1/audiences/create-lal",
   "/v1/audiences/list",
+  "/v1/ads/duplicate",
 ];
 
 const requiredReadmeSnippets = [
@@ -61,6 +66,7 @@ const requiredReadmeSnippets = [
   "zuckerbot_redeem_license",
   "ZUCKERBOT_ENABLE_CREATIVE_TOOLS",
   "https://zuckerbot.ai/api/mcp",
+  "zuckerbot_duplicate_ad",
 ];
 
 const fakeClient = {
