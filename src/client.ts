@@ -11,6 +11,30 @@ const DEFAULT_REQUEST_TIMEOUT_MS = (() => {
   return Number.isFinite(raw) && raw > 0 ? raw : 120_000;
 })();
 
+// ── Declared caller identity (X-10) ─────────────────────────────────
+//
+// DECLARED, NOT VERIFIED: these labels ride as `x-zb-agent` / `x-zb-session`
+// headers so the backend's durable mutation ledger can record WHICH agent
+// asked for a mutation. Any bearer of a valid credential can claim any
+// label — the server records them verbatim (after sanitisation) and must
+// never use them for authorization, entitlements, rate limits or tenancy.
+export interface DeclaredClientIdentity {
+  agent?: string | null;
+  session?: string | null;
+}
+
+// Server-side columns cap declared identity at 120 chars; cap here too so a
+// runaway label can never bloat requests. Non-printable/control characters
+// (incl. CR/LF header injection) are stripped for transport safety.
+const DECLARED_IDENTITY_MAX_LENGTH = 120;
+
+function sanitizeIdentityHeaderValue(raw: string | null | undefined): string | null {
+  if (typeof raw !== "string") return null;
+  const cleaned = raw.replace(/[^\x20-\x7e]/g, "").trim();
+  if (!cleaned) return null;
+  return cleaned.slice(0, DECLARED_IDENTITY_MAX_LENGTH);
+}
+
 export class ZuckerBotApiError extends Error {
   constructor(
     public readonly statusCode: number,
@@ -34,17 +58,35 @@ export class ZuckerBotClient {
   private readonly baseUrl: string;
   private readonly apiKey: string | null;
   private readonly userAgent: string;
+  private readonly version: string;
   private cachedResolvedBusinessId: string | null;
+  private declaredAgent: string | null;
+  private declaredSession: string | null;
   readonly authenticated: boolean;
 
-  constructor(apiKey: string | null, version: string) {
+  constructor(apiKey: string | null, version: string, identity?: DeclaredClientIdentity) {
     this.baseUrl = (
       process.env.ZUCKERBOT_API_URL || "https://zuckerbot.ai/api/v1"
     ).replace(/\/+$/, "");
     this.apiKey = apiKey;
     this.authenticated = !!apiKey;
     this.userAgent = `zuckerbot-mcp/${version}`;
+    this.version = version;
     this.cachedResolvedBusinessId = null;
+    this.declaredAgent = sanitizeIdentityHeaderValue(identity?.agent);
+    this.declaredSession = sanitizeIdentityHeaderValue(identity?.session);
+  }
+
+  /** Update the declared (unverified) caller identity — e.g. once the MCP
+   *  initialize handshake reveals clientInfo. Provided fields overwrite;
+   *  omitted fields are left untouched. */
+  setDeclaredIdentity(identity: DeclaredClientIdentity): void {
+    if (identity.agent !== undefined) {
+      this.declaredAgent = sanitizeIdentityHeaderValue(identity.agent);
+    }
+    if (identity.session !== undefined) {
+      this.declaredSession = sanitizeIdentityHeaderValue(identity.session);
+    }
   }
 
   requireAuth(): void {
@@ -61,8 +103,28 @@ export class ZuckerBotClient {
     return {
       "Content-Type": "application/json",
       "User-Agent": this.userAgent,
+      // Declared identity (X-10): x-zb-client always names this client
+      // software; x-zb-agent / x-zb-session are emitted only when declared.
+      // All three are declared-not-verified labels for the mutation ledger.
+      "x-zb-client": this.userAgent,
+      ...(this.declaredAgent ? { "x-zb-agent": this.declaredAgent } : {}),
+      ...(this.declaredSession ? { "x-zb-session": this.declaredSession } : {}),
       ...(this.apiKey ? { Authorization: `Bearer ${this.apiKey}` } : {}),
     };
+  }
+
+  /**
+   * Version echo (defect brief v2, D10): pair the backend's x-zb-version
+   * header (version+git SHA of the deployment that actually executed the
+   * call) with this package's own version, so every tool response answers
+   * "is the fix deployed, and which service ran this?" on sight.
+   * Defensive header read: unit tests stub fetch with plain objects that
+   * may lack `headers` — the echo must never break response handling.
+   */
+  private zbVersion(response: Response): { server: string | null; client: string } {
+    const headers = (response as { headers?: { get?: (name: string) => string | null } }).headers;
+    const server = typeof headers?.get === "function" ? headers.get("x-zb-version") : null;
+    return { server: server || null, client: this.version };
   }
 
   private async handleResponse(response: Response): Promise<unknown> {
@@ -74,6 +136,8 @@ export class ZuckerBotClient {
     } catch {
       data = { raw: body };
     }
+
+    const zbVersion = this.zbVersion(response);
 
     if (!response.ok) {
       // The API uses two error shapes: nested `{ error: { code, message } }`
@@ -104,6 +168,7 @@ export class ZuckerBotClient {
         if (err === flat) delete rest.error;
         if (Object.keys(rest).length > 0) details = rest;
       }
+      details = { ...(details || {}), zb_version: zbVersion };
 
       switch (response.status) {
         case 401:
@@ -135,6 +200,11 @@ export class ZuckerBotClient {
       }
     }
 
+    // Additive echo on plain-object successes only — a top-level array
+    // (no v1 endpoint returns one today) keeps its shape untouched.
+    if (data && typeof data === "object" && !Array.isArray(data)) {
+      return { ...(data as Record<string, unknown>), zb_version: zbVersion };
+    }
     return data;
   }
 
@@ -167,6 +237,9 @@ export class ZuckerBotClient {
         isTimeout
           ? `Request to ${path} timed out after ${DEFAULT_REQUEST_TIMEOUT_MS}ms — the backend did not respond. Check the ZuckerBot API status, or raise ZUCKERBOT_API_TIMEOUT_MS.`
           : `Network request to ${path} failed: ${err instanceof Error ? err.message : String(err)}`,
+        undefined,
+        // No server was reached — say so explicitly (D10).
+        { zb_version: { server: null, client: this.version } },
       );
     }
   }
