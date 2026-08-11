@@ -36,7 +36,7 @@ Your agent already writes code, manages files, and searches the web. It should m
 ZuckerBot gives any AI agent full Meta Ads capabilities through MCP. No dashboard, no UI to learn, no platform to log into. Your agent installs it, connects your ad account, and gets to work.
 
 **What agents can do with ZuckerBot:**
-- **Audit your ad account in one message** — wasted spend, creative fatigue, opportunity score, prioritised action items (free tier included)
+- **Audit your ad account in one message** — spend flagged for review, creative fatigue, opportunity score, prioritised action items (free tier included)
 - Pull campaign performance and spot what's working
 - Analyse ad creatives and recommend what to test next
 - Build and launch campaigns with targeting and budget
@@ -123,7 +123,7 @@ zuckerbot create https://your-business.com --budget 5000 --objective leads
 ### Audit & Licensing (2)
 | Tool | What it does |
 |------|-------------|
-| `audit_account` | Full read-only account audit: wasted spend, creative fatigue, opportunity score (0-100), projected CPL improvement, prioritised action items. Available on every tier — the recommended first call |
+| `audit_account` | Full read-only account audit: spend flagged for review against each campaign's objective, creative fatigue, opportunity score (0-100), projected CPL improvement, prioritised action items. Available on every tier — the recommended first call |
 | `redeem_license` | Redeem a lifetime licence code (Dealify/AppSumo) and upgrade all API keys on the account |
 
 ### Setup & Account (7)

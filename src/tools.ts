@@ -118,7 +118,7 @@ function buildQuickstartPayload(client: ZuckerBotClient): Record<string, unknown
       {
         step: 0,
         tool: "zuckerbot_audit_account",
-        description: "Full account audit: wasted spend, creative fatigue, opportunity score, action items",
+        description: "Full account audit: spend flagged for review, creative fatigue, opportunity score, action items",
         requires_key: true,
         flow: "audit",
       },
@@ -514,7 +514,7 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
   // ── 0a. Account Audit ───────────────────────────────────────────
   server.tool(
     "zuckerbot_audit_account",
-    "Run a full audit of the connected Meta ad account: wasted spend detection, creative fatigue, a complete-account opportunity score (0-100 when all inputs return), and prioritised action items. Saves a shareable web report when the API key resolves to one saved business. Read-only and available on every tier — the recommended FIRST call for any new account or when a user asks 'how are my ads doing?'.",
+    "Run a full audit of the connected Meta ad account: spend flagged for review against each campaign's own objective, creative fatigue, a complete-account opportunity score (0-100 when all inputs return), and prioritised action items. Saves a shareable web report when the API key resolves to one saved business. Read-only and available on every tier — the recommended FIRST call for any new account or when a user asks 'how are my ads doing?'.",
     {
       meta_ad_account_id: z.string().optional().describe("Meta ad account ID to audit (format: act_XXXXX). Defaults to the connected account."),
       company_name: z.string().optional().describe("Company name used in the audit narrative. Defaults to the connected business name."),
@@ -556,13 +556,24 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
         // campaign_rows, so the delete above does not drop it). The stable
         // poll/read interface is the existing public report endpoint.
         const creativeAnalysis = asRecord(raw?.creative_analysis);
+        // flagged_spend is the audit's most quotable number and its most
+        // misreadable one: it is the spend SITTING IN flagged ads, not an
+        // estimate of recoverable waste. A flagged ad can be a top performer
+        // caught by the CTR rule. Say so explicitly — an agent that reads this
+        // total as "wasted" will recommend pausing the account's best ads.
+        const flaggedAdCount = typeof raw?.flagged_ad_count === "number" ? raw.flagged_ad_count : null;
+        const flaggedRowsShown = Array.isArray(raw?.flagged_spend_rows) ? raw.flagged_spend_rows.length : 0;
+        const flaggedTruncationHint = flaggedAdCount !== null && flaggedAdCount > flaggedRowsShown
+          ? ` The table lists the ${flaggedRowsShown} highest-spend of ${flaggedAdCount} flagged ads, but flagged_spend_pct covers all ${flaggedAdCount} — do not attribute the whole figure to the rows shown.`
+          : "";
+        const flaggedSpendHint = ` NOTE: flagged_spend_pct / flagged_spend_rows are spend sitting in ads that crossed a CTR or cost-per-result review threshold, judged against each campaign's own objective. This is NOT wasted spend and NOT a recoverable-saving estimate — a flagged ad may be delivering results efficiently. Read each row's flagged_reasons and its cost against its own result before suggesting any pause.${flaggedTruncationHint}`;
         const creativeHint = typeof creativeAnalysis?.status === "string"
           ? ` Creative attribute analysis is ${creativeAnalysis.status}; re-check the saved report (report_url → GET /api/audit/<id>) or query zuckerbot_get_creative_attributes after completion.`
           : "";
         return formatResult(
           appendHint(
             result,
-            `Audit complete.${reportHint}${partialDataHint}${scoreHint}${currencyHint}${creativeHint} Present complete observed findings and audit.rawInsights.action_items to the user, then act on them: zuckerbot_get_performance to drill into a specific campaign, zuckerbot_pause_campaign to stop wasted spend, or zuckerbot_creative_analysis to diagnose fatigued creatives.`,
+            `Audit complete.${reportHint}${partialDataHint}${scoreHint}${currencyHint}${creativeHint}${flaggedSpendHint} Present complete observed findings and audit.rawInsights.action_items to the user, then act on them: zuckerbot_get_performance to drill into a specific campaign, zuckerbot_pause_campaign once the user has confirmed a specific ad is underperforming, or zuckerbot_creative_analysis to diagnose fatigued creatives.`,
           ),
         );
       } catch (err) {
