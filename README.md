@@ -242,6 +242,8 @@ Every tool returns a `_hint` field suggesting the logical next step, so your age
 Shorthand: legacy create -> review -> launch -> monitor. Intelligence activation, portfolio launch, and campaign resume are temporarily unavailable during Dealify launch hardening.
 MCP names include `zuckerbot_enrich_business`, `zuckerbot_upload_business_context`, `zuckerbot_get_campaign`, `zuckerbot_activate_campaign`, and `zuckerbot_create_seed_audience`.
 `zuckerbot_duplicate_ad` duplicates one supported ad into an existing ad set in the same ad account — dry-run by default, always created PAUSED, and executes only with an explicit `idempotency_key` so a retry can never create the ad twice.
+`zuckerbot_upload_ad_asset` uploads a brand-new image or video file into the connected ad account's library from a hosted https URL (Meta downloads it directly), returning the `image_hash` or `video_id`; poll `zuckerbot_get_ad_asset_status` until a video is processed.
+`zuckerbot_create_ad` then builds one new creative + one new PAUSED ad from that asset in any EXISTING ad set — including live campaigns built outside ZuckerBot — with the same dry-run-first, `idempotency_key`-gated contract as duplication.
 
 ## ZuckerBot vs alternatives
 

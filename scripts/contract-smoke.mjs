@@ -28,6 +28,9 @@ const requiredToolNames = [
   "zuckerbot_get_lead_form",
   "zuckerbot_get_custom_conversion",
   "zuckerbot_duplicate_ad",
+  "zuckerbot_upload_ad_asset",
+  "zuckerbot_get_ad_asset_status",
+  "zuckerbot_create_ad",
   "zuckerbot_get_creative_attributes",
 ];
 
@@ -53,6 +56,9 @@ const requiredDocsSnippets = [
   "/v1/audiences/create-lal",
   "/v1/audiences/list",
   "/v1/ads/duplicate",
+  "/v1/assets/upload",
+  "/v1/assets/status",
+  "/v1/ads/create",
 ];
 
 const requiredReadmeSnippets = [
@@ -67,6 +73,8 @@ const requiredReadmeSnippets = [
   "ZUCKERBOT_ENABLE_CREATIVE_TOOLS",
   "https://zuckerbot.ai/api/mcp",
   "zuckerbot_duplicate_ad",
+  "zuckerbot_upload_ad_asset",
+  "zuckerbot_create_ad",
 ];
 
 const fakeClient = {
