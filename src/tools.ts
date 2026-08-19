@@ -11,6 +11,8 @@ const DOCS_URL = "https://zuckerbot.ai/docs";
 const CAMPAIGN_HINT = `Get your API key at ${DEVELOPER_URL} to launch this campaign.`;
 const CREATIVE_STATUS_POLL_INTERVAL_MS = 15_000;
 const CREATIVE_STATUS_MAX_POLLS = 8;
+const ASSET_STATUS_POLL_INTERVAL_MS = 15_000;
+const ASSET_STATUS_MAX_POLLS = 4;
 
 function formatResult(data: unknown): { content: Array<{ type: "text"; text: string }> } {
   return {
@@ -988,7 +990,7 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
 
   server.tool(
     "zuckerbot_upload_creative",
-    "Upload finished creative assets (images or videos) to an approved intelligence campaign. ZuckerBot queues the Meta upload and ad-creation jobs asynchronously, then polls until they complete or the polling window expires. Use this when you have your own creative assets ready.",
+    "Upload finished creative assets (images or videos) to an approved intelligence campaign. ZuckerBot queues the Meta upload and ad-creation jobs asynchronously, then polls until they complete or the polling window expires. Use this when you have your own creative assets ready. INTELLIGENCE CAMPAIGNS ONLY — to add a new creative file to any other EXISTING campaign (including live ones built outside ZuckerBot), use zuckerbot_upload_ad_asset + zuckerbot_create_ad instead.",
     {
       campaign_id: z.string().describe("Intelligence campaign ID"),
       creatives: z.array(creativeUploadSchema).min(1).describe("Creative assets to attach to the campaign"),
@@ -2223,7 +2225,7 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
   // ── 26. Spec Mode — Campaign From Spec ─────────────────────────
   server.tool(
     "zuckerbot_create_campaign_from_spec",
-    "Build a complete Meta campaign VERBATIM from a declarative JSON spec — no strategy generation, no copy authoring. Everything is created PAUSED, always; launching remains a separate deliberate call. Recommended flow: send with dry_run=true first to get the fully resolved Graph API payloads without creating anything, review them, then re-send without dry_run to build. Validation failures return an errors array of per-field {path, message, kind: schema|semantic} entries — fix each path and retry. Spec shape: campaign {name, objective OUTCOME_LEADS|OUTCOME_SALES, budget {type CBO_DAILY, amount, bid_strategy HIGHEST_VOLUME|LOWEST_COST_WITHOUT_CAP|COST_CAP}, special_ad_categories}, ad_sets [{name, conversion_location WEBSITE|INSTANT_FORM, attribution {click_days 1|7, view_days 0|1}, targeting {geo — ARRAY of 2-letter country codes e.g. [\"AU\"], age_min, advantage_audience, excluded_custom_audiences}, placements {mode MANUAL|ADVANTAGE_PLUS, exclude}; WEBSITE additionally: pixel_id, optimisation_event {type CUSTOM_CONVERSION, id}|{type STANDARD, event e.g. Lead}, performance_goal MAXIMISE_CONVERSIONS (the Ads Manager label, not the Graph enum); INSTANT_FORM instead: lead_form_id — the Meta instant form on the connected Page (no pixel_id, no optimisation_event, and its ads take NO final_url — the form is the destination; the creative's required display link is set automatically to the business's stored website, else its Facebook Page URL; single-image creative, no multi-ratio placement customisation)}], ads [{name, asset {type IMAGE_SET, refs {1x1,4x5,9x16 — https URLs or uploaded image hashes}}|{type VIDEO, ref — pre-uploaded Meta video id}|{type EXISTING_AD, ad_id — clones that ad's image/video asset from the SAME ad account; copy, CTA and destination come from THIS spec}|{type EXISTING_POST, ad_id — reuses the SAME page post as that ad (object_story_id), keeping the post's social proof and engagement; or object_story_id \"<pageid>_<postid>\" directly; the post must belong to the connected Page and the source ad to the connected ad account; the post carries ALL copy/CTA/destination, so OMIT primary_text, headline, description, cta and final_url on EXISTING_POST ads — declaring any is rejected as existing_post_copy_conflict}, primary_text, headline, description, cta, final_url (WEBSITE ad sets only; all five omitted for EXISTING_POST), ad_set_name?}]. EXISTING_AD and EXISTING_POST (ad_id form) specs need Meta credentials even for dry_run (the source ad is read from Meta). Use zuckerbot_list_custom_conversions to find custom conversion ids.",
+    "Build a complete Meta campaign VERBATIM from a declarative JSON spec — no strategy generation, no copy authoring. Everything is created PAUSED, always; launching remains a separate deliberate call. Recommended flow: send with dry_run=true first to get the fully resolved Graph API payloads without creating anything, review them, then re-send without dry_run to build. Validation failures return an errors array of per-field {path, message, kind: schema|semantic} entries — fix each path and retry. Spec shape: campaign {name, objective OUTCOME_LEADS|OUTCOME_SALES, budget {type CBO_DAILY, amount, bid_strategy HIGHEST_VOLUME|LOWEST_COST_WITHOUT_CAP|COST_CAP}, special_ad_categories}, ad_sets [{name, conversion_location WEBSITE|INSTANT_FORM, attribution {click_days 1|7, view_days 0|1}, targeting {geo — ARRAY of 2-letter country codes e.g. [\"AU\"], age_min, advantage_audience, excluded_custom_audiences}, placements {mode MANUAL|ADVANTAGE_PLUS, exclude}; WEBSITE additionally: pixel_id, optimisation_event {type CUSTOM_CONVERSION, id}|{type STANDARD, event e.g. Lead}, performance_goal MAXIMISE_CONVERSIONS (the Ads Manager label, not the Graph enum); INSTANT_FORM instead: lead_form_id — the Meta instant form on the connected Page (no pixel_id, no optimisation_event, and its ads take NO final_url — the form is the destination; the creative's required display link is set automatically to the business's stored website, else its Facebook Page URL; single-image creative, no multi-ratio placement customisation)}], ads [{name, asset {type IMAGE_SET, refs {1x1,4x5,9x16 — https URLs or uploaded image hashes}}|{type VIDEO, ref — pre-uploaded Meta video id (upload one with zuckerbot_upload_ad_asset)}|{type EXISTING_AD, ad_id — clones that ad's image/video asset from the SAME ad account; copy, CTA and destination come from THIS spec}|{type EXISTING_POST, ad_id — reuses the SAME page post as that ad (object_story_id), keeping the post's social proof and engagement; or object_story_id \"<pageid>_<postid>\" directly; the post must belong to the connected Page and the source ad to the connected ad account; the post carries ALL copy/CTA/destination, so OMIT primary_text, headline, description, cta and final_url on EXISTING_POST ads — declaring any is rejected as existing_post_copy_conflict}, primary_text, headline, description, cta, final_url (WEBSITE ad sets only; all five omitted for EXISTING_POST), ad_set_name?}]. EXISTING_AD and EXISTING_POST (ad_id form) specs need Meta credentials even for dry_run (the source ad is read from Meta). Use zuckerbot_list_custom_conversions to find custom conversion ids.",
     {
       business_id: z.string().optional().describe("Optional business ID override for the authenticated API key"),
       spec: z.record(z.string(), z.any()).describe("The declarative campaign spec (see tool description for the shape)"),
@@ -2338,7 +2340,7 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
   // ── 29. Ads — Duplicate one ad (same account, PAUSED, dry-run first) ──
   server.tool(
     "zuckerbot_duplicate_ad",
-    "Duplicate ONE supported ad into an existing ad set in the SAME ad account. Dry-run by default: it returns the exact object plan (1 new creative + 1 new ad) without creating anything; pass execute: true plus an idempotency_key to perform it. The duplicated ad is ALWAYS created PAUSED — activating it is a separate deliberate action. Supported source shapes: static single-image creatives with an accessible image hash, and single pre-uploaded video creatives. Carousel, dynamic/catalogue, existing-post and multi-asset creatives are rejected with the unsupported feature named. A new creative is always built — creative IDs are never reused.",
+    "Duplicate ONE supported ad into an existing ad set in the SAME ad account. Dry-run by default: it returns the exact object plan (1 new creative + 1 new ad) without creating anything; pass execute: true plus an idempotency_key to perform it. The duplicated ad is ALWAYS created PAUSED — activating it is a separate deliberate action. Supported source shapes: static single-image creatives with an accessible image hash, and single pre-uploaded video creatives. Carousel, dynamic/catalogue, existing-post and multi-asset creatives are rejected with the unsupported feature named. A new creative is always built — creative IDs are never reused. To introduce a brand-NEW image or video file instead of reusing an existing ad's asset, use zuckerbot_upload_ad_asset + zuckerbot_create_ad.",
     {
       business_id: z.string().optional().describe("Optional business ID override for the authenticated API key"),
       source_ad_id: z.string().describe("Numeric Meta ad id to duplicate (must be in the connected ad account)"),
@@ -2374,6 +2376,129 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
         return formatResult(appendHint(result, execute === true
           ? "The duplicate was created PAUSED and spends nothing. Review it in Ads Manager, then activate it deliberately when ready."
           : "This was a dry-run — nothing was created. Review would_create, then re-call with execute: true and an idempotency_key to perform the duplication."));
+      } catch (err) {
+        return formatError(err);
+      }
+    },
+  );
+
+  // ── 30. Ad-account library assets — upload a NEW image/video ─────
+  server.tool(
+    "zuckerbot_upload_ad_asset",
+    "Upload a NEW image or video file into the connected Meta ad account's library from a publicly reachable https URL — Meta downloads the file itself, nothing is fetched locally. Returns image_hash (images) or video_id (videos) for use in zuckerbot_create_ad or a zuckerbot_create_campaign_from_spec IMAGE_SET/VIDEO ref. Videos need Meta-side processing: the tool waits briefly and polls; if still processing, call zuckerbot_get_ad_asset_status until ready=true before creating an ad with the video. Library assets are non-delivering and spend nothing. This is the first step for adding a brand-new creative file to an EXISTING (even live) campaign: upload here, then zuckerbot_create_ad into the target ad set.",
+    {
+      business_id: z.string().optional().describe("Optional business ID override for the authenticated API key"),
+      asset_url: z.string().describe("Publicly reachable https:// URL of the image or video file (e.g. jpg, png, mp4, mov)"),
+      asset_type: z.enum(["image", "video"]).optional().describe("Auto-detected from the URL extension when omitted; pass explicitly for extension-less URLs"),
+      name: z.string().optional().describe("Optional library name for the uploaded video"),
+    },
+    async ({ business_id, asset_url, asset_type, name }) => {
+      try {
+        const resolvedBusinessId = await client.resolveBusinessId(business_id);
+        const body: Record<string, unknown> = { business_id: resolvedBusinessId, asset_url };
+        if (asset_type !== undefined) body.asset_type = asset_type;
+        if (name !== undefined) body.name = name;
+        const result = await client.post("/assets/upload", body);
+        const payload = asRecord(result);
+
+        if (payload?.asset_type !== "video" || payload?.ready === true || !payload?.video_id) {
+          return formatResult(appendHint(result, payload?.asset_type === "image"
+            ? "Image uploaded. Use image_hash in zuckerbot_create_ad (asset_type IMAGE) or a from-spec IMAGE_SET ref."
+            : "Video uploaded and processed. Use video_id in zuckerbot_create_ad (asset_type VIDEO) or a from-spec VIDEO ref."));
+        }
+
+        // Still processing: poll the status route briefly before handing back.
+        const videoId = String(payload.video_id);
+        let lastStatus: unknown = result;
+        for (let attempt = 1; attempt <= ASSET_STATUS_MAX_POLLS; attempt += 1) {
+          await sleep(ASSET_STATUS_POLL_INTERVAL_MS);
+          try {
+            const status = await client.get(`/assets/status?video_id=${encodeURIComponent(videoId)}&business_id=${encodeURIComponent(resolvedBusinessId)}`);
+            lastStatus = status;
+            if (asRecord(status)?.ready === true) {
+              return formatResult(appendHint({ initial_response: payload, final_status: status }, "Video uploaded and processed. Use video_id in zuckerbot_create_ad (asset_type VIDEO) or a from-spec VIDEO ref."));
+            }
+          } catch {
+            break;
+          }
+        }
+        return formatResult(appendHint({ initial_response: payload, last_status: lastStatus }, "Video uploaded but Meta is still processing it. Call zuckerbot_get_ad_asset_status in 15–30 seconds until ready=true, then create the ad."));
+      } catch (err) {
+        return formatError(err);
+      }
+    },
+  );
+
+  server.tool(
+    "zuckerbot_get_ad_asset_status",
+    "Check Meta's processing status for a video uploaded with zuckerbot_upload_ad_asset. Returns ready=true (with a derived thumbnail_url) once the video can be used in zuckerbot_create_ad or a from-spec VIDEO ref. Poll every 15–30 seconds while ready=false.",
+    {
+      business_id: z.string().optional().describe("Optional business ID override for the authenticated API key"),
+      video_id: z.string().describe("Meta video id returned by zuckerbot_upload_ad_asset"),
+    },
+    async ({ business_id, video_id }) => {
+      try {
+        const resolvedBusinessId = await client.resolveBusinessId(business_id);
+        const result = await client.get(`/assets/status?video_id=${encodeURIComponent(video_id)}&business_id=${encodeURIComponent(resolvedBusinessId)}`);
+        return formatResult(appendHint(result, asRecord(result)?.ready === true
+          ? "Video processed. Use video_id in zuckerbot_create_ad (asset_type VIDEO) or a from-spec VIDEO ref."
+          : "Still processing — poll again in 15–30 seconds."));
+      } catch (err) {
+        return formatError(err);
+      }
+    },
+  );
+
+  // ── 30b. Ads — Create one NEW ad from a new asset (PAUSED, dry-run first) ──
+  server.tool(
+    "zuckerbot_create_ad",
+    "Create ONE new ad (a new creative built from a declared asset) in an EXISTING ad set of the connected ad account — the way to add a brand-new image or video into a campaign that is already running, including ZuckerBot-external campaigns. Dry-run by default: returns the exact object plan (1 new creative + 1 new ad) without creating anything; pass execute: true plus an idempotency_key to build it. The ad is ALWAYS created PAUSED — activating it is a separate deliberate action. Asset: IMAGE (image_hash from zuckerbot_upload_ad_asset, or image_url — uploaded to the library automatically) or VIDEO (video_id from zuckerbot_upload_ad_asset, which must be processed/ready; thumbnail auto-derived, thumbnail_url overridable). Destination: exactly one of final_url (website) or lead_form_id (instant form — requires cta). VIDEO ads carry their link in the call_to_action, so VIDEO + final_url also requires cta. To clone an ad that already exists in the account instead, use zuckerbot_duplicate_ad.",
+    {
+      business_id: z.string().optional().describe("Optional business ID override for the authenticated API key"),
+      target_adset_id: z.string().describe("Numeric Meta ad set id to create the ad in (must be an EXISTING ad set in the connected ad account)"),
+      name: z.string().describe("Name for the new ad"),
+      asset_type: z.enum(["IMAGE", "VIDEO"]).describe("IMAGE (image_hash or image_url) or VIDEO (video_id)"),
+      image_hash: z.string().optional().describe("IMAGE: 32-char Meta library image hash (from zuckerbot_upload_ad_asset)"),
+      image_url: z.string().optional().describe("IMAGE: https URL — uploaded to the ad-account library automatically on execution"),
+      video_id: z.string().optional().describe("VIDEO: Meta video id (from zuckerbot_upload_ad_asset; must be processed/ready)"),
+      thumbnail_url: z.string().optional().describe("VIDEO: optional https thumbnail override (default: derived from the processed video)"),
+      thumbnail_hash: z.string().optional().describe("VIDEO: optional library image hash to use as the thumbnail"),
+      primary_text: z.string().optional().describe("Primary text / body copy"),
+      headline: z.string().optional().describe("Headline"),
+      description: z.string().optional().describe("Description"),
+      cta: z.string().optional().describe("Uppercase Meta CTA type, e.g. LEARN_MORE or SIGN_UP (required for VIDEO ads and instant-form destinations)"),
+      final_url: z.string().optional().describe("Website destination URL (exactly one of final_url or lead_form_id)"),
+      lead_form_id: z.string().optional().describe("Meta instant-form id on the connected Page (exactly one of final_url or lead_form_id; see zuckerbot_lead_forms)"),
+      execute: z.boolean().optional().describe("Default false (dry-run). Set true to actually create the PAUSED ad — requires idempotency_key"),
+      idempotency_key: z.string().optional().describe("Required when execute is true. Generate once per logical operation (UUIDv4 recommended); reuse the identical value only when retrying the identical request"),
+    },
+    async ({ business_id, target_adset_id, name, asset_type, image_hash, image_url, video_id, thumbnail_url, thumbnail_hash, primary_text, headline, description, cta, final_url, lead_form_id, execute, idempotency_key }) => {
+      try {
+        const resolvedBusinessId = await client.resolveBusinessId(business_id);
+        const asset: Record<string, unknown> = { type: asset_type };
+        if (image_hash !== undefined) asset.image_hash = image_hash;
+        if (image_url !== undefined) asset.image_url = image_url;
+        if (video_id !== undefined) asset.video_id = video_id;
+        if (thumbnail_url !== undefined) asset.thumbnail_url = thumbnail_url;
+        if (thumbnail_hash !== undefined) asset.thumbnail_hash = thumbnail_hash;
+        const body: Record<string, unknown> = {
+          business_id: resolvedBusinessId,
+          target_adset_id,
+          name,
+          asset,
+        };
+        if (primary_text !== undefined) body.primary_text = primary_text;
+        if (headline !== undefined) body.headline = headline;
+        if (description !== undefined) body.description = description;
+        if (cta !== undefined) body.cta = cta;
+        if (final_url !== undefined) body.final_url = final_url;
+        if (lead_form_id !== undefined) body.lead_form_id = lead_form_id;
+        if (execute !== undefined) body.execute = execute;
+        if (idempotency_key !== undefined) body.idempotency_key = idempotency_key;
+        const result = await client.post("/ads/create", body);
+        return formatResult(appendHint(result, execute === true
+          ? "The new ad was created PAUSED and spends nothing. Review it in Ads Manager, then activate it deliberately when ready."
+          : "This was a dry-run — nothing was created. Review would_create, then re-call with execute: true and an idempotency_key to create the PAUSED ad."));
       } catch (err) {
         return formatError(err);
       }
