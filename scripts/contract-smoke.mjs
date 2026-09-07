@@ -27,6 +27,7 @@ const requiredToolNames = [
   "zuckerbot_delete_audience",
   "zuckerbot_get_lead_form",
   "zuckerbot_get_custom_conversion",
+  "zuckerbot_resume_campaign",
   "zuckerbot_duplicate_ad",
   "zuckerbot_upload_ad_asset",
   "zuckerbot_get_ad_asset_status",
@@ -55,6 +56,7 @@ const requiredDocsSnippets = [
   "/v1/audiences/create-seed",
   "/v1/audiences/create-lal",
   "/v1/audiences/list",
+  "/v1/meta/resume",
   "/v1/ads/duplicate",
   "/v1/assets/upload",
   "/v1/assets/status",
@@ -63,7 +65,7 @@ const requiredDocsSnippets = [
 
 const requiredReadmeSnippets = [
   "legacy create -> review -> launch -> monitor",
-  "Intelligence activation, portfolio launch, and campaign resume are temporarily unavailable",
+  "Intelligence activation and portfolio launch are temporarily unavailable",
   "zuckerbot_enrich_business",
   "zuckerbot_upload_business_context",
   "zuckerbot_activate_campaign",
@@ -72,6 +74,7 @@ const requiredReadmeSnippets = [
   "zuckerbot_redeem_license",
   "ZUCKERBOT_ENABLE_CREATIVE_TOOLS",
   "https://zuckerbot.ai/api/mcp",
+  "zuckerbot_resume_campaign",
   "zuckerbot_duplicate_ad",
   "zuckerbot_upload_ad_asset",
   "zuckerbot_create_ad",
