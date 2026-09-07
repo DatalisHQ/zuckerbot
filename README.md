@@ -147,7 +147,8 @@ zuckerbot create https://your-business.com --budget 5000 --objective leads
 | `suggest_angles` | Get proposed creative angles and audience tiers for a draft |
 | `activate_campaign` | Temporarily unavailable; intelligence campaigns remain planning-only |
 | `launch_campaign` | Launch one or all variants from a draft on Meta |
-| `pause_campaign` | Pause a live campaign; resume is temporarily disabled |
+| `pause_campaign` | Pause a campaign, ad set or ad, including spec-built Meta campaigns |
+| `resume_campaign` | Preview and explicitly activate one existing Meta campaign, ad set or ad |
 | `get_performance` | Real-time campaign metrics: spend, leads, CPL, CTR, ROAS |
 
 ### Audiences (6)
@@ -239,7 +240,7 @@ Costs are derived as `spend / count`; Meta's `cost_per_action_type` is non-addit
 ```
 
 Every tool returns a `_hint` field suggesting the logical next step, so your agent always knows what to do next.
-Shorthand: legacy create -> review -> launch -> monitor. Intelligence activation, portfolio launch, and campaign resume are temporarily unavailable during Dealify launch hardening.
+Shorthand: legacy create -> review -> launch -> monitor. Intelligence activation and portfolio launch are temporarily unavailable; existing Meta objects use the reviewed resume workflow below for spec-built and external campaigns.
 MCP names include `zuckerbot_enrich_business`, `zuckerbot_upload_business_context`, `zuckerbot_get_campaign`, `zuckerbot_activate_campaign`, and `zuckerbot_create_seed_audience`.
 `zuckerbot_duplicate_ad` duplicates one supported ad into an existing ad set in the same ad account — dry-run by default, always created PAUSED, and executes only with an explicit `idempotency_key` so a retry can never create the ad twice.
 `zuckerbot_upload_ad_asset` uploads a brand-new image or video file into the connected ad account's library from a hosted https URL (Meta downloads it directly), returning the `image_hash` or `video_id`; poll `zuckerbot_get_ad_asset_status` until a video is processed.
@@ -306,3 +307,32 @@ npm start
 ## License
 
 MIT
+
+### Activate a PAUSED spec-built campaign
+
+Use `zuckerbot_resume_campaign` (`POST /v1/meta/resume`) with the real Meta
+`campaign_id` (spec-built or external campaigns, not managed ZuckerBot drafts), optional `business_id`, and `entity_level` (`ad`, `adset`, or
+`campaign`). For an ad or ad set, include its `entity_id`.
+
+1. Call with `dry_run: true` (default). Review the returned hierarchy, account
+   currency, budgets, campaign spend cap and ad-set end dates with the user.
+   Amounts are minor currency units; a daily budget is not a total spend cap.
+2. After explicit approval, send the same target with `dry_run: false`,
+   `confirm_spend: true`, the returned `preview_hash` and a unique
+   `idempotency_key` (8–128 letters, digits, dots, underscores, colons or hyphens).
+3. For a new spec build, repeat for each intended **ad**, then **ad set**, then
+   the **campaign last**. Obtain a fresh preview for each operation. Activation
+   never cascades to other paused objects and preserves all spend controls.
+4. Use `zuckerbot_pause_campaign` to stop any of these objects. Campaign-level
+   pause accepts the real Meta campaign ID; pass `business_id` if needed.
+
+Retry the exact request/key after a transport failure. An uncertain outcome
+requires live status inspection (or pausing) before further activation. A stored
+successful response describes that operation; replay does not reactivate an
+object paused afterwards. `ACTIVE` is configured status; Meta review, schedules,
+and parent/child status can still prevent delivery. Campaigns with more than
+100 ad sets or 100 ads require Ads Manager for this preview workflow.
+
+The hosted MCP receives this tool when its API deployment ships. Installed local
+MCP clients require a package release containing the tool. The legacy draft launch
+tool is not used for activating objects created by the spec builder.
