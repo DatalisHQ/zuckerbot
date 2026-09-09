@@ -2,6 +2,7 @@
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { inspectLocalAsset, uploadLocalAsset, type LocalAsset } from "./local-assets.js";
 import { ZuckerBotClient, ZuckerBotApiError } from "./client.js";
 
 // ── Helpers ──────────────────────────────────────────────────────────
@@ -508,7 +509,7 @@ function registerCreativeGenerationTools(server: McpServer, client: ZuckerBotCli
 
 // ── Register all tools ───────────────────────────────────────────────
 
-export function registerTools(server: McpServer, client: ZuckerBotClient): void {
+export function registerTools(server: McpServer, client: ZuckerBotClient, options: { localFiles?: boolean } = {}): void {
   // ── 0. Quickstart ───────────────────────────────────────────────
   registerQuickstartTool(server, client);
   registerBillingStatusTool(server, client);
@@ -2412,15 +2413,56 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
   // ── 30. Ad-account library assets — upload a NEW image/video ─────
   server.tool(
     "zuckerbot_upload_ad_asset",
-    "Upload a NEW image or video file into the connected Meta ad account's library from a publicly reachable https URL. Returns image_hash (images) or video_id (videos) for use in zuckerbot_create_ad or a zuckerbot_create_campaign_from_spec IMAGE_SET/VIDEO ref. This is the ONLY supported way to get a usable image_hash: Meta scopes image hashes to a single ad account, so a hash copied out of the Meta business media library or out of a different ad account is rejected at ad-creation time as \"Image Not Found\". Videos need Meta-side processing: the tool waits briefly and polls; if still processing, call zuckerbot_get_ad_asset_status until ready=true before creating an ad with the video. Library assets are non-delivering and spend nothing. This is the first step for adding a brand-new creative file to an EXISTING (even live) campaign: upload here, then zuckerbot_create_ad into the target ad set.",
+    "Upload a NEW image or video file into the connected Meta ad account's library from a publicly reachable https URL or an absolute local file_path (local stdio/CLI only). Choose exactly one of asset_url, file_path, or files (a batch of up to 20 local files). Local jpg/png images are limited to 30 MB; mp4/mov videos to 4 GB. Files transfer privately without manual hosting. Images return original width/height/name with image_hash. Batch results preserve input order and report per-file failures; all local files are validated before uploading. Returns image_hash (images) or video_id (videos) for use in zuckerbot_create_ad or a zuckerbot_create_campaign_from_spec IMAGE_SET/VIDEO ref. This is the ONLY supported way to get a usable image_hash: Meta scopes image hashes to a single ad account, so a hash copied out of the Meta business media library or out of a different ad account is rejected at ad-creation time as \"Image Not Found\". Videos need Meta-side processing: the tool waits briefly and polls; if still processing, call zuckerbot_get_ad_asset_status until ready=true before creating an ad with the video. Library assets are non-delivering and spend nothing. This is the first step for adding a brand-new creative file to an EXISTING (even live) campaign: upload here, then zuckerbot_create_ad into the target ad set.",
     {
       business_id: z.string().optional().describe("Optional business ID override for the authenticated API key"),
-      asset_url: z.string().describe("Publicly reachable https:// URL of the image or video file (e.g. jpg, png, mp4, mov)"),
+      asset_url: z.string().optional().describe("Publicly reachable https:// URL; mutually exclusive with file_path and files"),
+      file_path: z.string().optional().describe("Absolute local jpg/png/mp4/mov path; local stdio/CLI MCP only"),
+      files: z.array(z.object({ file_path: z.string(), label: z.string().min(1).max(100).optional() }).strict()).min(1).max(20).optional().describe("Batch of local files; mutually exclusive with asset_url and file_path"),
       asset_type: z.enum(["image", "video"]).optional().describe("Auto-detected from the URL extension when omitted; pass explicitly for extension-less URLs"),
       name: z.string().optional().describe("Optional library name for the uploaded video"),
     },
-    async ({ business_id, asset_url, asset_type, name }) => {
+    async ({ business_id, asset_url, file_path, files, asset_type, name }) => {
       try {
+        if ([asset_url, file_path, files].filter(value => value !== undefined).length !== 1) {
+          throw new ZuckerBotApiError(400, "validation_error", "Provide exactly one of asset_url, file_path or files.");
+        }
+        if (file_path !== undefined || files !== undefined) {
+          const entries = files ?? [{ file_path: file_path! }];
+          const opened: LocalAsset[] = [];
+          try {
+            if (!entries.length || entries.length > 20) throw new ZuckerBotApiError(400, "validation_error", "Provide between 1 and 20 files.");
+            if (name !== undefined && (!name.trim() || name.length > 255)) throw new ZuckerBotApiError(400, "validation_error", "name must contain 1 to 255 characters.");
+            for (const entry of entries) {
+              const file = await inspectLocalAsset(entry.file_path, options.localFiles === true);
+              opened.push(file);
+              if (asset_type && asset_type !== file.type) throw new ZuckerBotApiError(400, "asset_type_mismatch", `${file.name} does not match asset_type ${asset_type}.`);
+            }
+            const resolved = await client.resolveBusinessId(business_id);
+            const results: Record<string, unknown>[] = [];
+            for (let index = 0; index < opened.length; index++) {
+              try {
+                let result = await uploadLocalAsset(client, resolved, opened[index], name);
+                if (result.asset_type === "video" && !result.ready && result.video_id) {
+                  for (let attempt = 0; attempt < ASSET_STATUS_MAX_POLLS; attempt++) {
+                    await sleep(ASSET_STATUS_POLL_INTERVAL_MS);
+                    try {
+                      result = { ...result, ...asRecord(await client.get(`/assets/status?video_id=${encodeURIComponent(result.video_id)}&business_id=${encodeURIComponent(resolved)}`)) };
+                    } catch { break; }
+                    if (result.ready) break;
+                  }
+                }
+                results.push({ ...result, file_path: entries[index].file_path, ...(entries[index].label ? { label: entries[index].label } : {}) });
+              } catch (err) {
+                if (!files) throw err;
+                results.push({ file_path: entries[index].file_path, ...(entries[index].label ? { label: entries[index].label } : {}),
+                  error: true, code: err instanceof ZuckerBotApiError ? err.errorCode : "file_upload_failed",
+                  message: err instanceof Error ? err.message : "File upload failed. No ad was created." });
+              }
+            }
+            return formatResult(files ? results : results[0]);
+          } finally { for (const file of opened) await file.handle.close(); }
+        }
         const resolvedBusinessId = await client.resolveBusinessId(business_id);
         const body: Record<string, unknown> = { business_id: resolvedBusinessId, asset_url };
         if (asset_type !== undefined) body.asset_type = asset_type;
@@ -2479,12 +2521,17 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
   // ── 30b. Ads — Create one NEW ad from a new asset (PAUSED, dry-run first) ──
   server.tool(
     "zuckerbot_create_ad",
-    "Create ONE new ad (a new creative built from a declared asset) in an EXISTING ad set of the connected ad account — the way to add a brand-new image or video into a campaign that is already running, including ZuckerBot-external campaigns. Dry-run by default: returns the exact object plan (1 new creative + 1 new ad) without creating anything; pass execute: true plus an idempotency_key to build it. The ad is ALWAYS created PAUSED — activating it is a separate deliberate action. Asset: IMAGE (image_hash from zuckerbot_upload_ad_asset, or image_url — uploaded to the library automatically) or VIDEO (video_id from zuckerbot_upload_ad_asset, which must be processed/ready; thumbnail auto-derived, thumbnail_url overridable). Destination: exactly one of final_url (website) or lead_form_id (instant form — requires cta). VIDEO ads carry their link in the call_to_action, so VIDEO + final_url also requires cta. To clone an ad that already exists in the account instead, use zuckerbot_duplicate_ad.",
+    "Create ONE new ad (a new creative built from a declared asset) in an EXISTING ad set of the connected ad account — the way to add a brand-new image or video into a campaign that is already running, including ZuckerBot-external campaigns. Dry-run by default: returns the exact object plan (1 new creative + 1 new ad) without creating anything; pass execute: true plus an idempotency_key to build it. The ad is ALWAYS created PAUSED — activating it is a separate deliberate action. Optionally pass images (1–10 labeled image_hash/image_url/file_path entries); multiple images use placement customisation with a dry-run placement_table. Local file_path works only in local stdio/CLI and uploads automatically on execute. Omitted placements are inferred from original 1:1, 4:5 or 9:16 dimensions; remaining ad-set placements use square or the first image. Explicit placements use platform.position or platform.position.device (e.g. facebook.feed.mobile). Every target placement/device is assigned once, including newer placements returned by Meta. No ad-set settings are changed. Multiple images currently require final_url and cta. Asset: IMAGE (image_hash from zuckerbot_upload_ad_asset, or image_url — uploaded to the library automatically) or VIDEO (video_id from zuckerbot_upload_ad_asset, which must be processed/ready; thumbnail auto-derived, thumbnail_url overridable). Destination: exactly one of final_url (website) or lead_form_id (instant form — requires cta). VIDEO ads carry their link in the call_to_action, so VIDEO + final_url also requires cta. To clone an ad that already exists in the account instead, use zuckerbot_duplicate_ad.",
     {
       business_id: z.string().optional().describe("Optional business ID override for the authenticated API key"),
       target_adset_id: z.string().describe("Numeric Meta ad set id to create the ad in (must be an EXISTING ad set in the connected ad account)"),
       name: z.string().describe("Name for the new ad"),
-      asset_type: z.enum(["IMAGE", "VIDEO"]).describe("IMAGE (image_hash or image_url) or VIDEO (video_id)"),
+      asset_type: z.enum(["IMAGE", "VIDEO"]).optional().describe("IMAGE (image_hash or image_url) or VIDEO (video_id)"),
+      images: z.array(z.object({
+        image_hash: z.string().optional(), image_url: z.string().optional(), file_path: z.string().optional(),
+        label: z.string().regex(/^[A-Za-z][A-Za-z0-9_-]{0,49}$/),
+        placements: z.array(z.string()).min(1).max(100).optional(),
+      }).strict()).min(1).max(10).optional().describe("Labeled images; choose exactly one hash, HTTPS URL or local file path per image. Mutually exclusive with the single-asset fields."),
       image_hash: z.string().optional().describe("IMAGE: 32-char Meta library image hash from zuckerbot_upload_ad_asset for THIS ad account — hashes from the business media library or another ad account are rejected as image_hash_unusable"),
       image_url: z.string().optional().describe("IMAGE: https URL — uploaded to the ad-account library automatically on execution"),
       video_id: z.string().optional().describe("VIDEO: Meta video id (from zuckerbot_upload_ad_asset; must be processed/ready)"),
@@ -2499,7 +2546,7 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
       execute: z.boolean().optional().describe("Default false (dry-run). Set true to actually create the PAUSED ad — requires idempotency_key"),
       idempotency_key: z.string().optional().describe("Required when execute is true. Generate once per logical operation (UUIDv4 recommended); reuse the identical value only when retrying the identical request"),
     },
-    async ({ business_id, target_adset_id, name, asset_type, image_hash, image_url, video_id, thumbnail_url, thumbnail_hash, primary_text, headline, description, cta, final_url, lead_form_id, execute, idempotency_key }) => {
+    async ({ business_id, target_adset_id, name, asset_type, images, image_hash, image_url, video_id, thumbnail_url, thumbnail_hash, primary_text, headline, description, cta, final_url, lead_form_id, execute, idempotency_key }) => {
       try {
         const resolvedBusinessId = await client.resolveBusinessId(business_id);
         const asset: Record<string, unknown> = { type: asset_type };
@@ -2512,7 +2559,7 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
           business_id: resolvedBusinessId,
           target_adset_id,
           name,
-          asset,
+          ...(images ? { images } : { asset }),
         };
         if (primary_text !== undefined) body.primary_text = primary_text;
         if (headline !== undefined) body.headline = headline;
@@ -2522,7 +2569,42 @@ export function registerTools(server: McpServer, client: ZuckerBotClient): void 
         if (lead_form_id !== undefined) body.lead_form_id = lead_form_id;
         if (execute !== undefined) body.execute = execute;
         if (idempotency_key !== undefined) body.idempotency_key = idempotency_key;
-        const result = await client.post("/ads/create", body);
+        const opened = new Map<number, LocalAsset>();
+        let result: unknown;
+        try {
+          if (images) {
+            if (asset_type === "VIDEO" || [image_hash, image_url, video_id, thumbnail_url, thumbnail_hash].some(value => value !== undefined)) {
+              throw new ZuckerBotApiError(400, "validation_error", "images cannot be combined with single-asset fields.");
+            }
+            if (execute === true && (!idempotency_key || !/^[A-Za-z0-9][A-Za-z0-9_.:-]{7,127}$/.test(idempotency_key))) {
+              throw new ZuckerBotApiError(400, "idempotency_key_required", "Creating the PAUSED ad requires an idempotency_key before any local file upload.");
+            }
+            const preparedImages: Record<string, unknown>[] = [];
+            for (let index = 0; index < images.length; index++) {
+              const image = images[index];
+              if ([image.image_hash, image.image_url, image.file_path].filter(value => value !== undefined).length !== 1) {
+                throw new ZuckerBotApiError(400, "invalid_images", "Each image needs exactly one of image_hash, image_url or file_path.");
+              }
+              if (image.file_path !== undefined) {
+                const file = await inspectLocalAsset(image.file_path, options.localFiles === true);
+                opened.set(index, file);
+                if (file.type !== "image") throw new ZuckerBotApiError(400, "invalid_images", "images only accepts PNG/JPEG files; placement videos are not supported.");
+                preparedImages.push({ ...image, width: file.width, height: file.height });
+              } else preparedImages.push({ ...image });
+            }
+            body.images = preparedImages;
+            if (execute === true && opened.size) {
+              // Validate the ad/account/placement plan before uploading any file.
+              await client.post("/ads/create", { ...body, execute: false });
+              for (const [index, file] of opened) {
+                const upload = await uploadLocalAsset(client, resolvedBusinessId, file);
+                const { file_path: _path, width: _width, height: _height, ...image } = preparedImages[index];
+                preparedImages[index] = { ...image, image_hash: upload.image_hash };
+              }
+            }
+          }
+          result = await client.post("/ads/create", body);
+        } finally { for (const file of opened.values()) await file.handle.close(); }
         return formatResult(appendHint(result, execute === true
           ? "The new ad was created PAUSED and spends nothing. Review it in Ads Manager, then activate it deliberately when ready."
           : "This was a dry-run — nothing was created. Review would_create, then re-call with execute: true and an idempotency_key to create the PAUSED ad."));

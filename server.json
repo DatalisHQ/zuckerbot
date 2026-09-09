@@ -7,13 +7,13 @@
     "url": "https://github.com/DatalisHQ/zuckerbot",
     "source": "github"
   },
-  "version": "0.4.9",
+  "version": "0.4.10",
   "websiteUrl": "https://zuckerbot.ai",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "zuckerbot-mcp",
-      "version": "0.4.9",
+      "version": "0.4.10",
       "transport": {
         "type": "stdio"
       },

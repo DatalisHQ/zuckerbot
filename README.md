@@ -336,3 +336,16 @@ and parent/child status can still prevent delivery. Campaigns with more than
 The hosted MCP receives this tool when its API deployment ships. Installed local
 MCP clients require a package release containing the tool. The legacy draft launch
 tool is not used for activating objects created by the spec builder.
+
+### Local ad asset uploads
+
+Run the stdio MCP or CLI on the machine containing the files.
+`zuckerbot_upload_ad_asset` accepts exactly one of `asset_url`, an absolute
+`file_path`, or `files: [{ file_path, label? }]` (up to 20). Local files may be
+JPG/JPEG/PNG (30 MB maximum) or MP4/MOV (4 GB maximum). The client validates all
+files before a batch starts, transfers them privately in bounded chunks, and
+returns per-file results in order. No manual public hosting step is needed.
+Images include `image_hash`, original `width`, `height`, and `name`; videos retain
+the existing processing status/polling flow. A failed batch entry does not undo
+previous library uploads. Hosted MCP cannot access local paths: use a local client
+or `asset_url`. Library uploads do not create ads or enable delivery.
