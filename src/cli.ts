@@ -452,7 +452,7 @@ program
 
     const client = new ZuckerBotClient(getConfiguredApiKey(), VERSION);
     const server = new McpServer({ name: "zuckerbot", version: VERSION });
-    registerTools(server, client);
+    registerTools(server, client, { localFiles: true });
 
     const transport = new StdioServerTransport();
     await server.connect(transport);

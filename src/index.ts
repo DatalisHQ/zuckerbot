@@ -78,7 +78,7 @@ async function main(): Promise<void> {
   };
 
   // Register all tools — they handle both authenticated and demo modes internally
-  registerTools(server, client);
+  registerTools(server, client, { localFiles: true });
 
   // Connect via stdio
   const transport = new StdioServerTransport();
