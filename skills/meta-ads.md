@@ -18,8 +18,13 @@ approval before any action that can change delivery or spend money.
 
 **Audit or account health**
 
-Use `zuckerbot_audit_account`. Summarise wasted spend, creative fatigue and the
-highest-confidence action items. Do not imply the audit changed the account.
+Use `zuckerbot_audit_account`. Summarise spend flagged for review, creative
+fatigue and the highest-confidence action items. Flagged spend is not proven
+waste or recoverable savings. Do not imply the audit changed the Meta account.
+It can save a shareable report in ZuckerBot and uses API allowance.
+
+The discoverable plugin skill is [meta-ads/SKILL.md](meta-ads/SKILL.md); it includes
+account selection, evidence interpretation and the Grok Bot companion profile.
 
 **Performance or reporting**
 

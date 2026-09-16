@@ -4,7 +4,7 @@
       "command": "npx",
       "args": [
         "-y",
-        "zuckerbot-mcp@0.4.10"
+        "zuckerbot-mcp@0.4.11"
       ],
       "env": {
         "ZUCKERBOT_API_KEY": ""

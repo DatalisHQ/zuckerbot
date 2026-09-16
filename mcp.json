@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "zuckerbot": {
+      "url": "https://zuckerbot.ai/api/mcp"
+    }
+  }
+}

@@ -1,7 +1,7 @@
 /** Parse original PNG/JPEG dimensions, not a downloaded thumbnail's dimensions. */
 export function imageDimensions(bytes: Uint8Array): { width: number; height: number } {
   const data = Buffer.from(bytes);
-  if (data.length >= 24 && data.subarray(0, 8).equals(Buffer.from([137,80,78,71,13,10,26,10])) && data.toString('ascii',12,16) === 'IHDR') {
+  if (data.length >= 24 && data.subarray(0, 8).equals(Buffer.from([137,80,78,71,13,10,26,10]) as Uint8Array) && data.toString('ascii',12,16) === 'IHDR') {
     const width = data.readUInt32BE(16), height = data.readUInt32BE(20);
     if (width > 0 && height > 0) return { width, height };
   }

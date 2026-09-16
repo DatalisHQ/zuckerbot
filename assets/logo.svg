@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="zbg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6ea1ff"/>
+      <stop offset="1" stop-color="#1256f4"/>
+    </linearGradient>
+  </defs>
+  <!-- antenna -->
+  <rect x="61" y="20" width="6" height="18" rx="3" fill="url(#zbg)"/>
+  <circle cx="64" cy="16" r="7" fill="url(#zbg)"/>
+  <!-- ears -->
+  <rect x="8" y="58" width="12" height="26" rx="6" fill="url(#zbg)"/>
+  <rect x="108" y="58" width="12" height="26" rx="6" fill="url(#zbg)"/>
+  <!-- head -->
+  <rect x="18" y="34" width="92" height="74" rx="20" fill="url(#zbg)"/>
+  <!-- face panel -->
+  <rect x="30" y="46" width="68" height="50" rx="13" fill="#f4f7ff"/>
+  <!-- eyes -->
+  <rect x="45" y="55" width="10" height="19" rx="5" fill="#1256f4"/>
+  <rect x="73" y="55" width="10" height="19" rx="5" fill="#1256f4"/>
+  <!-- smile -->
+  <path d="M53 80 a11 8 0 0 0 22 0 z" fill="#1256f4"/>
+</svg>

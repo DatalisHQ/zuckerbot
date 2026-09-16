@@ -1,0 +1,22 @@
+{
+  "name": "zuckerbot",
+  "version": "0.4.11",
+  "description": "Audit Meta ads, analyse campaign performance and prepare reviewed campaign changes through ZuckerBot.",
+  "author": {
+    "name": "DatalisHQ"
+  },
+  "homepage": "https://zuckerbot.ai",
+  "repository": "https://github.com/DatalisHQ/zuckerbot",
+  "license": "MIT",
+  "keywords": [
+    "meta",
+    "facebook",
+    "instagram",
+    "advertising",
+    "marketing",
+    "analytics",
+    "mcp"
+  ],
+  "logo": "assets/logo.svg",
+  "mcpServers": "./mcp.json"
+}

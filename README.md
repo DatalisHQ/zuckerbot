@@ -95,6 +95,39 @@ Add to your MCP config:
 
 Same config pattern. ZuckerBot works with any client that supports the Model Context Protocol.
 
+### Cursor plugin and Grok Bot
+
+This repository includes a Cursor plugin manifest, a hosted MCP connection and
+a discoverable Meta ads skill. Marketplace review and availability are separate
+from the package being present in this repository.
+
+- **Connection:** `https://zuckerbot.ai/api/mcp`, using the client's OAuth flow.
+  Each user signs into their own ZuckerBot account and connects their own Meta
+  account. No shared API key or local Node installation is included or required
+  by the hosted connection.
+- **First task:** "Audit my connected Meta ad account. Show the main findings
+  and supporting evidence. Do not change campaigns or budgets."
+- **Workflow:** check the connection and account, run an audit, explain spend
+  flagged for review and creative findings, then propose actions for approval.
+- **Grok Bot profile:** the public repository contains a reusable profile at
+  `skills/meta-ads/references/grokbot-profile.md`. Recipients connect separately;
+  sharing a profile does not share the creator's account or credentials.
+
+For a local Cursor package test, clone the public repository into
+`~/.cursor/plugins/local/zuckerbot`, restart Cursor and check that the Meta ads
+skill and ZuckerBot MCP server are discovered. Local plugin imports may be
+restricted by a team administrator. Use a disposable test account and confirm
+the OAuth login and a read-only account check before relying on a live audit.
+
+The MIT-licensed client and plugin are open source. The hosted ZuckerBot service
+requires an account and has its own [plan limits](https://zuckerbot.ai/pricing.html).
+The full hosted platform is not a self-hostable open-source package. Audits can
+save shareable reports and consume API allowance; Meta campaign changes require
+explicit approval. See the [privacy policy](https://zuckerbot.ai/privacy.html)
+and [service terms](https://zuckerbot.ai/terms.html). For support, use
+[GitHub issues](https://github.com/DatalisHQ/zuckerbot/issues) without including
+credentials, private ad reports or customer data.
+
 ### Remote MCP (no install)
 
 Don't want to run anything locally? `https://zuckerbot.ai/api/mcp` is a hosted Streamable HTTP endpoint serving the same tools.

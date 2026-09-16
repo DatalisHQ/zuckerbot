@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 
 type JsonRecord = Record<string, unknown>;
@@ -27,12 +27,33 @@ function assertEqual(actual: unknown, expected: unknown, label: string): void {
 const packageJson = readJson("package.json");
 const packageLock = readJson("package-lock.json");
 const plugin = readJson(".claude-plugin/plugin.json");
+const cursorPlugin = readJson(".cursor-plugin/plugin.json");
 const mcpConfig = readJson(".mcp.json");
 const serverManifest = readJson("server.json");
 const version = requireString(packageJson.version, "package.json version");
 
 assertEqual(packageLock.version, version, "package-lock.json version");
 assertEqual(plugin.version, version, "Claude plugin version");
+assertEqual(cursorPlugin.version, version, "Cursor plugin version");
+assertEqual(cursorPlugin.name, "zuckerbot", "Cursor plugin name");
+assertEqual(cursorPlugin.mcpServers, "./mcp.json", "Cursor MCP config path");
+const hostedMcp = readJson("mcp.json");
+const hostedServers = hostedMcp.mcpServers as JsonRecord | undefined;
+const hostedZuckerbot = hostedServers?.zuckerbot as JsonRecord | undefined;
+assertEqual(hostedZuckerbot?.url, "https://zuckerbot.ai/api/mcp", "Cursor hosted endpoint");
+if (hostedZuckerbot?.headers !== undefined || hostedZuckerbot?.env !== undefined) {
+  throw new Error("Cursor's OAuth connection must not include static credentials");
+}
+const skillPath = "skills/meta-ads/SKILL.md";
+const skill = readFileSync(path.join(root, skillPath), "utf8");
+if (!/^---\r?\nname: meta-ads\r?\ndescription: [^\r\n]+\r?\n---/.test(skill)) {
+  throw new Error("Meta ads skill must have discoverable name and description frontmatter");
+}
+for (const relative of [requireString(cursorPlugin.logo, "Cursor logo"), "skills/meta-ads/references/grokbot-profile.md"]) {
+  if (path.isAbsolute(relative) || relative.split(/[\\/]/).includes("..") || !existsSync(path.join(root, relative))) {
+    throw new Error(`Cursor plugin asset must be an existing relative path: ${relative}`);
+  }
+}
 assertEqual(serverManifest.version, version, "server.json version");
 
 const lockPackages = packageLock.packages as JsonRecord | undefined;
@@ -63,6 +84,7 @@ const trackedFiles = execFileSync("git", ["ls-files", "-z"], {
 
 const allowedTopLevel = new Set([
   ".claude-plugin",
+  ".cursor-plugin",
   ".github",
   ".gitignore",
   ".mcp.json",
@@ -70,9 +92,11 @@ const allowedTopLevel = new Set([
   "CLAUDE.md",
   "LICENSE",
   "README.md",
+  "assets",
   "glama.json",
   "package-lock.json",
   "package.json",
+  "mcp.json",
   "scripts",
   "server.json",
   "skills",

@@ -33,10 +33,10 @@ export async function inspectLocalAsset(filePath: string, enabled: boolean): Pro
       invalid('file_too_large', `${basename(filePath)} exceeds the ${kind.type === 'image' ? '30 MB image' : '4 GB video'} limit.`);
     }
     const probe = Buffer.alloc(12);
-    await handle.read(probe, 0, probe.length, 0);
-    if (kind.mime === 'image/png' && !probe.subarray(0, 8).equals(Buffer.from([137,80,78,71,13,10,26,10]))) invalid('invalid_file', 'The PNG file does not contain a PNG image.');
+    await handle.read(probe as Uint8Array, 0, probe.length, 0);
+    if (kind.mime === 'image/png' && !probe.subarray(0, 8).equals(Buffer.from([137,80,78,71,13,10,26,10]) as Uint8Array)) invalid('invalid_file', 'The PNG file does not contain a PNG image.');
     if (kind.mime === 'image/jpeg' && !(probe[0] === 0xff && probe[1] === 0xd8)) invalid('invalid_file', 'The JPEG file does not contain a JPEG image.');
-    const dimensions = kind.type === 'image' ? imageDimensions(await handle.readFile()) : {};
+    const dimensions = kind.type === 'image' ? imageDimensions(await handle.readFile() as Uint8Array) : {};
     return { handle, path: filePath, name: basename(filePath), size: stat.size, mtimeMs: stat.mtimeMs, ...kind, ...dimensions };
   } catch (err) { await handle.close(); throw err; }
 }
